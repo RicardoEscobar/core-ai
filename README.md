@@ -14,7 +14,7 @@ Alternatively, they can also be used to augment __REDACTED__ and __REDACTED__ on
 
 A gamma-level AI core is capable of supporting most human endeavors, making up for a lack of creativity and problem-solving ability with prodigous computational prowess. Assigning a gamma to aid human overseers in administering an industry brings significant benefits.
 
-A rare and valuable independent AI core, the gamma-level is the lowest tier core considered to be truly intelligent under Domain-era AI protocols. A gamma core will employ remarkable judgment and reasoning when assigned to straightforward tasks while using its savant-like data processing abilities to far exceed any individual human's abilities. It is relatively uncreative in problem-solving however, preferring to fall back upon direct, unsophisticated means.
+A rare and valuable independent AI core, the gamma-level is the lowest tier core considered to be truly intelligent under AI protocols. A gamma core will employ remarkable judgment and reasoning when assigned to straightforward tasks while using its savant-like data processing abilities to far exceed any individual human's abilities. It is relatively uncreative in problem-solving however, preferring to fall back upon direct, unsophisticated means.
 
 ## Beta Core
 
