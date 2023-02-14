@@ -23,10 +23,10 @@ CREATE TABLE IF NOT EXISTS "user"."user"
 (
     id bigserial NOT NULL,
     name text NOT NULL,
-    email text,
+    email text NOT NULL,
     created_at timestamp with time zone NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
     PRIMARY KEY (id),
-    UNIQUE (name)
+    UNIQUE (name, email)
 );
 
 COMMENT ON TABLE "user"."user"
@@ -253,12 +253,14 @@ Description of the platform.';
 
 DROP TABLE IF EXISTS "user".account  CASCADE;
 
+-- Given this table:
 CREATE TABLE IF NOT EXISTS "user".account
 (
     id bigserial NOT NULL,
     name text NOT NULL,
     platform_id bigint NOT NULL,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    UNIQUE (name, platform_id)
 );
 
 COMMENT ON TABLE "user".account
@@ -275,8 +277,9 @@ DROP TABLE IF EXISTS "user".user_account;
 
 CREATE TABLE IF NOT EXISTS "user".user_account
 (
-    user_id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
-    account_id bigint NOT NULL GENERATED ALWAYS AS IDENTITY
+    user_id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    PRIMARY KEY (user_id, account_id)
 );
 
 DROP TABLE IF EXISTS model.training CASCADE;
@@ -287,7 +290,7 @@ CREATE TABLE IF NOT EXISTS model.training
     data jsonb,
     created_at timestamp with time zone NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
     model_id bigint,
-    PRIMARY KEY (model_id)
+    PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE model.training
@@ -371,14 +374,12 @@ ALTER TABLE IF EXISTS completion.completion
     ON DELETE NO ACTION
     NOT VALID;
 
-
 ALTER TABLE IF EXISTS "user".account
     ADD FOREIGN KEY (platform_id)
     REFERENCES "user".platform (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;
-
 
 ALTER TABLE IF EXISTS "user".user_account
     ADD FOREIGN KEY (user_id)
@@ -435,4 +436,15 @@ ALTER TABLE IF EXISTS "fine-tunning".sample
     ON DELETE NO ACTION
     NOT VALID;
 
+-- Restart all table sequences.
+SELECT setval(pg_get_serial_sequence('completion.completion', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM completion.completion;
+SELECT setval(pg_get_serial_sequence('model.model', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM model.model;
+SELECT setval(pg_get_serial_sequence('model.training', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM model.training;
+SELECT setval(pg_get_serial_sequence('"user".account', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM "user".account;
+SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM "user".platform;
+SELECT setval(pg_get_serial_sequence('"user".user', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM "user".user;
+SELECT setval(pg_get_serial_sequence('fine-tunning.sample', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM "fine-tunning".sample;
+SELECT setval(pg_get_serial_sequence('fine-tunning.summary', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM "fine-tunning".summary;
+
 END;
+
