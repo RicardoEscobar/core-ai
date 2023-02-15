@@ -1,5 +1,8 @@
 DROP TABLE IF EXISTS "user"."user" CASCADE;
 
+-- Reset the sequence.
+SELECT setval(pg_get_serial_sequence('"user".user', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM "user".user;
+
 CREATE TABLE IF NOT EXISTS "user"."user"
 (
     id bigserial NOT NULL,
