@@ -385,7 +385,7 @@ ALTER TABLE IF EXISTS "user".user_account
     ADD FOREIGN KEY (user_id)
     REFERENCES "user"."user" (id) MATCH SIMPLE
     ON UPDATE NO ACTION
-    ON DELETE NO ACTION
+    ON DELETE NO CASCADE
     NOT VALID;
 
 
@@ -393,7 +393,7 @@ ALTER TABLE IF EXISTS "user".user_account
     ADD FOREIGN KEY (account_id)
     REFERENCES "user".account (id) MATCH SIMPLE
     ON UPDATE NO ACTION
-    ON DELETE NO ACTION
+    ON DELETE NO CASCADE
     NOT VALID;
 
 
