@@ -447,4 +447,3 @@ SELECT setval(pg_get_serial_sequence('fine-tunning.sample', 'id'), coalesce(max(
 SELECT setval(pg_get_serial_sequence('fine-tunning.summary', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM "fine-tunning".summary;
 
 END;
-
