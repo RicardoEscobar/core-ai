@@ -370,8 +370,8 @@ ALTER TABLE IF EXISTS completion.completion
 ALTER TABLE IF EXISTS completion.completion
     ADD FOREIGN KEY (user_id)
     REFERENCES "user"."user" (id) MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
+    ON UPDATE CASCADE
+    ON DELETE CASCADE
     NOT VALID;
 
 ALTER TABLE IF EXISTS "user".account
