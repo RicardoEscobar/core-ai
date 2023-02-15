@@ -362,8 +362,8 @@ COMMENT ON TABLE "fine-tunning".summary
 ALTER TABLE IF EXISTS completion.completion
     ADD FOREIGN KEY (model_id)
     REFERENCES model.model (id) MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
+    ON UPDATE CASCADE
+    ON DELETE CASCADE
     NOT VALID;
 
 
