@@ -1,0 +1,6 @@
+ALTER TABLE IF EXISTS completion.completion
+    ADD FOREIGN KEY (model_id)
+    REFERENCES model.model (id) MATCH SIMPLE
+    ON UPDATE CASCADE
+    ON DELETE CASCADE
+    NOT VALID;
