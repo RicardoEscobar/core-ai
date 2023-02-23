@@ -1,11 +1,13 @@
 import os
-import psycopg2
+import psycopg
 from dotenv import load_dotenv
+from user.platform import Platform
+from typing import List
 
 load_dotenv()
 
 # Connect to an existing database
-conn = psycopg2.connect(
+connection = psycopg.connect(
     dbname=os.environ.get('DB_NAME'),
     user=os.environ.get('DB_USER'),
     password=os.environ.get('DB_PASSWORD'),
@@ -13,21 +15,27 @@ conn = psycopg2.connect(
     port=os.environ.get('DB_PORT')
 )
 
+# Create Platform objects
+platform1 = Platform(
+    name='Twitch', description='Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon.')
+platform2 = Platform(
+    name='YouTube', description='YouTube is an American online video-sharing platform headquartered in San Bruno, California.')
+platform3 = Platform(
+    name='VRChat', description='VRChat is a massively multiplayer online virtual reality social platform developed and published by VRChat Inc.')
+
+# Save the platform objects into a list
+platforms: List[Platform] = [platform1, platform2, platform3]
+
+# Save the platform objects into the database
+for platform in platforms:
+    platform.save(connection)
+
 # Create a cursor to perform database operations
-cur = conn.cursor()
-
-query = """SELECT "user".insert_platform('Twitch', 'Twitch (Twitch.tv) is an online live streaming video platform with a focus on gaming. The name Twitch comes from the term twitch gaming, which refers to fast action games that test reflexes, such as first person shooter games. Twitch is part of Twitch Interactive and is a subsidiary of Amazon.');"""
-
-# Run SELECT query, saving the results in a variable.
-cur.execute(query)
-conn.commit()
-
-first_row = cur.fetchone()
-print(first_row)
+cursor = connection.cursor()
 
 query = """SELECT * from "user".platform;"""
-cur.execute(query)
-first_row = cur.fetchone()
+cursor.execute(query)
+first_row = cursor.fetchone()
 print(first_row)
 
-conn.close()
+connection.close()
