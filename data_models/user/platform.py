@@ -3,6 +3,7 @@ This data model is used to store the platform information of the user.
 """
 from dataclasses import dataclass
 import psycopg
+from typing import List
 
 
 @dataclass
@@ -21,10 +22,13 @@ class Platform:
         self.description = description
 
     def __repr__(self):
-        return f"Platform(_id={self._id}, name={self.name}, description={self.description})"
+        return f"Platform(_id={self._id}, name={self.name!r}, description={self.description!r})"
 
     def __str__(self):
         return f"""({self._id if self._id else 'DEFAULT'}, $${self.name}$$, $${self.description}$$)"""
+
+    def as_tuple(self):
+        return (self._id if self._id else 'DEFAULT', self.name, self.description)
 
     def get_id(self, connection: psycopg.connection = None):
         """
@@ -48,28 +52,38 @@ class Platform:
         if connection:
             # Open a cursor to perform database operations
             with connection.cursor() as cursor:
-                query = f"""INSERT INTO {Platform.table_name} VALUES {self} ON RETURNING *;"""
-                try:
-                    cursor.execute(query)
-                except psycopg.errors.UniqueViolation:
-                    print(
-                        f"Platform {self.name} already exists in the database.")
-                    self._id = self.get_id(connection)
+                query = f"""INSERT INTO {Platform.table_name} VALUES {self} ON CONFLICT (name) DO UPDATE SET description = EXCLUDED.description RETURNING *;"""
+                cursor.execute(query)
                 connection.commit()
                 first_row = cursor.fetchone()
 
                 # set the _id of the object
                 self._id = first_row[0]
 
-    # Define _id as a property
-    @property
-    def _id(self):
-        return self.__id
+    @classmethod
+    def save_platforms(cls, platforms: List["Platform"], connection: psycopg.connection = None):
+        """
+        This method is used to save the platform data into the database. From a list of Platform objects.
+        Here is the explanation for the code:
+        1. The "Platform" data model is used to store the platform data of the user.
+        2. The "get_id" method is used to get the id of the platform.
+        3. The "save" method is used to save the platform data into the database.
+        4. The "save_platforms" method is used to save a list of platform objects into the database.
+        """
+        # Convert the list of Platform objects into a tuple of tuples
+        platforms_tuples = (platform.as_tuple() for platform in platforms)
 
-    @_id.setter
-    def _id(self, _id: int):
-        self.__id = _id
+        if connection:
+            # Open a cursor to perform database operations
+            with connection.cursor() as cursor:
+                query = f"""INSERT INTO {Platform.table_name} VALUES %s ON CONFLICT (name) DO UPDATE SET description = EXCLUDED.description RETURNING *;"""
+                print(query)
+                cursor.executemany(
+                    query, params_seq=platforms_tuples, returning=True)
 
-    @_id.deleter
-    def _id(self):
-        del self.__id
+                connection.commit()
+                all_rows = cursor.fetchall()
+
+                # set the _id of the object
+                for row in all_rows:
+                    platforms[all_rows.index(row)]._id = row['id']
