@@ -35,7 +35,8 @@ class TestPlatform(unittest.TestCase):
     id bigserial NOT NULL,
     name text NOT NULL,
     description text,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    UNIQUE (name)
 );
 
 COMMENT ON TABLE "user".platform
@@ -75,6 +76,7 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
         """
         This method is used to set up the test environment.        
         """
+        self.connection = self.__class__.connection
 
         # Create Platform objects
         self.platform1 = Platform(
@@ -98,6 +100,22 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
         # Test the __repr__ method
         expected = """Platform(_id=None, name='Twitch', description='Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon.')"""
         self.assertEqual(repr(self.platform1), expected)
+
+    def test_platform_save(self):
+        """
+        This method is used to test the platform save method.
+        """
+        # Test the save method
+        for i, platform in enumerate(self.platforms, start=1):
+            platform.save(self.connection)
+            # Assert that the platform objects are saved into the database.
+            self.assertEqual(platform._id, i)
+
+        # Assert that the platform objects are updated into the database when there is a conflict on the name column.
+        expected = """Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon, and it's great!."""
+        platform_updated = Platform('Twitch', expected)
+        platform_updated.save(self.connection)
+        self.assertEqual(platform_updated.description, expected)
 
 
 if __name__ == '__main__':
