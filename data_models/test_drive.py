@@ -23,6 +23,19 @@ platform2 = Platform(
 platform3 = Platform(
     name='VRChat', description='3VRChat is a massively multiplayer online virtual reality social platform developed and published by VRChat Inc.')
 
+# Test the __str__ method
+print(platform1)
+
+# Test the __repr__ method
+print(platform1.__repr__())
+
+# Test the as_tuple method
+print(platform1.as_tuple())
+
+# Test the as_insert_value method
+print(platform1.as_insert_value())
+# exit()
+
 # Save the platform objects into a list
 platforms: List[Platform] = [platform1, platform2, platform3]
 Platform.save_platforms(platforms, connection)
