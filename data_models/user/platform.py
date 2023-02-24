@@ -16,22 +16,11 @@ class Platform:
     _id: int = None
     table_name: str = '"user".platform'
 
-    def __init__(self, name: str, description: str = None, _id: int = None):
-        self._id = _id
-        self.name = name
-        self.description = description
-
     def __repr__(self):
         return f"Platform(_id={self._id}, name={self.name!r}, description={self.description!r})"
 
     def __str__(self):
         return f"""({self._id if self._id else 'DEFAULT'}, $${self.name}$$, $${self.description}$$)"""
-
-    def as_tuple(self):
-        return (self._id if self._id else 'DEFAULT', self.name, self.description)
-
-    def as_insert_value(self):
-        return (self.name, self.description)
 
     def get_id(self, connection: psycopg.connection = None):
         """
@@ -75,12 +64,13 @@ class Platform:
         """
         # Convert the list of Platform objects into a tuple of tuples
         # make a list comprehension to get the tuple of each object, extract only name and description.
-        params_seq = [platform.as_insert_value() for platform in platforms]
+        params_seq = [(platform.name, platform.description)
+                      for platform in platforms]
 
         if connection:
             # Open a cursor to perform database operations
             with connection.cursor() as cursor:
-                query = f"""INSERT INTO {Platform.table_name} (id, name, description) VALUES (DEFAULT, %s, %s) ON CONFLICT (name) DO UPDATE SET description = EXCLUDED.description RETURNING *;"""
+                query = f"""INSERT INTO {Platform.table_name} VALUES (DEFAULT, %s, %s) ON CONFLICT (name) DO UPDATE SET description = EXCLUDED.description RETURNING *;"""
 
                 cursor.executemany(
                     query, params_seq=params_seq, returning=True)
