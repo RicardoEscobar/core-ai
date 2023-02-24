@@ -5,7 +5,6 @@ import os
 import unittest
 import psycopg
 from dotenv import load_dotenv
-import controller.pythonpath
 from model.user.platform import Platform
 
 
@@ -14,20 +13,33 @@ class TestPlatform(unittest.TestCase):
     This class is used to test the platform module.
     """
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         """
         This method is used to set up the test environment.
         """
         load_dotenv()
 
         # Connect to an existing database
-        self.connection = psycopg.connect(
+        cls.connection = psycopg.connect(
             dbname=os.environ.get('DB_NAME'),
             user=os.environ.get('DB_USER'),
             password=os.environ.get('DB_PASSWORD'),
             host=os.environ.get('DB_HOST'),
             port=os.environ.get('DB_PORT')
         )
+
+    @classmethod
+    def tearDownClass(cls):
+        """
+        This method is used to tear down the test environment.
+        """
+        cls.connection.close()
+
+    def setUp(self):
+        """
+        This method is used to set up the test environment.        
+        """
 
         # Create Platform objects
         self.platform1 = Platform(
@@ -45,11 +57,11 @@ class TestPlatform(unittest.TestCase):
         This method is used to test the platform data model.
         """
         # Test the __str__ method
-        expected = """Platform(_id=None, name='Twitch', description="Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon.")"""
+        expected = """(DEFAULT, $$Twitch$$, $$Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon.$$)"""
         self.assertEqual(str(self.platform1), expected)
 
         # Test the __repr__ method
-        expected = """Platform(_id=None, name='Twitch', description="Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon.")"""
+        expected = """Platform(_id=None, name='Twitch', description='Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon.')"""
         self.assertEqual(repr(self.platform1), expected)
 
 
