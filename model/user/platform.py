@@ -44,8 +44,9 @@ class Platform:
         if connection:
             # Open a cursor to perform database operations
             with connection.cursor() as cursor:
-                query = f"""INSERT INTO {Platform.table_name} VALUES {self} ON CONFLICT (name) DO UPDATE SET description = EXCLUDED.description RETURNING *;"""
-                cursor.execute(query)
+                query = f"""INSERT INTO {Platform.table_name} (id, name, description) VALUES (DEFAULT, %s, %s) ON CONFLICT (name) DO UPDATE SET description = EXCLUDED.description RETURNING *;"""
+                cursor.execute(
+                    query, (self.name, self.description))
                 connection.commit()
                 first_row = cursor.fetchone()
 
