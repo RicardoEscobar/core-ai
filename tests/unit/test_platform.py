@@ -29,8 +29,8 @@ class TestPlatform(unittest.TestCase):
             port=os.environ.get('DB_PORT')
         )
 
-        DROP_TABLE = """DROP TABLE IF EXISTS "user".platform CASCADE;"""
-        CREATE_TABLE = """CREATE TABLE IF NOT EXISTS "user".platform
+        cls.DROP_TABLE = """DROP TABLE IF EXISTS "user".platform CASCADE;"""
+        cls.CREATE_TABLE = """CREATE TABLE IF NOT EXISTS "user".platform
 (
     id bigserial NOT NULL,
     name text NOT NULL,
@@ -56,12 +56,12 @@ Description of the platform.';
 -- Reset the sequence.
 SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM "user".platform;
 """
-        TRUNCATE_TABLE = """TRUNCATE TABLE "user".platform CASCADE;"""
+        cls.TRUNCATE_TABLE = """TRUNCATE TABLE "user".platform CASCADE;"""
 
         # Open a cursor to perform database operations
         with cls.connection.cursor() as cursor:
-            cursor.execute(DROP_TABLE)
-            cursor.execute(CREATE_TABLE)
+            cursor.execute(cls.DROP_TABLE)
+            cursor.execute(cls.CREATE_TABLE)
             # cursor.execute(TRUNCATE_TABLE)
             cls.connection.commit()
 
@@ -70,6 +70,11 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
         """
         This method is used to tear down the test environment.
         """
+
+        with cls.connection.cursor() as cursor:
+            cursor.execute(cls.DROP_TABLE)
+            cursor.execute(cls.CREATE_TABLE)
+
         cls.connection.close()
 
     def setUp(self):
@@ -116,6 +121,25 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
         platform_updated = Platform('Twitch', expected)
         platform_updated.save(self.connection)
         self.assertEqual(platform_updated.description, expected)
+
+    def test_platform_get_id(self):
+        """
+        This method is used to test the platform get_id method.
+        """
+        # Test the get_id method
+        for expected_id, platform in enumerate(self.platforms, start=1):
+            platform.save(self.connection)
+            # Get id's from the database
+            platform_id = platform.get_id(self.connection)
+            # Assert that the platform objects got their id's from the database.
+            self.assertEqual(platform_id, expected_id)
+
+        # Assert that the platform objects trhow an exception when the name is not found in the database.
+        platform = Platform(
+            'Facebook', 'Facebook is a social networking service.')
+
+        with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
+            platform.get_id(self.connection)
 
 
 if __name__ == '__main__':
