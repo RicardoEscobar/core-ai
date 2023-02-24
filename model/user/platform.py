@@ -16,13 +16,32 @@ class Platform:
     _id: int = None
     table_name: str = '"user".platform'
 
+    # getting the values
+    @property
+    def id(self):
+        print(f'Getting value {self._id}')
+        self.get_id()
+        return self._id
+
+    # setting the values
+    @id.setter
+    def id(self, id):
+        print(f'Setting value to {id}')
+        self._id = id
+
+    # deleting the values
+    @id.deleter
+    def id(self):
+        print(f'Deleting value {self._id}')
+        del self._id
+
     def __repr__(self):
         return f"Platform(_id={self._id}, name={self.name!r}, description={self.description!r})"
 
     def __str__(self):
         return f"""({self._id if self._id else 'DEFAULT'}, $${self.name}$$, $${self.description}$$)"""
 
-    def get_id(self, connection: psycopg.connection = None):
+    def get_id(self, connection: psycopg.connection = None) -> int:
         """
         This method is used to get the id of the platform.
         """
@@ -34,10 +53,13 @@ class Platform:
                 first_row = cursor.fetchone()
 
                 # set the _id of the object
-                self._id = first_row[0]
-                return self._id
+                if first_row:
+                    return first_row[0]
+                else:
+                    raise ValueError(
+                        f"""Platform '{self.name}' does not exist in the database. Please use save the platform first.""")
 
-    def save(self, connection: psycopg.connection = None):
+    def save(self, connection: psycopg.connection = None) -> None:
         """
         This method is used to save the platform data into the database.
         """
