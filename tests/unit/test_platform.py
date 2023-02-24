@@ -29,6 +29,41 @@ class TestPlatform(unittest.TestCase):
             port=os.environ.get('DB_PORT')
         )
 
+        DROP_TABLE = """DROP TABLE IF EXISTS "user".platform CASCADE;"""
+        CREATE_TABLE = """CREATE TABLE IF NOT EXISTS "user".platform
+(
+    id bigserial NOT NULL,
+    name text NOT NULL,
+    description text,
+    PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE "user".platform
+    IS 'Platform information, where the user is interacting with the AI.
+The same user may create several accounts on the same or different platforms.';
+
+COMMENT ON COLUMN "user".platform.name
+    IS 'text
+Required
+Name of the platform.';
+
+COMMENT ON COLUMN "user".platform.description
+    IS 'text
+Optional
+Description of the platform.';
+
+-- Reset the sequence.
+SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM "user".platform;
+"""
+        TRUNCATE_TABLE = """TRUNCATE TABLE "user".platform CASCADE;"""
+
+        # Open a cursor to perform database operations
+        with cls.connection.cursor() as cursor:
+            cursor.execute(DROP_TABLE)
+            cursor.execute(CREATE_TABLE)
+            # cursor.execute(TRUNCATE_TABLE)
+            cls.connection.commit()
+
     @classmethod
     def tearDownClass(cls):
         """
