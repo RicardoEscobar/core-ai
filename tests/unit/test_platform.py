@@ -49,6 +49,15 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
         """
         This method is used to tear down the test environment.
         """
+        # Open a cursor to perform database operations
+        with cls.connection.cursor() as cursor:
+            cursor.execute(cls.DROP_TABLE)
+            cursor.execute(cls.CREATE_TABLE)
+            cursor.execute(cls.RESET_SEQUENCE)
+            # cursor.execute(TRUNCATE_TABLE)
+            cls.connection.commit()
+
+        # Close the connection
         cls.connection.close()
 
     def setUp(self):
