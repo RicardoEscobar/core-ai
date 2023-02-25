@@ -29,7 +29,7 @@ class Platform:
     # deleting the values
     @id.deleter
     def id(self):
-        self._id = None
+        del self._id
 
     def __repr__(self):
         return f"Platform(_id={self._id}, name={self.name!r}, description={self.description!r})"
