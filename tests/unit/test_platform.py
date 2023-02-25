@@ -1,11 +1,30 @@
 """
 Unit tests for the platform module.
 """
+import logging
 import os
 import unittest
 import psycopg
 from dotenv import load_dotenv
+import model.user.platform
 from model.user.platform import Platform
+
+# create logger with 'test_platform'
+logger = logging.getLogger('test_platform')
+logger.setLevel(logging.DEBUG)
+
+# create file handler which logs even debug messages
+file_handler = logging.FileHandler('test_platform.log')
+file_handler.setLevel(logging.DEBUG)
+
+# create formatter and add it to the handlers
+formatter = logging.Formatter(
+    '%(asctime)s | %(name)s | %(levelname)s | %(message)s')
+
+file_handler.setFormatter(formatter)
+
+# add the handler to the logger
+logger.addHandler(file_handler)
 
 
 class TestPlatform(unittest.TestCase):
@@ -62,7 +81,7 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
 
     def setUp(self):
         """
-        This method is used to set up the test environment.        
+        This method is used to set up the test environment.
         """
         self.connection = self.__class__.connection
 
@@ -142,11 +161,12 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
             platform.save(self.connection)
             platform.delete(self.connection)
             # Assert that the platform objects are deleted from the database.
-            print(
-                f"""Platform {platform.id}: '{platform.name}' deleted from the database.""")
+            logger.debug(
+                """Platform %s: '%s' deleted from the database.""", platform.id, platform.name)
             self.assertIsNone(platform._id)
+        logger.info('Platforms deleted from the database.')
 
-        # Assert that the platform objects trhow an exception when the name is not found in the database.
+        # Assert that the platform objects throw an exception when the name is not found in the database.
         platform = Platform(
             'Facebook', 'Facebook is a social networking service.')
         with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
@@ -161,14 +181,28 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
             platform.save(self.connection)
             platform.update(self.connection)
             # Assert that the platform objects are updated into the database.
-            print(
-                f"""Platform {platform.id}: '{platform.name}' updated in the database.""")
+            logger.debug(
+                """Platform %s: '%s' updated in the database.""", platform.id, platform.name)
+        logger.info('Platforms updated into the database.')
 
-        # Assert that the platform objects trhow an exception when the name is not found in the database.
+        # Assert that the platform objects throw an exception when the name is not found in the database.
         platform = Platform(
             'Facebook', 'Facebook is a social networking service.')
         with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
             platform.update(self.connection)
+
+    def test_platform_save_platforms(self):
+        """
+        This method is used to test the platform save_platforms method.
+        """
+        # Test the save_platforms method
+        Platform.save_platforms(self.platforms, self.connection)
+        # Assert that the platform objects are saved into the database.
+        for i, platform in enumerate(self.platforms, start=1):
+            self.assertEqual(platform.id, i)
+            logger.debug(
+                """Platform %s: '%s' saved into the database.""", platform.id, platform.name)
+        logger.info('Platforms saved in bulk into the database.')
 
 
 if __name__ == '__main__':

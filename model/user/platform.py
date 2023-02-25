@@ -1,9 +1,27 @@
 """
 This data model is used to store the platform information of the user.
 """
+import logging
 from dataclasses import dataclass
 import psycopg
 from typing import List
+
+# create logger
+module_logger = logging.getLogger('model.user.platform')
+module_logger.setLevel(logging.DEBUG)
+
+# create file handler which logs even debug messages
+file_handler = logging.FileHandler('platform.log')
+file_handler.setLevel(logging.DEBUG)
+
+# create formatter and add it to the handlers
+formatter = logging.Formatter(
+    '%(asctime)s | %(name)s | %(levelname)s | %(message)s')
+
+file_handler.setFormatter(formatter)
+
+# add the handler to the logger
+module_logger.addHandler(file_handler)
 
 
 @dataclass
@@ -30,6 +48,14 @@ class Platform:
     @id.deleter
     def id(self):
         del self._id
+
+    def __init__(self, name: str, description: str = None, id: int = None):
+        self.logger = logging.getLogger('model.user.platform.Platform')
+        self.name = name
+        self.description = description
+        self.id = id
+        self.logger.info(
+            'Creating an instance of Platform(name=%s, description=%s, id=%s)', repr(name), repr(description), id)
 
     def __repr__(self):
         return f"Platform(_id={self._id}, name={self.name!r}, description={self.description!r})"
@@ -124,6 +150,7 @@ class Platform:
         # make a list comprehension to get the tuple of each object, extract only name and description.
         params_seq = [(platform.name, platform.description)
                       for platform in platforms]
+        module_logger.debug("params_seq=%s", params_seq)
 
         if connection:
             # Open a cursor to perform database operations
@@ -138,4 +165,6 @@ class Platform:
 
                 # set the _id of the object
                 for platform, row in zip(platforms, all_rows):
-                    platform._id = row[0]
+                    module_logger.debug(
+                        "Setting the id=%s of the '%s' platform.", row[0], platform.name)
+                    platform.id = row[0]
