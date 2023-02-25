@@ -39,7 +39,7 @@ class Platform:
 
     def load(self, connection: psycopg.connection = None) -> int:
         """
-        This method is used to get the id of the platform.
+        This method is used to return the id of the platform and load the name and description of the platform.
         """
         if connection:
             # Open a cursor to perform database operations
