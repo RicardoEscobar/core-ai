@@ -37,44 +37,18 @@ class TestPlatform(unittest.TestCase):
     description text,
     PRIMARY KEY (id),
     UNIQUE (name)
-);
+);"""
 
-COMMENT ON TABLE "user".platform
-    IS 'Platform information, where the user is interacting with the AI.
-The same user may create several accounts on the same or different platforms.';
-
-COMMENT ON COLUMN "user".platform.name
-    IS 'text
-Required
-Name of the platform.';
-
-COMMENT ON COLUMN "user".platform.description
-    IS 'text
-Optional
-Description of the platform.';
-
--- Reset the sequence.
+        cls.RESET_SEQUENCE = """-- Reset the sequence.
 SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM "user".platform;
 """
         cls.TRUNCATE_TABLE = """TRUNCATE TABLE "user".platform CASCADE;"""
-
-        # Open a cursor to perform database operations
-        with cls.connection.cursor() as cursor:
-            cursor.execute(cls.DROP_TABLE)
-            cursor.execute(cls.CREATE_TABLE)
-            # cursor.execute(TRUNCATE_TABLE)
-            cls.connection.commit()
 
     @classmethod
     def tearDownClass(cls):
         """
         This method is used to tear down the test environment.
         """
-
-        with cls.connection.cursor() as cursor:
-            cursor.execute(cls.DROP_TABLE)
-            cursor.execute(cls.CREATE_TABLE)
-
         cls.connection.close()
 
     def setUp(self):
@@ -93,6 +67,15 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
 
         # Save the platform objects into a list
         self.platforms = [self.platform1,  self.platform2,  self.platform3]
+
+        # Open a cursor to perform database operations
+        self.connection = self.__class__.connection
+        with self.connection.cursor() as cursor:
+            cursor.execute(self.DROP_TABLE)
+            cursor.execute(self.CREATE_TABLE)
+            cursor.execute(self.RESET_SEQUENCE)
+            # cursor.execute(TRUNCATE_TABLE)
+            self.connection.commit()
 
     def test_platform_str_repr(self):
         """
@@ -140,6 +123,43 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
 
         with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
             platform.load(self.connection)
+
+    def test_platform_delete(self):
+        """
+        This method is used to test the platform delete method.
+        """
+        # Test the delete method
+        for platform in self.platforms:
+            platform.save(self.connection)
+            platform.delete(self.connection)
+            # Assert that the platform objects are deleted from the database.
+            print(
+                f"""Platform {platform.id}: '{platform.name}' deleted from the database.""")
+            self.assertIsNone(platform._id)
+
+        # Assert that the platform objects trhow an exception when the name is not found in the database.
+        platform = Platform(
+            'Facebook', 'Facebook is a social networking service.')
+        with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
+            platform.delete(self.connection)
+
+    def test_platform_update(self):
+        """
+        This method is used to test the platform update method.
+        """
+        # Test the update method
+        for platform in self.platforms:
+            platform.save(self.connection)
+            platform.update(self.connection)
+            # Assert that the platform objects are updated into the database.
+            print(
+                f"""Platform {platform.id}: '{platform.name}' updated in the database.""")
+
+        # Assert that the platform objects trhow an exception when the name is not found in the database.
+        platform = Platform(
+            'Facebook', 'Facebook is a social networking service.')
+        with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
+            platform.update(self.connection)
 
 
 if __name__ == '__main__':
