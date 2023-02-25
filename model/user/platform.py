@@ -44,7 +44,7 @@ class Platform:
         if connection:
             # Open a cursor to perform database operations
             with connection.cursor() as cursor:
-                query = f"""SELECT id FROM {Platform.table_name} WHERE name = $${self.name}$$;"""
+                query = f"""SELECT * FROM {Platform.table_name} WHERE name = $${self.name}$$;"""
                 cursor.execute(query)
                 first_row = cursor.fetchone()
 
@@ -73,6 +73,42 @@ class Platform:
 
                 # set the _id of the object
                 self._id = first_row[0]
+
+    def delete(self, connection: psycopg.connection = None) -> None:
+        """
+        This method is used to delete the platform data from the database.
+        """
+        if connection:
+            # Open a cursor to perform database operations
+            with connection.cursor() as cursor:
+                query = f"""DELETE FROM {Platform.table_name} WHERE id = %s RETURNING *;"""
+                cursor.execute(query, (self.id,))
+                connection.commit()
+                first_row = cursor.fetchone()
+
+                if first_row:
+                    self.id = None
+                else:
+                    raise ValueError(
+                        f"""Platform '{self.name}' does not exist in the database.""")
+
+    def update(self, connection: psycopg.connection = None) -> None:
+        """
+        This method is used to update the platform data from the database.
+        """
+        if connection:
+            # Open a cursor to perform database operations
+            with connection.cursor() as cursor:
+                query = f"""UPDATE {Platform.table_name} SET name = %s, description = %s WHERE id = %s RETURNING *;"""
+                cursor.execute(query, (self.name, self.description, self.id))
+                connection.commit()
+                first_row = cursor.fetchone()
+
+                if first_row:
+                    self.id = first_row[0]
+                else:
+                    raise ValueError(
+                        f"""Platform '{self.name}' does not exist in the database.""")
 
     @classmethod
     def save_platforms(cls, platforms: List["Platform"], connection: psycopg.connection = None):
