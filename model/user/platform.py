@@ -19,21 +19,17 @@ class Platform:
     # getting the values
     @property
     def id(self):
-        print(f'Getting value {self._id}')
-        self.get_id()
         return self._id
 
     # setting the values
     @id.setter
     def id(self, id):
-        print(f'Setting value to {id}')
         self._id = id
 
     # deleting the values
     @id.deleter
     def id(self):
-        print(f'Deleting value {self._id}')
-        del self._id
+        self._id = None
 
     def __repr__(self):
         return f"Platform(_id={self._id}, name={self.name!r}, description={self.description!r})"
