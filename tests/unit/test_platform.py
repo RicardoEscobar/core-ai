@@ -122,15 +122,15 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
         platform_updated.save(self.connection)
         self.assertEqual(platform_updated.description, expected)
 
-    def test_platform_get_id(self):
+    def test_platform_load(self):
         """
-        This method is used to test the platform get_id method.
+        This method is used to test the platform load method.
         """
         # Test the get_id method
         for expected_id, platform in enumerate(self.platforms, start=1):
             platform.save(self.connection)
             # Get id's from the database
-            platform_id = platform.get_id(self.connection)
+            platform_id = platform.load(self.connection)
             # Assert that the platform objects got their id's from the database.
             self.assertEqual(platform_id, expected_id)
 
@@ -139,7 +139,7 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
             'Facebook', 'Facebook is a social networking service.')
 
         with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
-            platform.get_id(self.connection)
+            platform.load(self.connection)
 
 
 if __name__ == '__main__':

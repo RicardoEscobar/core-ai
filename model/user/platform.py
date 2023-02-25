@@ -37,7 +37,7 @@ class Platform:
     def __str__(self):
         return f"""({self._id if self._id else 'DEFAULT'}, $${self.name}$$, $${self.description}$$)"""
 
-    def get_id(self, connection: psycopg.connection = None) -> int:
+    def load(self, connection: psycopg.connection = None) -> int:
         """
         This method is used to get the id of the platform.
         """
@@ -50,6 +50,9 @@ class Platform:
 
                 # set the _id of the object
                 if first_row:
+                    self.id = first_row[0]
+                    self.name = first_row[1]
+                    self.description = first_row[2]
                     return first_row[0]
                 else:
                     raise ValueError(
