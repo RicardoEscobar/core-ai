@@ -117,6 +117,8 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
         expected = """Platform(_id=None, name='Twitch', description='Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon.')"""
         self.assertEqual(repr(self.platform1), expected)
 
+        logger.info('test_platform_str_repr: PASS')
+
     def test_platform_save(self):
         """
         This method is used to test the platform save method.
@@ -132,6 +134,8 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
         platform_updated = Platform('Twitch', expected)
         platform_updated.save(self.connection)
         self.assertEqual(platform_updated.description, expected)
+
+        logger.info('test_platform_save: PASS')
 
     def test_platform_load(self):
         """
@@ -151,6 +155,8 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
 
         with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
             platform.load(self.connection)
+
+        logger.info('test_platform_load: PASS')
 
     def test_platform_delete(self):
         """
@@ -172,6 +178,8 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
         with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
             platform.delete(self.connection)
 
+        logger.info('test_platform_delete: PASS')
+
     def test_platform_update(self):
         """
         This method is used to test the platform update method.
@@ -191,18 +199,26 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
         with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
             platform.update(self.connection)
 
+        logger.info('test_platform_update: PASS')
+
     def test_platform_save_platforms(self):
         """
         This method is used to test the platform save_platforms method.
         """
         # Test the save_platforms method
         Platform.save_platforms(self.platforms, self.connection)
+
         # Assert that the platform objects are saved into the database.
-        for i, platform in enumerate(self.platforms, start=1):
+        for platform, i in zip(self.platforms, range(1, 4)):
+            logger.debug("""-> %s.id=%s i=%s""", platform.name, platform.id, i)
             self.assertEqual(platform.id, i)
+
             logger.debug(
                 """Platform %s: '%s' saved into the database.""", platform.id, platform.name)
+
         logger.info('Platforms saved in bulk into the database.')
+
+        logger.info('test_platform_save_platforms: PASS')
 
 
 if __name__ == '__main__':
