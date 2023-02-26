@@ -1,0 +1,6 @@
+ALTER TABLE IF EXISTS "user".account
+    ADD FOREIGN KEY (platform_id)
+    REFERENCES "user".platform (id) MATCH SIMPLE
+    ON UPDATE NO CASCADE
+    ON DELETE NO RESTRICT
+    NOT VALID;
