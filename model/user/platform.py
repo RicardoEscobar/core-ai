@@ -4,7 +4,7 @@ This data model is used to store the platform information of the user.
 import logging
 from dataclasses import dataclass
 import psycopg
-from typing import List
+from typing import List, Tuple, Union
 
 # create logger
 module_logger = logging.getLogger('model.user.platform')
@@ -137,7 +137,7 @@ class Platform:
                         f"""Platform '{self.name}' does not exist in the database.""")
 
     @classmethod
-    def save_platforms(cls, platforms: List["Platform"], connection: psycopg.connection = None):
+    def save_platforms(cls, platforms: Union[Tuple["Platform"], List["Platform"]], connection: psycopg.connection = None):
         """
         This method is used to save the platform data into the database. From a list of Platform objects.
         Here is the explanation for the code:
@@ -148,8 +148,8 @@ class Platform:
         """
         # Convert the list of Platform objects into a tuple of tuples
         # make a list comprehension to get the tuple of each object, extract only name and description.
-        params_seq = [(platform.name, platform.description)
-                      for platform in platforms]
+        params_seq = tuple((platform.name, platform.description)
+                           for platform in platforms)
         module_logger.debug("params_seq=%s", params_seq)
 
         if connection:
@@ -161,10 +161,11 @@ class Platform:
                     query, params_seq=params_seq, returning=True)
 
                 connection.commit()
-                all_rows = cursor.fetchall()
 
-                # set the _id of the object
-                for platform, row in zip(platforms, all_rows):
+                # Fetch all the rows
+                for row in cursor:
+                    # module_logger.debug("row=%s", row)
+                    platforms[params_seq.index(row[1:])].id = row[0]
                     module_logger.debug(
-                        "Setting the id=%s of the '%s' platform.", row[0], platform.name)
-                    platform.id = row[0]
+                        "row=%s", platforms[params_seq.index(row[1:])])
+                    cursor.nextset()
