@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS "user".platform
     id bigserial NOT NULL,
     name text NOT NULL,
     description text,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    UNIQUE (name)
 );
 
 COMMENT ON TABLE "user".platform

@@ -29,3 +29,35 @@ An alpha-level AI core is capable of excelling at any task. Assigning one to run
 The alpha-level AI core is the physical soul of a fearsome intelligence. An alpha can create art which perfectly simulates human pathos, plausibly debate any philosophical position, and form what appear to be deep and meaningful bonds with human beings. Alphas have been known to perform elaborate 'jokes' built over years which can only be appreciated due to the intention that a particular human subject become cognitive of the whole at a specific time and context.
 
 Although the locus of vast material and intellectual investment, alphas terrified __REDACTED__ or any industry domain strategic planners. Like all AI, each alpha was watched, controlled, and ruthlessly eliminated at the first sign of disloyalty. The __REDACTED__ carries on these policies with even greater fervor.
+
+# Create virtual environment
+
+After cloning the repository, (if you are reading this, you probably already did) you need to create a vitual environment for installing the requirements.
+
+```shell
+python -m venv venv
+```
+
+This process takes around ttwo minutes.
+
+# Install requirements
+
+To work with the project you need to install modules to conect to the database and load environment variables.
+
+## psycopg 3
+
+This module connects __Python__ scripts to a __PostgreSQL__ database, here is where I'm storing AI model data.
+
+Go to [this link](https://www.psycopg.org/psycopg3/docs/basic/install.html) to check details on __psycopg 3__ installation.
+
+```shell
+pip install --upgrade pip           # upgrade pip to at least 20.3
+```
+
+## python-dotenv
+
+Python-dotenv reads key-value pairs from a .env file and can set them as environment variables. I use this to connect to a database and hiding the connection info from others.
+
+```shell
+pip install python-dotenv
+```
