@@ -23,6 +23,8 @@ file_handler.setFormatter(formatter)
 # add the handler to the logger
 module_logger.addHandler(file_handler)
 
+module_logger.info('Logger for platform module created.')
+
 
 @dataclass
 class Platform:
