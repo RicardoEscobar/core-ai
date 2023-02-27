@@ -1,30 +1,12 @@
 """
 Unit tests for the platform module.
 """
-import logging
 import os
 import unittest
 import psycopg
 from dotenv import load_dotenv
 import model.user.platform
 from model.user.platform import Platform
-
-# create logger with 'test_platform'
-logger = logging.getLogger('test_platform')
-logger.setLevel(logging.DEBUG)
-
-# create file handler which logs even debug messages
-file_handler = logging.FileHandler('test_platform.log')
-file_handler.setLevel(logging.DEBUG)
-
-# create formatter and add it to the handlers
-formatter = logging.Formatter(
-    '%(asctime)s | %(name)s | %(levelname)s | %(message)s')
-
-file_handler.setFormatter(formatter)
-
-# add the handler to the logger
-logger.addHandler(file_handler)
 
 
 class TestPlatform(unittest.TestCase):
@@ -117,8 +99,6 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
         expected = """Platform(_id=None, name='Twitch', description='Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon.')"""
         self.assertEqual(repr(self.platform1), expected)
 
-        logger.info('test_platform_str_repr: PASS')
-
     def test_platform_save(self):
         """
         This method is used to test the platform save method.
@@ -134,8 +114,6 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
         platform_updated = Platform('Twitch', expected)
         platform_updated.save(self.connection)
         self.assertEqual(platform_updated.description, expected)
-
-        logger.info('test_platform_save: PASS')
 
     def test_platform_load(self):
         """
@@ -156,8 +134,6 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
         with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
             platform.load(self.connection)
 
-        logger.info('test_platform_load: PASS')
-
     def test_platform_delete(self):
         """
         This method is used to test the platform delete method.
@@ -167,18 +143,13 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
             platform.save(self.connection)
             platform.delete(self.connection)
             # Assert that the platform objects are deleted from the database.
-            logger.debug(
-                """Platform %s: '%s' deleted from the database.""", platform.id, platform.name)
             self.assertIsNone(platform._id)
-        logger.info('Platforms deleted from the database.')
 
         # Assert that the platform objects throw an exception when the name is not found in the database.
         platform = Platform(
             'Facebook', 'Facebook is a social networking service.')
         with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
             platform.delete(self.connection)
-
-        logger.info('test_platform_delete: PASS')
 
     def test_platform_update(self):
         """
@@ -188,18 +159,12 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
         for platform in self.platforms:
             platform.save(self.connection)
             platform.update(self.connection)
-            # Assert that the platform objects are updated into the database.
-            logger.debug(
-                """Platform %s: '%s' updated in the database.""", platform.id, platform.name)
-        logger.info('Platforms updated into the database.')
 
         # Assert that the platform objects throw an exception when the name is not found in the database.
         platform = Platform(
             'Facebook', 'Facebook is a social networking service.')
         with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
             platform.update(self.connection)
-
-        logger.info('test_platform_update: PASS')
 
     def test_platform_save_platforms(self):
         """
@@ -210,15 +175,7 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
 
         # Assert that the platform objects are saved into the database.
         for platform, i in zip(self.platforms, range(1, 4)):
-            logger.debug("""-> %s.id=%s i=%s""", platform.name, platform.id, i)
             self.assertEqual(platform.id, i)
-
-            logger.debug(
-                """Platform %s: '%s' saved into the database.""", platform.id, platform.name)
-
-        logger.info('Platforms saved in bulk into the database.')
-
-        logger.info('test_platform_save_platforms: PASS')
 
 
 if __name__ == '__main__':
