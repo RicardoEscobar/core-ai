@@ -5,25 +5,13 @@ import os
 import logging
 import psycopg
 from dotenv import load_dotenv
+from controller.create_logger import create_logger
 
-# Create logger
-module_logger = logging.getLogger('model.database')
-module_logger.setLevel(logging.DEBUG)
-
-# create file handler which logs even debug messages
-file_handler = logging.FileHandler('logs/database.log')
-file_handler.setLevel(logging.DEBUG)
-
-# create formatter and add it to the handlers
-formatter = logging.Formatter(
-    '%(asctime)s | %(name)s | %(levelname)s | %(message)s')
-
-file_handler.setFormatter(formatter)
-
-# add the handler to the logger
-module_logger.addHandler(file_handler)
-
-module_logger.info('Logger for database module created.')
+module_logger = create_logger(
+    logger_name='model.database',
+    logger_filename='database.log',
+    log_directory='logs/database'
+)
 
 
 class Database():
@@ -104,6 +92,6 @@ class Database():
         This method is used to execute a script on the database.
         """
         self.logger.info('Executing script file: %s', file_path)
-        with open(file_path, 'r') as file:
+        with open(file_path, 'r', encoding='utf-8') as file:
             script = file.read()
         return self.execute_script(script)
