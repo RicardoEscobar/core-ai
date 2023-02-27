@@ -1,29 +1,19 @@
 """
 This data model is used to store the platform information of the user.
 """
+
 import logging
 from dataclasses import dataclass
 import psycopg
 from typing import List, Tuple, Union
+from controller.create_logger import create_logger
 
-# create logger
-module_logger = logging.getLogger('model.user.platform')
-module_logger.setLevel(logging.DEBUG)
 
-# create file handler which logs even debug messages
-file_handler = logging.FileHandler('logs/platform.log')
-file_handler.setLevel(logging.DEBUG)
-
-# create formatter and add it to the handlers
-formatter = logging.Formatter(
-    '%(asctime)s | %(name)s | %(levelname)s | %(message)s')
-
-file_handler.setFormatter(formatter)
-
-# add the handler to the logger
-module_logger.addHandler(file_handler)
-
-module_logger.info('Logger for platform module created.')
+module_logger = create_logger(
+    logger_name='model.user.platform',
+    logger_filename='platform.log',
+    log_directory='logs/platform'
+)
 
 
 @dataclass
