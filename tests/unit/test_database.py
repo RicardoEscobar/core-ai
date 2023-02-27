@@ -66,7 +66,7 @@ class TestDatabase(unittest.TestCase):
             'databases/core_ai/tables/user_platform.sql')
         self.assertEqual(result, [(1,)])
         mock_file.assert_called_once_with(
-            'databases/core_ai/tables/user_platform.sql', 'r')
+            'databases/core_ai/tables/user_platform.sql', 'r', encoding='utf-8')
 
 
 if __name__ == '__main__':
