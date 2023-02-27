@@ -11,7 +11,7 @@ module_logger = logging.getLogger('model.user.platform')
 module_logger.setLevel(logging.DEBUG)
 
 # create file handler which logs even debug messages
-file_handler = logging.FileHandler('platform.log')
+file_handler = logging.FileHandler('logs/platform.log')
 file_handler.setLevel(logging.DEBUG)
 
 # create formatter and add it to the handlers
