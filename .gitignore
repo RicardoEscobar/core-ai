@@ -291,3 +291,6 @@ $RECYCLE.BIN/
 
 # Logs
 logs/
+
+# git-sim
+git-sim_media/
