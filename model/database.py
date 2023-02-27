@@ -23,6 +23,8 @@ file_handler.setFormatter(formatter)
 # add the handler to the logger
 module_logger.addHandler(file_handler)
 
+module_logger.info('Logger for database module created.')
+
 
 class Database():
     """
@@ -74,9 +76,17 @@ class Database():
         self.logger.info('Executing query: %s', query)
         # Open a cursor to perform database operations
         with self.connection.cursor() as cursor:
-            cursor.executemany(query, values)
+            cursor.executemany(query, params_seq=values, returning=True)
             self.connection.commit()
-            return cursor.fetchall()
+
+            # Fetch all the rows
+            resultset = []
+            for row in cursor:
+                resultset.append(row)
+                module_logger.debug("row=%s", row)
+                cursor.nextset()
+
+            return resultset
 
     def execute_script(self, script: str) -> list:
         """
