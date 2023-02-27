@@ -1,6 +1,7 @@
 import os
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, mock_open
+import model.database
 from model.database import Database
 from dotenv import load_dotenv
 import psycopg
@@ -58,12 +59,14 @@ class TestDatabase(unittest.TestCase):
         result = self.db.execute_script('SELECT 1')
         self.assertEqual(result, [(1,)])
 
-    @patch('builtins.open', new_callable=Mock, return_value=Mock(read=Mock(return_value='SELECT 1')))
-    def test_execute_script_file(self, mock_open):
+    @patch('builtins.open', new_callable=mock_open, read_data='SELECT 1')
+    def test_execute_script_file(self, mock_file):
         # Test the execute_script_file method
-        result = self.db.execute_script_file('/path/to/script.sql')
+        result = self.db.execute_script_file(
+            'databases/core_ai/tables/user_platform.sql')
         self.assertEqual(result, [(1,)])
-        mock_open.assert_called_once_with('/path/to/script.sql', 'r')
+        mock_file.assert_called_once_with(
+            'databases/core_ai/tables/user_platform.sql', 'r')
 
 
 if __name__ == '__main__':
