@@ -14,7 +14,7 @@ logger = logging.getLogger('test_platform')
 logger.setLevel(logging.DEBUG)
 
 # create file handler which logs even debug messages
-file_handler = logging.FileHandler('test_platform.log')
+file_handler = logging.FileHandler('logs/test_platform.log')
 file_handler.setLevel(logging.DEBUG)
 
 # create formatter and add it to the handlers
