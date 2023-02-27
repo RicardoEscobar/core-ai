@@ -11,7 +11,19 @@ If it's not a string, it assumes it's a nested list of tokens and loops through 
 """
 
 
-def count_prompt_tokens(prompt_or_prompts):
+from typing import Union, List
+
+
+def count_prompt_tokens(prompt_or_prompts: Union[str, List[Union[str, List[str]]]]) -> int:
+    """
+    Counts the total number of tokens in a prompt or a list of prompts.
+
+    Args:
+        prompt_or_prompts: A string or a list of strings/lists containing the prompts.
+
+    Returns:
+        The total number of tokens in the prompts.
+    """
     total_tokens = 0
     if isinstance(prompt_or_prompts, str):
         total_tokens += len(prompt_or_prompts.split())
