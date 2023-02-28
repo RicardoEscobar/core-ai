@@ -85,7 +85,7 @@ class Database():
         with self.connection.cursor() as cursor:
             cursor.execute(script)
             self.connection.commit()
-            return cursor.fetchall()
+            return cursor.fetchall() if cursor.rowcount > 0 else []
 
     def execute_script_file(self, file_path: str) -> list:
         """
@@ -95,3 +95,22 @@ class Database():
         with open(file_path, 'r', encoding='utf-8') as file:
             script = file.read()
         return self.execute_script(script)
+
+    def create_user_schema(self):
+        """
+        This method is used to create the user schema.
+        """
+        # Create the user schema
+        self.logger.info('Creating the user schema.')
+        self.execute_script_file(
+            'databases/core_ai/schemas/user.sql')
+
+        # Create the user.platform table
+        self.logger.info('Creating the user.platform table.')
+        self.execute_script_file(
+            'databases/core_ai/tables/user_platform.sql')
+
+        # Insert data to the user.platform table
+        self.logger.info('Inserting the user.platform data.')
+        self.execute_script_file(
+            'databases/core_ai/data/user_platform.sql')
