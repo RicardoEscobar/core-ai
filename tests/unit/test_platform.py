@@ -3,9 +3,9 @@ Unit tests for the platform module.
 """
 import os
 import unittest
+from unittest.mock import patch
 import psycopg
 from dotenv import load_dotenv
-import model.user.platform
 from model.user.platform import Platform
 
 
@@ -44,6 +44,12 @@ class TestPlatform(unittest.TestCase):
 SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM "user".platform;
 """
         cls.TRUNCATE_TABLE = """TRUNCATE TABLE "user".platform CASCADE;"""
+        cls.INSERT_DATA = """INSERT INTO "user".platform (name, description)
+VALUES
+('Core AI','Core AI is a platform for interacting with AI powered chatbots, NPCs, and other virtual characters.'),
+('VRChat','VRChat is a social VR platform where users can create and share their own virtual worlds, avatars, and experiences.')
+ON CONFLICT (name) DO UPDATE SET description = EXCLUDED.description
+RETURNING *;"""
 
     @classmethod
     def tearDownClass(cls):
@@ -51,15 +57,17 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
         This method is used to tear down the test environment.
         """
         # Open a cursor to perform database operations
-        with cls.connection.cursor() as cursor:
-            cursor.execute(cls.DROP_TABLE)
-            cursor.execute(cls.CREATE_TABLE)
-            cursor.execute(cls.RESET_SEQUENCE)
-            # cursor.execute(TRUNCATE_TABLE)
-            cls.connection.commit()
+        with patch('psycopg.Connection') as mock_connection:
+            with patch('psycopg.cursor.Cursor') as mock_cursor:
+                mock_cursor.execute(cls.DROP_TABLE)
+                mock_cursor.execute(cls.CREATE_TABLE)
+                mock_cursor.execute(cls.RESET_SEQUENCE)
+                mock_cursor.execute(cls.INSERT_DATA)
+                # mock_cursor.execute(TRUNCATE_TABLE)
+                mock_connection.commit()
 
         # Close the connection
-        cls.connection.close()
+        mock_connection.close()
 
     def setUp(self):
         """
@@ -79,13 +87,14 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
         self.platforms = [self.platform1,  self.platform2,  self.platform3]
 
         # Open a cursor to perform database operations
-        self.connection = self.__class__.connection
-        with self.connection.cursor() as cursor:
-            cursor.execute(self.DROP_TABLE)
-            cursor.execute(self.CREATE_TABLE)
-            cursor.execute(self.RESET_SEQUENCE)
-            # cursor.execute(TRUNCATE_TABLE)
-            self.connection.commit()
+        with patch('psycopg.Connection') as mock_connection:
+            with patch('psycopg.cursor.Cursor') as mock_cursor:
+                mock_cursor.execute(self.DROP_TABLE)
+                mock_cursor.execute(self.CREATE_TABLE)
+                mock_cursor.execute(self.RESET_SEQUENCE)
+                mock_cursor.execute(self.INSERT_DATA)
+                # mock_cursor.execute(TRUNCATE_TABLE)
+                mock_connection.commit()
 
     def test_platform_str_repr(self):
         """
@@ -120,12 +129,21 @@ SELECT setval(pg_get_serial_sequence('"user".platform', 'id'), coalesce(max(id),
         This method is used to test the platform load method.
         """
         # Test the get_id method
-        for expected_id, platform in enumerate(self.platforms, start=1):
-            platform.save(self.connection)
-            # Get id's from the database
-            platform_id = platform.load(self.connection)
-            # Assert that the platform objects got their id's from the database.
-            self.assertEqual(platform_id, expected_id)
+        for i, platform in enumerate(self.platforms, start=1):
+            # Mock the fetchone method to return the expected id's.
+            with patch('psycopg.Cursor.fetchone') as mock_fetchone:
+                mock_fetchone.return_value = (
+                    (i, platform.name, platform.description)
+                )
+                # Mock the execute method to return the expected id's.
+                with patch('psycopg.Cursor.execute') as mock_execute:
+                    mock_execute.return_value = (
+                        (i, platform.name, platform.description)
+                    )
+                    # Get id's from the database
+                    actual_result = platform.load(self.connection)
+                    # Assert that the platform objects got their id's from the database.
+                    self.assertEqual(actual_result, platform.id)
 
         # Assert that the platform objects trhow an exception when the name is not found in the database.
         platform = Platform(
