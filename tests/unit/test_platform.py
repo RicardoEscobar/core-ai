@@ -116,7 +116,7 @@ RETURNING *;"""
         for i, platform in enumerate(self.platforms, start=1):
             platform.save(self.connection)
             # Assert that the platform objects are saved into the database.
-            self.assertEqual(platform._id, i)
+            self.assertEqual(platform.id, i)
 
         # Assert that the platform objects are updated into the database when there is a conflict on the name column.
         expected = """Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon, and it's great!."""
