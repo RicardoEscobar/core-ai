@@ -112,5 +112,7 @@ class Database():
 
         # Insert data to the user.platform table
         self.logger.info('Inserting the user.platform data.')
-        self.execute_script_file(
+        resultset = self.execute_script_file(
             'databases/core_ai/data/user_platform.sql')
+        self.logger.info(
+            'Inserted rows into user.platform table: %s',  resultset)
