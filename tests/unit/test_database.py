@@ -1,13 +1,17 @@
+"""
+This module contains the unit tests for the database module.
+"""
 import os
 import unittest
-from unittest.mock import patch, Mock, mock_open
-import model.database
-from model.database import Database
+from unittest.mock import patch, mock_open
 from dotenv import load_dotenv
 import psycopg
+from model.database import Database
 
 
 class TestDatabase(unittest.TestCase):
+    """This class contains the unit tests for the database module."""
+
     @classmethod
     def setUpClass(cls):
         # load the environment variables
