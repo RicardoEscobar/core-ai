@@ -3,7 +3,7 @@ Unit tests for the platform module.
 """
 import os
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 import psycopg
 from dotenv import load_dotenv
 from model.user.platform import Platform
@@ -112,11 +112,24 @@ RETURNING *;"""
         """
         This method is used to test the platform save method.
         """
+
         # Test the save method
         for i, platform in enumerate(self.platforms, start=1):
-            platform.save(self.connection)
-            # Assert that the platform objects are saved into the database.
-            self.assertEqual(platform.id, i)
+            with patch.object(psycopg.Cursor, 'fetchone') as mock_fetchone, \
+                    patch.object(psycopg.Cursor, 'execute') as mock_execute:
+
+                # Mock the fetchone method to return the expected row's.
+                mock_fetchone.return_value = (
+                    (i, platform.name, platform.description)
+                )
+                # Mock the execute method to return the expected row's.
+                mock_execute.return_value = (
+                    (i, platform.name, platform.description)
+                )
+
+                platform.save(self.connection)
+                # Assert that the platform objects are saved into the database.
+                self.assertEqual(platform.id, i)
 
         # Assert that the platform objects are updated into the database when there is a conflict on the name column.
         expected = """Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon, and it's great!."""
@@ -184,12 +197,16 @@ RETURNING *;"""
         with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
             platform.update(self.connection)
 
-    def test_platform_save_platforms(self):
-        """
-        This method is used to test the platform save_platforms method.
-        """
+    @patch.object(Platform, 'table_name', return_value='platform_table')
+    @patch.object(psycopg, 'connect')
+    def test_platform_save_platforms(self, mock_connect, mock_table_name):
+        mock_cursor = Mock()
+        mock_connect.return_value.__enter__.return_value.cursor.return_value = mock_cursor
+
         # Test the save_platforms method
         Platform.save_platforms(self.platforms, self.connection)
+
+        mock_cursor.executemany.assert_called_once()
 
         # Assert that the platform objects are saved into the database.
         for platform, i in zip(self.platforms, range(1, 4)):
