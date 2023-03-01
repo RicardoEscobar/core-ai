@@ -161,7 +161,7 @@ RETURNING *;"""
             platform.save(self.connection)
             platform.delete(self.connection)
             # Assert that the platform objects are deleted from the database.
-            self.assertIsNone(platform._id)
+            self.assertIsNone(platform.id)
 
         # Assert that the platform objects throw an exception when the name is not found in the database.
         platform = Platform(
