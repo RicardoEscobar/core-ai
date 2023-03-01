@@ -4,8 +4,8 @@ This data model is used to store the platform information of the user.
 
 import logging
 from dataclasses import dataclass
-import psycopg
 from typing import List, Tuple, Union
+import psycopg
 from controller.create_logger import create_logger
 
 
