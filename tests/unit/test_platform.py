@@ -3,7 +3,7 @@ Unit tests for the platform module.
 """
 import os
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 import psycopg
 from dotenv import load_dotenv
 from model.user.platform import Platform
