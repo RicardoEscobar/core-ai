@@ -85,7 +85,14 @@ class Database():
         with self.connection.cursor() as cursor:
             cursor.execute(script)
             self.connection.commit()
-            return cursor.fetchall() if cursor.rowcount > 0 else []
+
+            # Fetch all the rows
+            try:
+                resultset = cursor.fetchall()
+            except psycopg.ProgrammingError:
+                resultset = []
+
+            return resultset
 
     def execute_script_file(self, file_path: str) -> list:
         """
@@ -116,3 +123,15 @@ class Database():
             'databases/core_ai/data/user_platform.sql')
         self.logger.info(
             'Inserted rows into user.platform table: %s',  resultset)
+
+        # Create the user.account table
+        self.logger.info('Creating the user.account table.')
+        self.execute_script_file(
+            'databases/core_ai/tables/user_account.sql')
+
+        # Insert data to the user.account table
+        self.logger.info('Inserting the user.account data.')
+        resultset = self.execute_script_file(
+            'databases/core_ai/data/user_account.sql')
+        self.logger.info(
+            'Inserted rows into user.account table: %s',  resultset)
