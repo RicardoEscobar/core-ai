@@ -109,7 +109,7 @@ RETURNING *;"""
         expected = """Platform(_id=None, name='Twitch', description='Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon.')"""
         self.assertEqual(repr(self.core_ai), expected)
 
-    @unittest.skip('Not mocked yet.')
+    @unittest.skip('Done!')
     def test_platform_save(self):
         """
         This method is used to test the platform save method.
@@ -133,11 +133,17 @@ RETURNING *;"""
             self.assertEqual(platform.id, i)
 
         # Assert that the platform objects are updated into the database when there is a conflict on the name column.
-        # expected = """Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon, and it's great!."""
-        # platform_updated = Platform('Twitch', expected)
-        # platform_updated.save(self.connection)
-        # self.assertEqual(platform_updated.description, expected)
+        expected = """Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon, and it's great!"""
 
+        # Mock the fetchone method to return the expected row's.
+        self.mock_cursor.__enter__.return_value.fetchone.return_value = (
+            3, 'Twitch', expected)
+
+        platform_updated = Platform('Twitch', expected)
+        platform_updated.save(self.mock_connection)
+        self.assertEqual(platform_updated.description, expected)
+
+    @unittest.skip('Done!')
     def test_platform_load(self):
         """
         This method is used to test the platform load method.
@@ -148,9 +154,6 @@ RETURNING *;"""
         # Mock the fetchone method to return the expected row's.
         # Compensate for the 0 index: expected[i-1].
         self.mock_cursor.__enter__.return_value.fetchone.return_value = expected
-
-        # Create a mock fetchone method.
-        # self.mock_cursor.fetchone.return_value = expected
 
         # Get id's from the database.
         result = self.core_ai.load(self.mock_connection)
@@ -215,8 +218,8 @@ RETURNING *;"""
             # Assert that the save_platforms method is called.
             mock_save_platforms.assert_called_once()
 
-            # for platform, i in zip(self.platforms, range(1, 4)):
-            #     self.assertEqual(platform.id, i)
+            for platform, i in zip(self.platforms, range(1, 4)):
+                self.assertEqual(platform.id, i)
 
 
 if __name__ == '__main__':
