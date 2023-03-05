@@ -209,21 +209,38 @@ RETURNING *;"""
         with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
             platform.delete(self.mock_connection)
 
-    @unittest.skip('Not mocked yet.')
+    @unittest.skip('Done!')
     def test_platform_update(self):
         """
         This method is used to test the platform update method.
         """
-        # Test the update method
-        for platform in self.platforms:
-            platform.save(self.connection)
-            platform.update(self.connection)
+        # Create expected values.
+        expected = tuple([
+            (1, 'Core AI', """UPDATED: Core AI is a platform for interacting with AI powered chatbots, NPCs, and other virtual characters."""),
+            (2, 'VRChat', 'UPDATED: VRChat is a massively multiplayer online virtual reality social platform developed and published by VRChat Inc.'),
+            (3, 'Twitch', 'UPDATED: Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon.')
+        ])
+
+        # Test the update method.
+        for i, platform in enumerate(self.platforms, start=1):
+            # Create a mock fetchone method.
+            # Compensate for the 0 index: expected[i-1].
+            self.mock_cursor.__enter__.return_value.fetchone.return_value = expected[i-1]
+
+            platform.update(self.mock_connection)
+
+            # Assert that the platform objects are updated into the database.
+            self.assertEqual(platform.description, expected[i-1][2])
 
         # Assert that the platform objects throw an exception when the name is not found in the database.
         platform = Platform(
             'Facebook', 'Facebook is a social networking service.')
+
+        # Create a mock fetchone method.
+        self.mock_cursor.__enter__.return_value.fetchone.return_value = None
+
         with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
-            platform.update(self.connection)
+            platform.update(self.mock_connection)
 
     @unittest.skip('Not mocked yet.')
     def test_platform_save_platforms(self):
