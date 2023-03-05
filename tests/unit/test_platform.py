@@ -22,7 +22,7 @@ class TestPlatform(unittest.TestCase):
         """
         load_dotenv()
 
-        # Connect to an existing database
+        # Connect to an existing database.
         cls.connection = psycopg.connect(
             dbname=os.environ.get('DB_NAME'),
             user=os.environ.get('DB_USER'),
@@ -30,6 +30,11 @@ class TestPlatform(unittest.TestCase):
             host=os.environ.get('DB_HOST'),
             port=os.environ.get('DB_PORT')
         )
+
+        # Create a mock connection and cursor.
+        cls.mock_connect = patch('psycopg.connect').start()
+        cls.mock_connection = cls.mock_connect.return_value
+        cls.mock_cursor = cls.mock_connection.cursor.return_value
 
         cls.DROP_TABLE = """DROP TABLE IF EXISTS "user".platform CASCADE;"""
         cls.CREATE_TABLE = """CREATE TABLE IF NOT EXISTS "user".platform
@@ -64,18 +69,22 @@ RETURNING *;"""
         """
         This method is used to set up the test environment.
         """
+        # Set the connection and mock connect, mock connection, and mock cursor.
         self.connection = self.__class__.connection
+        self.mock_connect = self.__class__.mock_connect
+        self.mock_connection = self.__class__.mock_connection
+        self.mock_cursor = self.__class__.mock_cursor
 
         # Create Platform objects
-        self.platform1 = Platform(
+        self.core_ai = Platform(
             name='Core AI', description="""Core AI is a platform for interacting with AI powered chatbots, NPCs, and other virtual characters.""")
-        self.platform2 = Platform(
-            name='YouTube', description='YouTube is an American online video-sharing platform headquartered in San Bruno, California.')
-        self.platform3 = Platform(
+        self.vrchat = Platform(
             name='VRChat', description='VRChat is a massively multiplayer online virtual reality social platform developed and published by VRChat Inc.')
+        self.twitch = Platform(
+            name='Twitch', description='Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon.')
 
         # Save the platform objects into a list
-        self.platforms = [self.platform1,  self.platform2,  self.platform3]
+        self.platforms = [self.core_ai,  self.vrchat,  self.twitch]
 
         # Open a cursor to perform database operations
         with patch('psycopg.Connection') as mock_connection:
@@ -94,76 +103,72 @@ RETURNING *;"""
         """
         # Test the __str__ method
         expected = """(DEFAULT, $$Twitch$$, $$Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon.$$)"""
-        self.assertEqual(str(self.platform1), expected)
+        self.assertEqual(str(self.core_ai), expected)
 
         # Test the __repr__ method
         expected = """Platform(_id=None, name='Twitch', description='Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon.')"""
-        self.assertEqual(repr(self.platform1), expected)
+        self.assertEqual(repr(self.core_ai), expected)
 
     @unittest.skip('Not mocked yet.')
     def test_platform_save(self):
         """
         This method is used to test the platform save method.
         """
+        # Create expected values.
+        expected = tuple([
+            (1, 'Core AI', """Core AI is a platform for interacting with AI powered chatbots, NPCs, and other virtual characters."""),
+            (2, 'VRChat', 'VRChat is a massively multiplayer online virtual reality social platform developed and published by VRChat Inc.'),
+            (3, 'Twitch', 'Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon.')
+        ])
+
         # Test the save method
         for i, platform in enumerate(self.platforms, start=1):
-            with patch.object(psycopg.Cursor, 'fetchone') as mock_fetchone, \
-                    patch.object(psycopg.Cursor, 'execute') as mock_execute:
 
-                # Mock the fetchone method to return the expected row's.
-                mock_fetchone.return_value = (
-                    (i, platform.name, platform.description)
-                )
-                # Mock the execute method to return the expected row's.
-                mock_execute.return_value = (
-                    (i, platform.name, platform.description)
-                )
+            # Mock the fetchone method to return the expected row's.
+            # Compensate for the 0 index: expected[i-1].
+            self.mock_cursor.__enter__.return_value.fetchone.return_value = expected[i-1]
 
-                platform.save(self.connection)
-                # Assert that the platform objects are saved into the database.
-                self.assertEqual(platform.id, i)
+            platform.save(self.mock_connection)
+            # Assert that the platform objects are saved into the database.
+            self.assertEqual(platform.id, i)
 
         # Assert that the platform objects are updated into the database when there is a conflict on the name column.
-        expected = """Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon, and it's great!."""
-        platform_updated = Platform('Twitch', expected)
-        platform_updated.save(self.connection)
-        self.assertEqual(platform_updated.description, expected)
+        # expected = """Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon, and it's great!."""
+        # platform_updated = Platform('Twitch', expected)
+        # platform_updated.save(self.connection)
+        # self.assertEqual(platform_updated.description, expected)
 
-    @mock.patch('psycopg.connect')
-    def test_platform_load(self, mock_connect):
+    def test_platform_load(self):
         """
         This method is used to test the platform load method.
         """
         expected = (
             1, 'Core AI', 'Core AI is a platform for interacting with AI powered chatbots, NPCs, and other virtual characters.')
 
-        # Create a mock connection, cursor, fetchone method and execute method.
-        mock_con = mock_connect.return_value
-        mock_cur = mock_con.cursor.return_value
-        mock_cur.fetchone.return_value = expected
+        # Mock the fetchone method to return the expected row's.
+        # Compensate for the 0 index: expected[i-1].
+        self.mock_cursor.__enter__.return_value.fetchone.return_value = expected
 
-        # Get id's from the database
-        result = self.platform1.load(self.connection)
+        # Create a mock fetchone method.
+        # self.mock_cursor.fetchone.return_value = expected
+
+        # Get id's from the database.
+        result = self.core_ai.load(self.mock_connection)
+
         # Assert that the platform objects got their id's from the database.
-        self.assertEqual(result, self.platform1.id)
-
-        if mock_con is not None:
-            mock_con.close()
+        self.assertEqual(result, self.core_ai.id)
 
         # Assert that the platform objects trhow an exception when the name is not found in the database.
-        # platform = Platform(
-        #     'Facebook', 'Facebook is a social networking service.')
-        # with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
-        #     # Patch the fetchone method to return None.
-        #     with patch('psycopg.Cursor.fetchone') as mock_fetchone:
-        #         mock_fetchone.return_value = None
+        expected = None
+        platform = Platform(
+            'Facebook', 'Facebook is a social networking service.')
+        with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
 
-        #         # Patch the execute method to return None.
-        #         with patch('psycopg.Cursor.execute') as mock_execute:
-        #             mock_execute.return_value = None
+            # Create a mock fetchone method.
+            self.mock_cursor.__enter__.return_value.fetchone.return_value = expected
 
-        #             # Call the load method
-        #             platform.load(self.connection)
+            # Call the load method.
+            platform.load(self.mock_connection)
 
     @unittest.skip('Not mocked yet.')
     def test_platform_delete(self):
