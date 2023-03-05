@@ -99,7 +99,9 @@ class Platform:
 
                 # set the _id of the object
                 self.id = first_row[0]
-                module_logger.debug("Saved database row = %s", first_row[0])
+                self.name = first_row[1]
+                self.description = first_row[2]
+                module_logger.debug("Saved database row = %s", str(self))
 
     def delete(self, connection: psycopg.connection = None) -> None:
         """
