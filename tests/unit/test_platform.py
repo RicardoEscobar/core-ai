@@ -154,7 +154,6 @@ RETURNING *;"""
             1, 'Core AI', 'Core AI is a platform for interacting with AI powered chatbots, NPCs, and other virtual characters.')
 
         # Mock the fetchone method to return the expected row's.
-        # Compensate for the 0 index: expected[i-1].
         self.mock_cursor.__enter__.return_value.fetchone.return_value = expected
 
         # Get id's from the database.
@@ -175,23 +174,40 @@ RETURNING *;"""
             # Call the load method.
             platform.load(self.mock_connection)
 
-    @unittest.skip('Not mocked yet.')
+    @unittest.skip('Done!')
     def test_platform_delete(self):
         """
         This method is used to test the platform delete method.
         """
-        # Test the delete method
-        for platform in self.platforms:
-            platform.save(self.connection)
-            platform.delete(self.connection)
+        # Create expected values.
+        expected = tuple([
+            (1, 'Core AI', """Core AI is a platform for interacting with AI powered chatbots, NPCs, and other virtual characters."""),
+            (2, 'VRChat', 'VRChat is a massively multiplayer online virtual reality social platform developed and published by VRChat Inc.'),
+            (3, 'Twitch', 'Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon.')
+        ])
+
+        # Test the delete method.
+        for i, platform in enumerate(self.platforms, start=1):
+            # Set id's for the platform objects.
+            platform.id = i
+
+            # Create a mock fetchone method.
+            # Compensate for the 0 index: expected[i-1].
+            self.mock_cursor.__enter__.return_value.fetchone.return_value = expected[i-1]
+
+            platform.delete(self.mock_connection)
             # Assert that the platform objects are deleted from the database.
             self.assertIsNone(platform.id)
 
         # Assert that the platform objects throw an exception when the name is not found in the database.
         platform = Platform(
             'Facebook', 'Facebook is a social networking service.')
+
+        # Create a mock fetchone method.
+        self.mock_cursor.__enter__.return_value.fetchone.return_value = None
+
         with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
-            platform.delete(self.connection)
+            platform.delete(self.mock_connection)
 
     @unittest.skip('Not mocked yet.')
     def test_platform_update(self):
