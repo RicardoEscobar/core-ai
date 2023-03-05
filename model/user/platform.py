@@ -116,8 +116,12 @@ class Platform:
                 first_row = cursor.fetchone()
 
                 if first_row:
+                    module_logger.debug("Deleted database row = %s", str(self))
                     self.id = None
                 else:
+                    # if the platform does not exist in the database, raise an error. Else is unnecessary.
+                    module_logger.error(
+                        "Platform '%s' does not exist in the database.", self.name)
                     raise ValueError(
                         f"""Platform '{self.name}' does not exist in the database.""")
 
