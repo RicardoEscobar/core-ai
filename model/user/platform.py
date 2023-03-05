@@ -139,7 +139,13 @@ class Platform:
 
                 if first_row:
                     self.id = first_row[0]
+                    self.name = first_row[1]
+                    self.description = first_row[2]
+                    module_logger.debug("Updated database row = %s", str(self))
                 else:
+                    # if the platform does not exist in the database, raise an error. Else is unnecessary.
+                    module_logger.error(
+                        "Platform '%s' does not exist in the database.", self.name)
                     raise ValueError(
                         f"""Platform '{self.name}' does not exist in the database.""")
 
