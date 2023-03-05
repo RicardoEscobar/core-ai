@@ -95,17 +95,20 @@ RETURNING *;"""
                 # mock_cursor.execute(TRUNCATE_TABLE)
                 mock_connection.commit()
 
-    @unittest.skip('Not mocked yet.')
+    @unittest.skip('Done!')
     def test_platform_str_repr(self):
         """
         This method is used to test the platform data model.
         """
-        # Test the __str__ method
-        expected = """(DEFAULT, $$Twitch$$, $$Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon.$$)"""
+
+        # Create expected values.
+        expected = """(DEFAULT, $$Core AI$$, $$Core AI is a platform for interacting with AI powered chatbots, NPCs, and other virtual characters.$$)"""
+
+        # Assert the __str__ method
         self.assertEqual(str(self.core_ai), expected)
 
-        # Test the __repr__ method
-        expected = """Platform(_id=None, name='Twitch', description='Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon.')"""
+        # Assert the __repr__ method
+        expected = """Platform(_id=None, name='Core AI', description='Core AI is a platform for interacting with AI powered chatbots, NPCs, and other virtual characters.')"""
         self.assertEqual(repr(self.core_ai), expected)
 
     @unittest.skip('Done!')
