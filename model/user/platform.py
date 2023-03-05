@@ -33,21 +33,21 @@ class Platform:
 
     # setting the values
     @id.setter
-    def id(self, id):
-        self._id = id
+    def id(self, property_id):
+        self._id = property_id
 
     # deleting the values
     @id.deleter
     def id(self):
         del self._id
 
-    def __init__(self, name: str, description: str = None, id: int = None):
+    def __init__(self, name: str, description: str = None, property_id: int = None):
         self.logger = logging.getLogger('model.user.platform.Platform')
         self.name = name
         self.description = description
-        self.id = id
+        self.id = property_id
         self.logger.info(
-            'Creating an instance of Platform(name=%s, description=%s, id=%s)', repr(name), repr(description), id)
+            'Creating an instance of Platform(name=%s, description=%s, id=%s)', repr(name), repr(description), property_id)
 
     def __repr__(self):
         return f"Platform(_id={self._id}, name={self.name!r}, description={self.description!r})"
