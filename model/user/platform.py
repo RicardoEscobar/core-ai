@@ -77,9 +77,12 @@ class Platform:
                     module_logger.info(
                         "Loaded Platform(id=%s, name=%s, description=%s)", self.id, repr(self.name), repr(self.description))
                     return first_row[0]
-                else:
-                    raise ValueError(
-                        f"""Platform '{self.name}' does not exist in the database. Please use save the platform first.""")
+
+                # if the platform does not exist in the database, raise an error. Else is unnecessary.
+                module_logger.error(
+                    "Platform '%s' does not exist in the database.", self.name)
+                raise ValueError(
+                    f"""Platform '{self.name}' does not exist in the database. Please use save the platform first.""")
 
     def save(self, connection: psycopg.connection = None) -> None:
         """
@@ -95,7 +98,8 @@ class Platform:
                 first_row = cursor.fetchone()
 
                 # set the _id of the object
-                self._id = first_row[0]
+                self.id = first_row[0]
+                module_logger.debug("Saved database row = %s", first_row[0])
 
     def delete(self, connection: psycopg.connection = None) -> None:
         """
