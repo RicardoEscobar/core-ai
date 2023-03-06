@@ -242,19 +242,65 @@ RETURNING *;"""
         with self.assertRaises(ValueError, msg=f"""Platform '{platform.name}' does not exist in the database. Please use save the platform first."""):
             platform.update(self.mock_connection)
 
-    @unittest.skip('Not mocked yet.')
+    # @unittest.skip('Not mocked yet.')
     def test_platform_save_platforms(self):
         """
         This method is used to test the platform save_platforms method.
         """
-        # Mock save_platforms method
-        with patch.object(Platform, 'save_platforms') as mock_save_platforms:
-            Platform.save_platforms(self.platforms, self.connection)
-            # Assert that the save_platforms method is called.
-            mock_save_platforms.assert_called_once()
+        # Create expected values.
+        expected = tuple([
+            (1, 'Core AI', """Core AI is a platform for interacting with AI powered chatbots, NPCs, and other virtual characters."""),
+            (2, 'VRChat', 'VRChat is a massively multiplayer online virtual reality social platform developed and published by VRChat Inc.'),
+            (3, 'Twitch', 'Twitch is a live streaming video platform owned by Twitch Interactive, a subsidiary of Amazon.')
+        ])
 
-            for platform, i in zip(self.platforms, range(1, 4)):
-                self.assertEqual(platform.id, i)
+        for i, platform in enumerate(self.platforms, start=1):
+            # Create a mock executemany method.
+            # TODO: Figure out how to mock the executemany method. connect().cursor().__enter__()
+
+            self.mock_cursor.__enter__.return_value.executemany.return_value = expected[i-1]
+            # print(self.mock_cursor.__enter__.return_value.executemany.return_value)
+
+            # Create a mock cursor.nextset() method.
+            self.mock_cursor.__enter__.return_value.nextset.__enter__.return_value = expected[
+                i-1]
+            # print(self.mock_cursor.__enter__.return_value.nextset.__enter__.return_value)
+
+            # Create a mock cursor.fetchone() method.
+            self.mock_cursor.__enter__.return_value.fetchone.__enter__.return_value = expected[
+                i-1]
+            # print(self.mock_cursor.__enter__.return_value.fetchone.__enter__.return_value)
+
+            # Create a mock cursor.fetchall() method.
+            self.mock_cursor.__enter__.return_value.fetchall.__enter__.return_value = expected[
+                i-1]
+
+            # Create a mock cursor.row() method.
+            self.mock_cursor.__enter__.return_value.row = expected[i-1]
+            # print(f""">>>{self.mock_cursor.__enter__.return_value.row}""")
+
+            # Create a mock rowcount method.
+            # len(expected)
+            self.mock_cursor.__enter__.return_value.rowcount = 1
+            # print(self.mock_cursor.__enter__.return_value.rowcount)
+
+            # Create a mock cursor.__iter__() method.
+            # TODO: Figure out how to THIS FIXED IT! The `[expected[i-1]]` is the key!
+            self.mock_cursor.__enter__.return_value.__iter__.return_value = [
+                expected[i-1]]
+            # print(self.mock_cursor.__enter__.return_value.__iter__.return_value)
+
+            # Create a mock cursor.__next__() method.
+            self.mock_cursor.__enter__.return_value.__next__.return_value = expected[
+                i-1]
+            # print(self.mock_cursor.__enter__.return_value.__next__.return_value)
+
+            # Call the save_platforms method.
+            Platform.save_platforms(self.platforms, self.mock_connection)
+
+            # Assert that the platform objects are saved into the database.
+            # print(f"""{self.platforms[i-1].id} == {expected[i-1][0]}""")
+            self.assertEqual(self.platforms[i-1].id, expected[i-1][0])
 
 
 if __name__ == '__main__':
