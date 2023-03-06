@@ -175,10 +175,13 @@ class Platform:
 
                 connection.commit()
 
+                module_logger.debug("Number of rows=%s", cursor.rowcount)
+                module_logger.debug("cursor=%s", cursor)
                 # Fetch all the rows
                 for row in cursor:
-                    # module_logger.debug("row=%s", row)
+                    print('Inside row loop')
+                    module_logger.debug("->>row=%s", row)
+
+                    # set the _id of the object
                     platforms[params_seq.index(row[1:])].id = row[0]
-                    module_logger.debug(
-                        "row=%s", platforms[params_seq.index(row[1:])])
                     cursor.nextset()
