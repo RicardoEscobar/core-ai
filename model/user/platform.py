@@ -21,6 +21,7 @@ class Platform:
     """
     This data model is used to store the `"user".platform` row data.
     """
+    # class variables
     name: str
     description: str = None
     _id: int = None
@@ -63,23 +64,23 @@ class Platform:
             # Open a cursor to perform database operations
             with connection.cursor() as cursor:
                 query = f"""SELECT * FROM {Platform.table_name} WHERE name = $${self.name}$$;"""
-                module_logger.debug(
+                self.logger.debug(
                     "Loading '%s' id from the database.", self.name)
                 cursor.execute(query)
                 first_row = cursor.fetchone()
-                module_logger.debug("Loaded database row = %s", first_row)
+                self.logger.debug("Loaded database row = %s", first_row)
 
                 # set the _id of the object
                 if first_row:
                     self.id = first_row[0]
                     self.name = first_row[1]
                     self.description = first_row[2]
-                    module_logger.info(
+                    self.logger.info(
                         "Loaded Platform(id=%s, name=%s, description=%s)", self.id, repr(self.name), repr(self.description))
                     return first_row[0]
 
                 # if the platform does not exist in the database, raise an error. Else is unnecessary.
-                module_logger.error(
+                self.logger.error(
                     "Platform '%s' does not exist in the database.", self.name)
                 raise ValueError(
                     f"""Platform '{self.name}' does not exist in the database. Please use save the platform first.""")
@@ -101,7 +102,7 @@ class Platform:
                 self.id = first_row[0]
                 self.name = first_row[1]
                 self.description = first_row[2]
-                module_logger.debug("Saved database row = %s", str(self))
+                self.logger.debug("Saved database row = %s", str(self))
 
     def delete(self, connection: psycopg.connection = None) -> None:
         """
@@ -116,11 +117,11 @@ class Platform:
                 first_row = cursor.fetchone()
 
                 if first_row:
-                    module_logger.debug("Deleted database row = %s", str(self))
+                    self.logger.debug("Deleted database row = %s", str(self))
                     self.id = None
                 else:
                     # if the platform does not exist in the database, raise an error. Else is unnecessary.
-                    module_logger.error(
+                    self.logger.error(
                         "Platform '%s' does not exist in the database.", self.name)
                     raise ValueError(
                         f"""Platform '{self.name}' does not exist in the database.""")
@@ -141,10 +142,10 @@ class Platform:
                     self.id = first_row[0]
                     self.name = first_row[1]
                     self.description = first_row[2]
-                    module_logger.debug("Updated database row = %s", str(self))
+                    self.logger.debug("Updated database row = %s", str(self))
                 else:
                     # if the platform does not exist in the database, raise an error. Else is unnecessary.
-                    module_logger.error(
+                    self.logger.error(
                         "Platform '%s' does not exist in the database.", self.name)
                     raise ValueError(
                         f"""Platform '{self.name}' does not exist in the database.""")
