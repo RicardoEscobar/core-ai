@@ -176,11 +176,8 @@ class Platform:
 
                 connection.commit()
 
-                module_logger.debug("Number of rows=%s", cursor.rowcount)
-                module_logger.debug("cursor=%s", cursor)
                 # Fetch all the rows
                 for row in cursor:
-                    print('Inside row loop')
                     module_logger.debug("->>row=%s", row)
 
                     # set the _id of the object
