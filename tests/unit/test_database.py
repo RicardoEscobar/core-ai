@@ -1,13 +1,17 @@
+"""
+This module contains the unit tests for the database module.
+"""
 import os
 import unittest
-from unittest.mock import patch, Mock, mock_open
-import model.database
-from model.database import Database
+from unittest.mock import patch, mock_open
 from dotenv import load_dotenv
 import psycopg
+from model.database import Database
 
 
 class TestDatabase(unittest.TestCase):
+    """This class contains the unit tests for the database module."""
+
     @classmethod
     def setUpClass(cls):
         # load the environment variables
@@ -67,6 +71,10 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(result, [(1,)])
         mock_file.assert_called_once_with(
             'databases/core_ai/tables/user_platform.sql', 'r', encoding='utf-8')
+
+    def test_create_user_schema(self):
+        """Test the create_user_schema method"""
+        self.db.create_user_schema()
 
 
 if __name__ == '__main__':

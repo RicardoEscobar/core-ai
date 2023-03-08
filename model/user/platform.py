@@ -4,8 +4,8 @@ This data model is used to store the platform information of the user.
 
 import logging
 from dataclasses import dataclass
-import psycopg
 from typing import List, Tuple, Union
+import psycopg
 from controller.create_logger import create_logger
 
 
@@ -21,6 +21,7 @@ class Platform:
     """
     This data model is used to store the `"user".platform` row data.
     """
+    # class variables
     name: str
     description: str = None
     _id: int = None
@@ -33,21 +34,21 @@ class Platform:
 
     # setting the values
     @id.setter
-    def id(self, id):
-        self._id = id
+    def id(self, property_id):
+        self._id = property_id
 
     # deleting the values
     @id.deleter
     def id(self):
         del self._id
 
-    def __init__(self, name: str, description: str = None, id: int = None):
+    def __init__(self, name: str, description: str = None, property_id: int = None):
         self.logger = logging.getLogger('model.user.platform.Platform')
         self.name = name
         self.description = description
-        self.id = id
+        self.id = property_id
         self.logger.info(
-            'Creating an instance of Platform(name=%s, description=%s, id=%s)', repr(name), repr(description), id)
+            'Creating an instance of Platform(name=%s, description=%s, id=%s)', repr(name), repr(description), property_id)
 
     def __repr__(self):
         return f"Platform(_id={self._id}, name={self.name!r}, description={self.description!r})"
@@ -63,18 +64,26 @@ class Platform:
             # Open a cursor to perform database operations
             with connection.cursor() as cursor:
                 query = f"""SELECT * FROM {Platform.table_name} WHERE name = $${self.name}$$;"""
+                self.logger.debug(
+                    "Loading '%s' id from the database.", self.name)
                 cursor.execute(query)
                 first_row = cursor.fetchone()
+                self.logger.debug("Loaded database row = %s", first_row)
 
                 # set the _id of the object
                 if first_row:
                     self.id = first_row[0]
                     self.name = first_row[1]
                     self.description = first_row[2]
+                    self.logger.info(
+                        "Loaded Platform(id=%s, name=%s, description=%s)", self.id, repr(self.name), repr(self.description))
                     return first_row[0]
-                else:
-                    raise ValueError(
-                        f"""Platform '{self.name}' does not exist in the database. Please use save the platform first.""")
+
+                # if the platform does not exist in the database, raise an error. Else is unnecessary.
+                self.logger.error(
+                    "Platform '%s' does not exist in the database.", self.name)
+                raise ValueError(
+                    f"""Platform '{self.name}' does not exist in the database. Please use save the platform first.""")
 
     def save(self, connection: psycopg.connection = None) -> None:
         """
@@ -90,7 +99,10 @@ class Platform:
                 first_row = cursor.fetchone()
 
                 # set the _id of the object
-                self._id = first_row[0]
+                self.id = first_row[0]
+                self.name = first_row[1]
+                self.description = first_row[2]
+                self.logger.debug("Saved database row = %s", str(self))
 
     def delete(self, connection: psycopg.connection = None) -> None:
         """
@@ -105,8 +117,12 @@ class Platform:
                 first_row = cursor.fetchone()
 
                 if first_row:
+                    self.logger.debug("Deleted database row = %s", str(self))
                     self.id = None
                 else:
+                    # if the platform does not exist in the database, raise an error. Else is unnecessary.
+                    self.logger.error(
+                        "Platform '%s' does not exist in the database.", self.name)
                     raise ValueError(
                         f"""Platform '{self.name}' does not exist in the database.""")
 
@@ -124,7 +140,13 @@ class Platform:
 
                 if first_row:
                     self.id = first_row[0]
+                    self.name = first_row[1]
+                    self.description = first_row[2]
+                    self.logger.debug("Updated database row = %s", str(self))
                 else:
+                    # if the platform does not exist in the database, raise an error. Else is unnecessary.
+                    self.logger.error(
+                        "Platform '%s' does not exist in the database.", self.name)
                     raise ValueError(
                         f"""Platform '{self.name}' does not exist in the database.""")
 
@@ -156,8 +178,8 @@ class Platform:
 
                 # Fetch all the rows
                 for row in cursor:
-                    # module_logger.debug("row=%s", row)
+                    module_logger.debug("->>row=%s", row)
+
+                    # set the _id of the object
                     platforms[params_seq.index(row[1:])].id = row[0]
-                    module_logger.debug(
-                        "row=%s", platforms[params_seq.index(row[1:])])
                     cursor.nextset()
