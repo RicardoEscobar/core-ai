@@ -15,11 +15,12 @@ import tiktoken
 
 def num_tokens_from_messages(messages: List[Dict[str, Any]], model: str = "gpt-3.5-turbo-0301") -> int:
     """Returns the number of tokens used by a list of messages."""
+    supported_models = ["gpt-3.5-turbo-0301", "gpt-3.5-turbo"]
     try:
         encoding = tiktoken.encoding_for_model(model)
     except KeyError:
         encoding = tiktoken.get_encoding("cl100k_base")
-    if model == "gpt-3.5-turbo-0301":
+    if model in supported_models:
         num_tokens = 0
         for message in messages:
             # every message follows <im_start>{role/name}\n{content}<im_end>\n
@@ -39,15 +40,16 @@ def num_tokens_from_messages(messages: List[Dict[str, Any]], model: str = "gpt-3
 if __name__ == "__main__":
     # example usage
     messages_dict = [
-        {
-            "role": "user",
-            "name": "John Doe",
-            "content": "Hello, how are you?",
-        },
-        {
-            "role": "assistant",
-            "name": "Jane Doe",
-            "content": "I'm fine, thank you.",
-        },
+        {"role": "system", "content": "You are a helpful, pattern-following assistant that translates corporate jargon into plain English."},
+        {"role": "system", "name": "example_user",
+            "content": "New synergies will help drive top-line growth."},
+        {"role": "system", "name": "example_assistant",
+            "content": "Things working well together will increase revenue."},
+        {"role": "system", "name": "example_user",
+            "content": "Let's circle back when we have more bandwidth to touch base on opportunities for increased leverage."},
+        {"role": "system", "name": "example_assistant",
+            "content": "Let's talk later when we're less busy about how to do better."},
+        {"role": "user", "content": "This late pivot means we don't have time to boil the ocean for the client deliverable."},
     ]
     print(num_tokens_from_messages(messages_dict))
+    print(num_tokens_from_messages(messages_dict, model="gpt-3.5-turbo"))
