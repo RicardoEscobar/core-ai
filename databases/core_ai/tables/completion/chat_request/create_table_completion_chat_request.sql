@@ -13,6 +13,6 @@ CREATE TABLE IF NOT EXISTS completion.chat_request
     frequency_penalty numeric(3, 2) DEFAULT 0,
     logit_bias jsonb,
     "user" text,
-    created_at timestamp with time zone DEFAULT now() AT TIME ZONE 'UTC',
+    created_at timestamp DEFAULT timezone('UTC'::text, now()),
     user_id serial
 );
