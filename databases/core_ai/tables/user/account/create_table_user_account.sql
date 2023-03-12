@@ -27,6 +27,6 @@ CREATE TABLE IF NOT EXISTS "user".account
 (
     id serial PRIMARY KEY,
     name text NOT NULL,
-    platform_id smallserial NOT NULL
-    CONSTRAINT UNIQUE (name, platform_id)
+    platform_id smallserial NOT NULL,
+    CONSTRAINT account_name_platform_id_key UNIQUE (name, platform_id)
 );
