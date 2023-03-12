@@ -7,11 +7,11 @@ DROP TABLE IF EXISTS "user".account;
 
 CREATE TABLE IF NOT EXISTS "user".account
 (
-    id bigserial NOT NULL DEFAULT nextval('"user".account_id_seq'::regclass),
+    id bigserial NOT NULL,
     name text COLLATE pg_catalog."default" NOT NULL,
     platform_id bigint NOT NULL,
-    CONSTRAINT account_pkey PRIMARY KEY (id),
-    CONSTRAINT account_name_platform_id_key UNIQUE (name, platform_id)
+    PRIMARY KEY (id),
+    CONSTRAINT UNIQUE (name, platform_id)
 );
 
 COMMENT ON TABLE "user".account
@@ -28,9 +28,9 @@ DROP TABLE IF EXISTS "user".platform;
 
 CREATE TABLE IF NOT EXISTS "user".platform
 (
-    id bigserial NOT NULL DEFAULT nextval('"user".platform_id_seq'::regclass),
-    name text COLLATE pg_catalog."default" NOT NULL,
-    description text COLLATE pg_catalog."default",
+    id bigserial NOT NULL,
+    name text NOT NULL,
+    description text ,
     PRIMARY KEY (id)
 );
 
