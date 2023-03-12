@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS "user".account;
+DROP TABLE IF EXISTS "user".account CASCADE;

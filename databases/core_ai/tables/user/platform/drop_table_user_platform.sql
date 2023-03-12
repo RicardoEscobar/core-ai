@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS "user".platform;
+DROP TABLE IF EXISTS "user".platform CASCADE;

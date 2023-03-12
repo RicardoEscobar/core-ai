@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS completion.role;
+DROP TABLE IF EXISTS completion.role CASCADE;

@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS completion.chat_request;
+DROP TABLE IF EXISTS completion.chat_request CASCADE;

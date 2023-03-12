@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS persona.persona;
+DROP TABLE IF EXISTS persona.persona CASCADE;

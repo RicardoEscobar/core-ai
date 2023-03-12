@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS completion.content;
+DROP TABLE IF EXISTS completion.content CASCADE;
