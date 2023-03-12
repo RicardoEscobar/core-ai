@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS completion.chat_request;
