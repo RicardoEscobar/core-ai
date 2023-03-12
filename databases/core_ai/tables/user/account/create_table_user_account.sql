@@ -17,6 +17,10 @@ The name column is used to identify the user account on the platform the user is
 The name column is a unique identifier representing the end-user account on a given platform, which can help OpenAI to monitor and detect abuse.
 
 The combination of the name and platform_id columns is unique.
+
+id: The unique identifier for the user account.
+name: The name of the user account.
+platform_id: The unique identifier for the platform the user account belongs to.
 */
 
 CREATE TABLE IF NOT EXISTS "user".account
