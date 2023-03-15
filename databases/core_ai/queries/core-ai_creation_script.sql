@@ -1,4 +1,5 @@
 -- user schema
+-- 2023-03-14 18:23:06
 
 DROP TABLE IF EXISTS "user".platform;
 
