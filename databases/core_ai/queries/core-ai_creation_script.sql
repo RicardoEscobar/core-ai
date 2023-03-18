@@ -1,7 +1,6 @@
 -- user schema
--- 2023-03-14 18:23:06
 
-DROP TABLE IF EXISTS "user".platform;
+DROP TABLE IF EXISTS "user".platform CASCADE;
 
 CREATE TABLE IF NOT EXISTS "user".platform
 (
@@ -24,7 +23,7 @@ COMMENT ON COLUMN "user".platform.description
 Optional
 Description of the platform.';
 
-DROP TABLE IF EXISTS "user".account;
+DROP TABLE IF EXISTS "user".account CASCADE;
 
 CREATE TABLE IF NOT EXISTS "user".account
 (
@@ -44,7 +43,7 @@ A unique identifier representing your end-user account on a given platform, whic
 Learn more.
 https://platform.openai.com/docs/guides/safety-best-practices/end-user-ids';
 
-DROP TABLE IF EXISTS "user"."user";
+DROP TABLE IF EXISTS "user"."user" CASCADE;
 
 CREATE TABLE IF NOT EXISTS "user"."user"
 (
@@ -65,7 +64,7 @@ A unique identifier representing your end-user, which can help OpenAI to monitor
 Learn more.
 https://platform.openai.com/docs/guides/safety-best-practices/end-user-ids';
 
-DROP TABLE IF EXISTS "user".user_account;
+DROP TABLE IF EXISTS "user".user_account CASCADE;
 
 CREATE TABLE IF NOT EXISTS "user".user_account
 (
@@ -76,7 +75,7 @@ CREATE TABLE IF NOT EXISTS "user".user_account
 
 -- Completion schema
 
-DROP TABLE IF EXISTS completion.chat_request;
+DROP TABLE IF EXISTS completion.chat_request CASCADE;
 
 CREATE TABLE IF NOT EXISTS completion.chat_request
 (
@@ -180,7 +179,7 @@ Optional
 A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse. Learn more.
 https://platform.openai.com/docs/guides/safety-best-practices/end-user-ids';
 
-DROP TABLE IF EXISTS completion.role;
+DROP TABLE IF EXISTS completion.role CASCADE;
 
 CREATE TABLE IF NOT EXISTS completion.role
 (
@@ -193,7 +192,7 @@ COMMENT ON TABLE completion.role
 
 This table stores those roles.';
 
-DROP TABLE IF EXISTS completion.content;
+DROP TABLE IF EXISTS completion.content CASCADE;
 
 CREATE TABLE IF NOT EXISTS completion.content
 (
@@ -210,7 +209,7 @@ COMMENT ON TABLE completion.content
 
 -- persona schema
 
-DROP TABLE IF EXISTS persona.persona;
+DROP TABLE IF EXISTS persona.persona CASCADE;
 
 CREATE TABLE IF NOT EXISTS persona.persona
 (
