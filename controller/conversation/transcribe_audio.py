@@ -9,6 +9,6 @@ load_dotenv()
 # Set the OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-audio_file= open("recording.wav", "rb")
+audio_file= open("output.wav", "rb")
 transcript = openai.Audio.transcribe("whisper-1", audio_file)
-print(transcript)
+print(f"Texto: {transcript['text']}")
