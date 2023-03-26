@@ -21,7 +21,7 @@ VOICE_NAME = {
     'Camila' : 'es-PE-CamilaNeural',
     'Elena' : 'es-AR-ElenaNeural',
 }
-SELECTED_VOICE = 'Nuria'
+SELECTED_VOICE = 'Larissa'
 
 # This example requires environment variables named "SPEECH_KEY" and "SPEECH_REGION"
 speech_config = speechsdk.SpeechConfig(subscription=SPEECH_KEY, region=SPEECH_REGION)
