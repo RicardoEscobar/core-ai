@@ -1,69 +1,62 @@
 """
-This module records audio from the default microphone and saves it to a WAV file.
+This script records audio from the default input device and saves it to a WAV file named "output.wav".
 """
-import sounddevice as sd
-import soundfile as sf
-import numpy as np
+import wave
+import pyaudio
+from typing import List
 
-# Set the audio file parameters
-FILENAME = "recording_open_mic.wav"
-SAMPLERATE = 16000
-CHANNELS = 1
-SUBTYPE = "PCM_16"
-DURATION = 5  # in seconds
-THRESHOLD = 0  # Amplitude threshold for detecting speech
 
-def record_voice():
-    """
-    Detects if the user is talking (open mic) and records the audio into a wave file.
+
+
+def record_voice() -> List[bytes]:
+    """It uses the pyaudio library to access the audio device and record the audio. The stream object is created using pyaudio.open(), which takes in parameters such as the audio format, number of channels, sampling rate, and frames per buffer. In this case, it's set to record 16-bit integer audio samples at a sampling rate of 44.1kHz with a buffer size of 1024 frames.
     
-    If the user is talking, the function will record the audio until he or she stops talking then save it to a wave file.
-
-    There is no specified duration for the recording. Keep recording until the user stops talking.
+    returns:
+        frames: List[bytes]
     """
 
-    print("Recording started. Speak into the microphone...")
+    audio = pyaudio.PyAudio()
+    stream = audio.open(
+        format=pyaudio.paInt16,
+        channels=1, rate=44100,
+        input=True,
+        frames_per_buffer=1024
+    )
+
     frames = []
-    while True:
-        # Record audio for `duration` seconds
-        recording = sd.rec(int(SAMPLERATE * DURATION), samplerate=SAMPLERATE, channels=CHANNELS)
-        sd.wait()
 
-        # Append new recording to list of frames
-        frames.append(recording)
+    # The script then enters a loop that reads the audio data from the input stream in chunks of 1024 frames and appends them to the frames list. This loop will continue indefinitely until the user interrupts it with a keyboard interrupt (Ctrl+C).
+    try:
+        while True:
+            data = stream.read(1024)
+            frames.append(data)
+    except KeyboardInterrupt:
+        pass
 
-        # Convert list of frames to numpy array and normalize
-        audio = np.concatenate(frames, axis=0)
-        audio /= np.max(np.abs(audio))
+    # Once the user interrupts the loop, the input stream is stopped, closed, and the audio object is terminated to release the resources used by the library.
 
-        # Detect if the user is speaking
-        if np.max(audio) > THRESHOLD:
-            print("User is speaking...")
-        else:
-            print("User stopped speaking.")
+    stream.stop_stream()
+    stream.close()
+    audio.terminate()
 
-            # Save audio to file and reset list of frames
-            sf.write(FILENAME, audio, SAMPLERATE)
-            frames = []
+    return frames
 
-
-
-    
-def record_voice_duration(duration: int = 5):
-    # Record audio from the default microphone
-    print(f"Recording {duration} seconds of audio...")
-    recording = sd.rec(int(duration * SAMPLERATE), samplerate=SAMPLERATE, channels=CHANNELS)
-    sd.wait()
-
-    # Save the recording to a WAV file
-    print(f"Saving recording to {FILENAME}...")
-    sf.write(FILENAME, recording, SAMPLERATE, subtype=SUBTYPE)
-
-    print("Done!")
+def save_wav_file(filename: str = "output.wav", audio: pyaudio.PyAudio = None, frames: List = None):
+    """
+    Finally, the script creates a WAV file using the wave library and writes the recorded audio data to it. The WAV file is configured with the same audio format, channel count, and sampling rate as the input stream. The frames list is joined into a single byte string and written to the WAV file using the writeframes() method. Finally, the WAV file is closed.
+    """
+    sound_file = wave.open(filename, "wb")
+    sound_file.setnchannels(1)
+    sound_file.setsampwidth(audio.get_sample_size(pyaudio.paInt16))
+    sound_file.setframerate(44100)
+    sound_file.writeframes(b"".join(frames))
+    sound_file.close()
 
 def main():
-    # record_voice_duration(DURATION)
-    record_voice()
+    frames = record_voice()
+    save_wav_file(frames=frames, audio=pyaudio.PyAudio())
+
+
 
 if __name__ == "__main__":
     main()
