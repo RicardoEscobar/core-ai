@@ -60,7 +60,7 @@ def main():
 
         # Step 4: Convert the response to audio and play it back to the user.
         # Constants for speech synthesis configuration
-        SELECTED_VOICE = 'Marina'
+        SELECTED_VOICE = 'Tania'
 
         # Get a speech synthesizer
         speech_synthesizer = get_speech_synthesizer(SELECTED_VOICE)
