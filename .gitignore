@@ -329,3 +329,6 @@ logs/
 
 # git-sim
 git-sim_media/
+
+# Conversations
+controller/conversation/conversations
