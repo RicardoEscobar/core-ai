@@ -17,6 +17,7 @@ from controller.conversation.completion_create import get_answer
 from controller.conversation.completion_create import save_conversation
 from controller.conversation.conversations.tsundere_ai_conversation import SYSTEM
 from controller.conversation.conversations.tsundere_ai_conversation import MESSAGES
+from controller.conversation.conversations.tsundere_ai_conversation import SELECTED_VOICE
 from controller.conversation.load_openai import load_openai
 
 
@@ -63,9 +64,6 @@ def main():
         save_conversation(MESSAGES, SYSTEM, str(conversation_path))
 
         # Step 4: Convert the response to audio and play it back to the user.
-        # Constants for speech synthesis configuration
-        SELECTED_VOICE = 'Tania'
-
         # Get a speech synthesizer
         speech_synthesizer = get_speech_synthesizer(SELECTED_VOICE)
 
