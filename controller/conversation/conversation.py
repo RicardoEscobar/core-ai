@@ -58,6 +58,10 @@ def main():
         MESSAGES.append(generate_message("assistant", response))
         print(f'\nAssistant: {response}')
 
+        # Save the MESSAGES list to the tsundere_ai_conversation.py file.
+        conversation_path = Path(__file__).parent / "conversations" / "tsundere_ai_conversation.py"
+        save_conversation(MESSAGES, SYSTEM, str(conversation_path))
+
         # Step 4: Convert the response to audio and play it back to the user.
         # Constants for speech synthesis configuration
         SELECTED_VOICE = 'Tania'
@@ -71,10 +75,6 @@ def main():
         # If the transcribed_prompt contains "bye." then break out of the loop
         if transcribed_prompt.lower().find("bye.") != -1:
             break
-
-    # Save the MESSAGES list to the tsundere_ai_conversation.py file.
-    conversation_path = Path(__file__).parent / "conversations" / "tsundere_ai_conversation.py"
-    save_conversation(MESSAGES, SYSTEM, str(conversation_path))
 
 if __name__ == '__main__':
     main()
