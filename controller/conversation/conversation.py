@@ -59,9 +59,9 @@ def main():
         MESSAGES.append(generate_message("assistant", response))
         print(f'\nAssistant: {response}')
 
-        # Save the MESSAGES list to the tsundere_ai_conversation.py file.
+        # Save the MESSAGES list to the conversation file.
         conversation_path = Path(__file__).parent / "conversations" / "overwatch_ai_conversation.py"
-        save_conversation(MESSAGES, SYSTEM, str(conversation_path))
+        save_conversation(MESSAGES, SYSTEM, str(conversation_path), SELECTED_VOICE)
 
         # Step 4: Convert the response to audio and play it back to the user.
         # Get a speech synthesizer
