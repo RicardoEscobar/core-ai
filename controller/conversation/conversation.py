@@ -50,7 +50,7 @@ def main():
         transcribed_prompt = transcribe_audio.transcribe(audio_file_path)
         print(f"Transcribed prompt: {transcribed_prompt}")
 
-        # Step 3: Prompt OpenAI's GPT-3.5-Turbo API to generate a response.    
+        # Step 3: Prompt OpenAI's GPT-3.5-Turbo API to generate a response.
         # Save the user input to the messages list
         MESSAGES.append(generate_message("user", transcribed_prompt))
 
