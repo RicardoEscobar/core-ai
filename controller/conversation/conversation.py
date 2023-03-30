@@ -15,9 +15,10 @@ from controller.conversation.speech_synthesis import speak_text
 from controller.conversation.completion_create import generate_message
 from controller.conversation.completion_create import get_answer
 from controller.conversation.completion_create import save_conversation
-from controller.conversation.conversations.overwatch_ai_conversation import SYSTEM
-from controller.conversation.conversations.overwatch_ai_conversation import MESSAGES
-from controller.conversation.conversations.overwatch_ai_conversation import SELECTED_VOICE
+from controller.conversation.conversations.paraphrase_ai_conversation import SYSTEM
+from controller.conversation.conversations.paraphrase_ai_conversation import MESSAGES
+from controller.conversation.conversations.paraphrase_ai_conversation import SELECTED_VOICE
+from controller.conversation.conversations.paraphrase_ai_conversation import CONVERSATION_FILE_PATH
 from controller.conversation.load_openai import load_openai
 
 
@@ -60,7 +61,7 @@ def main():
         print(f'\nAssistant: {response}')
 
         # Save the MESSAGES list to the conversation file.
-        conversation_path = Path(__file__).parent / "conversations" / "overwatch_ai_conversation.py"
+        conversation_path = Path(__file__).parent / "conversations" / CONVERSATION_FILE_PATH
         save_conversation(MESSAGES, SYSTEM, str(conversation_path), SELECTED_VOICE)
 
         # Step 4: Convert the response to audio and play it back to the user.

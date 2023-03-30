@@ -28,9 +28,14 @@ def get_answer(messages: List = None) -> str:
     )
     return answer
 
-def save_conversation(conversation: List, system: str, conversation_path: str, selected_voice: str = 'Salome'):
+def save_conversation(conversation: List, system: str, conversation_path: str, selected_voice: str = 'Salome', ):
+    # Get conversation file name from the conversation_path.
+    conversation_file_name = Path(conversation_path).name
+
+    # Save the conversation to the conversation file.
     with open(Path(conversation_path), mode="w", encoding='utf-8') as file:
-        file.write(f'SELECTED_VOICE = """{system}"""\n')
+        file.write(f'CONVERSATION_FILE_PATH = """{conversation_file_name}"""\n')
+        file.write(f'SELECTED_VOICE = """{selected_voice}"""\n')
         file.write(f'SYSTEM = """{system}"""\n')
         file.write(f'MESSAGES = {conversation}\n')
 
