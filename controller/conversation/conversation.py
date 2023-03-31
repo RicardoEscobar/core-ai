@@ -95,21 +95,8 @@ def dubbing(selected_voice: str = "Juan"):
         # Step 2: Convert the audio to text.
         transcribed_prompt = transcribe_audio.transcribe(audio_file_path)
         print(f"Transcribed prompt: {transcribed_prompt}")
-
-        # Step 3: Prompt OpenAI's GPT-3.5-Turbo API to generate a response.
-        # Save the user input to the messages list
-        # MESSAGES.append(generate_message("user", transcribed_prompt))
-
-        # Save the response to the messages list
-        # response = get_answer(MESSAGES)['choices'][0]['message']['content']
-        # MESSAGES.append(generate_message("assistant", response))
-        # print(f'\nAssistant: {response}')
-
-        # Save the MESSAGES list to the conversation file.
-        # conversation_path = Path(__file__).parent / "conversations" / CONVERSATION_FILE_PATH
-        # save_conversation(MESSAGES, SYSTEM, str(conversation_path), SELECTED_VOICE)
-
-        # Step 4: Convert the response to audio and play it back to the user.
+        
+        # Step 3: Convert the response to audio and play it back to the user.
         # Get a speech synthesizer
         speech_synthesizer = get_speech_synthesizer(selected_voice)
 
