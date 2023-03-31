@@ -9,16 +9,16 @@ from datetime import datetime
 import openai
 from controller.conversation import detect_audio
 from controller.conversation import transcribe_audio
-from controller.conversation import speech_synthesis
 from controller.conversation.speech_synthesis import get_speech_synthesizer
 from controller.conversation.speech_synthesis import speak_text
 from controller.conversation.completion_create import generate_message
 from controller.conversation.completion_create import get_answer
 from controller.conversation.completion_create import save_conversation
-from controller.conversation.conversations.podcaster_ai_conversation import SYSTEM
-from controller.conversation.conversations.podcaster_ai_conversation import MESSAGES
-from controller.conversation.conversations.podcaster_ai_conversation import SELECTED_VOICE
-from controller.conversation.conversations.podcaster_ai_conversation import CONVERSATION_FILE_PATH
+from controller.conversation.conversations.german_overwatch_ai_conversation import SYSTEM
+from controller.conversation.conversations.german_overwatch_ai_conversation import MESSAGES
+from controller.conversation.conversations.german_overwatch_ai_conversation import SELECTED_VOICE
+from controller.conversation.conversations.german_overwatch_ai_conversation import CONVERSATION_FILE_PATH
+from controller.conversation.conversations.german_overwatch_ai_conversation import TARGET_LANGUAGE
 from controller.conversation.load_openai import load_openai
 
 
@@ -64,7 +64,7 @@ def translator(selected_voice: str = "Jenny", target_language: str = "English"):
 
         # Save the MESSAGES list to the conversation file.
         conversation_path = Path(__file__).parent / "conversations" / CONVERSATION_FILE_PATH
-        save_conversation(MESSAGES, SYSTEM, str(conversation_path), selected_voice)
+        save_conversation(MESSAGES, SYSTEM, str(conversation_path), selected_voice, target_language=target_language)
 
         # Step 4: Convert the response to audio and play it back to the user.
         # Get a speech synthesizer
@@ -150,7 +150,7 @@ def dubbing(selected_voice: str = "Juan"):
             break
 
 def main():
-    conversation(selected_voice=SELECTED_VOICE)
+    translator(selected_voice=SELECTED_VOICE, target_language=TARGET_LANGUAGE)
 
 if __name__ == '__main__':
     main()
