@@ -14,6 +14,11 @@ def transcribe(audio_file_path: str) -> str:
     transcript = openai.Audio.transcribe("whisper-1", audio_file)
     return transcript['text']
 
+def translate(audio_file_path: str) -> str:
+    audio_file= open(audio_file_path, "rb")
+    transcript = openai.Audio.translate("whisper-1", audio_file)
+    return transcript['text']
+
 def main():
     transcribe("prompt.wav")
 
