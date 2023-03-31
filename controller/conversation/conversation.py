@@ -35,7 +35,7 @@ def generate_audio_file_path() -> Path:
     return audio_file_path
 
 
-def conversation():
+def conversation(selected_voice: str = "Juan"):
     # Loop until the user says "bye"
     while True:
         # Load the OpenAI API key
@@ -62,11 +62,11 @@ def conversation():
 
         # Save the MESSAGES list to the conversation file.
         conversation_path = Path(__file__).parent / "conversations" / CONVERSATION_FILE_PATH
-        save_conversation(MESSAGES, SYSTEM, str(conversation_path), SELECTED_VOICE)
+        save_conversation(MESSAGES, SYSTEM, str(conversation_path), selected_voice)
 
         # Step 4: Convert the response to audio and play it back to the user.
         # Get a speech synthesizer
-        speech_synthesizer = get_speech_synthesizer(SELECTED_VOICE)
+        speech_synthesizer = get_speech_synthesizer(selected_voice)
 
         # Speak the text
         speak_text(speech_synthesizer, response)
@@ -95,7 +95,7 @@ def dubbing(selected_voice: str = "Juan"):
         # Step 2: Convert the audio to text.
         transcribed_prompt = transcribe_audio.transcribe(audio_file_path)
         print(f"Transcribed prompt: {transcribed_prompt}")
-        
+
         # Step 3: Convert the response to audio and play it back to the user.
         # Get a speech synthesizer
         speech_synthesizer = get_speech_synthesizer(selected_voice)
@@ -108,7 +108,7 @@ def dubbing(selected_voice: str = "Juan"):
             break
 
 def main():
-    dubbing(selected_voice='Tania')
+    dubbing(selected_voice=SELECTED_VOICE)
 
 if __name__ == '__main__':
     main()
