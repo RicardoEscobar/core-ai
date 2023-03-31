@@ -26,6 +26,8 @@ def get_speech_synthesizer(selected_voice: str = 'Larissa') -> speechsdk.SpeechS
         'Tania' : 'es-PY-TaniaNeural',
         'Salome' : 'es-CO-SalomeNeural',
         'Juan' : 'es-CR-JuanNeural',
+        'Bernd' : 'de-DE-BerndNeural',
+        'Gisela' : 'de-DE-GiselaNeural',
     }
 
     # This example requires environment variables named "SPEECH_KEY" and "SPEECH_REGION"
