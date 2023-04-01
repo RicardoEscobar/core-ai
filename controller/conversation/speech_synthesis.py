@@ -2,8 +2,15 @@ import os
 import azure.cognitiveservices.speech as speechsdk
 from dotenv import load_dotenv
 
-def get_speech_synthesizer(selected_voice: str = 'Larissa') -> speechsdk.SpeechSynthesizer:
+def get_speech_synthesizer(
+        selected_voice: str = 'Larissa',
+        filename: str = None,
+        ) -> speechsdk.SpeechSynthesizer:
     """Get a speech synthesizer.
+
+    Args:
+        selected_voice (str, optional): The voice to use. Defaults to 'Larissa'.
+        filename (str, optional): The file to save the audio to. Defaults to None.
     
     Returns:
         speechsdk.SpeechSynthesizer: A speech synthesizer.
@@ -32,9 +39,9 @@ def get_speech_synthesizer(selected_voice: str = 'Larissa') -> speechsdk.SpeechS
     }
 
     # This example requires environment variables named "SPEECH_KEY" and "SPEECH_REGION"
-    speech_config = speechsdk.SpeechConfig(subscription=SPEECH_KEY, region=SPEECH_REGION)
-    audio_config = speechsdk.audio.AudioOutputConfig(use_default_speaker=True)
-
+    speech_config = speechsdk.SpeechConfig(subscription=SPEECH_KEY, region=SPEECH_REGION)    
+    audio_config = speechsdk.audio.AudioOutputConfig(use_default_speaker=False, filename=filename)
+    
     # The language of the voice that speaks.
     speech_config.speech_synthesis_voice_name=VOICE_NAME[selected_voice]
 
@@ -51,7 +58,7 @@ def speak_text(speech_synthesizer: speechsdk.SpeechSynthesizer, text: str):
     speech_synthesis_result = speech_synthesizer.speak_text_async(text).get()
 
     if speech_synthesis_result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-        print(f"Speech synthesized for text [{text}]")
+        print(f"Assistant: {text}")
     elif speech_synthesis_result.reason == speechsdk.ResultReason.Canceled:
         cancellation_details = speech_synthesis_result.cancellation_details
         print(f"Speech synthesis canceled: {cancellation_details.reason}")
