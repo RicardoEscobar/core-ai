@@ -14,15 +14,15 @@ from controller.conversation.speech_synthesis import speak_text
 from controller.conversation.completion_create import generate_message
 from controller.conversation.completion_create import get_answer
 from controller.conversation.completion_create import save_conversation
-from controller.conversation.conversations.german_overwatch_ai_conversation import SYSTEM
-from controller.conversation.conversations.german_overwatch_ai_conversation import MESSAGES
-from controller.conversation.conversations.german_overwatch_ai_conversation import SELECTED_VOICE
-from controller.conversation.conversations.german_overwatch_ai_conversation import CONVERSATION_FILE_PATH
-from controller.conversation.conversations.german_overwatch_ai_conversation import TARGET_LANGUAGE
+from controller.conversation.conversations.podcaster_ai_conversation import SYSTEM
+from controller.conversation.conversations.podcaster_ai_conversation import MESSAGES
+from controller.conversation.conversations.podcaster_ai_conversation import SELECTED_VOICE
+from controller.conversation.conversations.podcaster_ai_conversation import CONVERSATION_FILE_PATH
+from controller.conversation.conversations.podcaster_ai_conversation import TARGET_LANGUAGE
 from controller.conversation.load_openai import load_openai
 
 
-def generate_audio_file_path() -> Path:
+def generate_audio_file_path(prefix: str = 'prompt') -> Path:
     """Generate a file path for the audio file.
 
     Returns:
@@ -31,7 +31,7 @@ def generate_audio_file_path() -> Path:
     # How to put the timestamp into a file name?
     # https://stackoverflow.com/questions/415511/how-to-get-current-time-in-python
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    audio_file_path = Path(__file__).parent / f"prompt_{timestamp}.wav"
+    audio_file_path = Path(__file__).parent / f"{prefix}_{timestamp}.wav"
     return audio_file_path
 
 def translator(selected_voice: str = "Jenny", target_language: str = "English"):
@@ -150,7 +150,7 @@ def dubbing(selected_voice: str = "Juan"):
             break
 
 def main():
-    translator(selected_voice=SELECTED_VOICE, target_language=TARGET_LANGUAGE)
+    conversation(selected_voice=SELECTED_VOICE)
 
 if __name__ == '__main__':
     main()
