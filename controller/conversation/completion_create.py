@@ -25,6 +25,8 @@ def get_answer(messages: List = None) -> str:
     answer = openai.ChatCompletion.create(
     model="gpt-3.5-turbo",
     messages=messages,
+    temperature=1.0,
+    max_tokens=200,
     )
     return answer
 
