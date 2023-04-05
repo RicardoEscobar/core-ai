@@ -36,6 +36,7 @@ def get_speech_synthesizer(
         'Bernd' : 'de-DE-BerndNeural',
         'Gisela' : 'de-DE-GiselaNeural',
         'Amala' : 'de-DE-AmalaNeural',
+        'Jorge' : 'es-MX-JorgeNeural',
     }
 
     # This example requires environment variables named "SPEECH_KEY" and "SPEECH_REGION"
