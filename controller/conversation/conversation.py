@@ -15,11 +15,11 @@ from controller.conversation.completion_create import generate_message
 from controller.conversation.completion_create import get_answer
 from controller.conversation.completion_create import save_conversation
 from controller.conversation.play_audio import play_audio
-from controller.conversation.conversations.podcaster_ai_conversation import SYSTEM
-from controller.conversation.conversations.podcaster_ai_conversation import MESSAGES
-from controller.conversation.conversations.podcaster_ai_conversation import SELECTED_VOICE
-from controller.conversation.conversations.podcaster_ai_conversation import CONVERSATION_FILE_PATH
-from controller.conversation.conversations.podcaster_ai_conversation import TARGET_LANGUAGE
+from controller.conversation.conversations.azure_conversation import SYSTEM
+from controller.conversation.conversations.azure_conversation import MESSAGES
+from controller.conversation.conversations.azure_conversation import SELECTED_VOICE
+from controller.conversation.conversations.azure_conversation import CONVERSATION_FILE_PATH
+from controller.conversation.conversations.azure_conversation import TARGET_LANGUAGE
 from controller.conversation.load_openai import load_openai
 
 
@@ -94,7 +94,7 @@ def conversation(selected_voice: str = "Juan"):
     load_openai()
 
     # Select an output path for the audio files: D:\podcaster-ai\MenteDoble\001-QueEsLaInteligenciaArtificial\
-    output_folder =  Path("D:") / "podcaster-ai" / "MenteDoble" / "001-QueEsLaInteligenciaArtificial"
+    output_folder =  Path("D:") / "podcaster-ai" / "MenteDoble" / "005-ExpartoEnMicrosoftAzure"
 
     # Create the output folder if it doesn't exist
     output_folder.mkdir(parents=True, exist_ok=True)
