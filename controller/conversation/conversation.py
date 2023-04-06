@@ -120,13 +120,13 @@ def conversation(selected_voice: str = persona["selected_voice"]):
         human_audio_file_path = str(generate_audio_file_path(output_folder, "JorgeEscobar_human"))
         
         # Step 1: Record audio from the microphone and save it to a file.
-        print("Wait in silence to begin recording; wait in silence to terminate")
+        print("Wait in silence to begin recording; wait in silence to terminate...\n")
         detect_audio.record_to_file(human_audio_file_path)
-        print(f"done - result written to {human_audio_file_path}")
+        print(f"done - result written to {human_audio_file_path}\n")
 
         # Step 2: Convert the audio to text.
         transcribed_prompt = transcribe_audio.transcribe(human_audio_file_path)
-        print(f"Transcribed prompt: {transcribed_prompt}")
+        print(f"Transcribed prompt: {transcribed_prompt}\n")
 
         # Step 3: Prompt OpenAI's GPT-3.5-Turbo API to generate a response.
         # Save the user input to the persona["messages"] list
@@ -187,7 +187,7 @@ def dubbing(selected_voice: str = "Juan"):
             break
 
 def main():
-    translator()
+    conversation()
 
 if __name__ == '__main__':
     main()
