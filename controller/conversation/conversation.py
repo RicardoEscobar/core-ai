@@ -108,11 +108,8 @@ def conversation(selected_voice: str = persona["selected_voice"]):
     # Load the OpenAI API key
     load_openai()
 
-    # Select an output path for the audio files.
-    output_folder = create_folder(persona["audio_output_path"])
-
     # Create the output folder if it doesn't exist
-    output_folder.mkdir(parents=True, exist_ok=True)
+    output_folder = create_folder(persona["audio_output_path"])
 
     # Loop until the user says "bye"
     while True:
@@ -126,7 +123,7 @@ def conversation(selected_voice: str = persona["selected_voice"]):
 
         # Step 2: Convert the audio to text.
         transcribed_prompt = transcribe_audio.transcribe(human_audio_file_path)
-        print(f"Transcribed prompt: {transcribed_prompt}\n")
+        print(f"\033[31mUser:\033[0m \033[33m{transcribed_prompt}\033[0m\n")
 
         # Step 3: Prompt OpenAI's GPT-3.5-Turbo API to generate a response.
         # Save the user input to the persona["messages"] list
