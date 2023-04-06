@@ -30,17 +30,14 @@ def get_answer(messages: List = None) -> str:
     )
     return answer
 
-def save_conversation(conversation: List, system: str, conversation_path: str, selected_voice: str = 'Amala', target_language: str = 'German'):
-    # Get conversation file name from the conversation_path.
-    conversation_file_name = Path(conversation_path).name
-
+def save_conversation(persona: Dict):
     # Save the conversation to the conversation file.
-    with open(Path(conversation_path), mode="w", encoding='utf-8') as file:
-        file.write(f'TARGET_LANGUAGE = """{target_language}"""\n')
-        file.write(f'CONVERSATION_FILE_PATH = """{conversation_file_name}"""\n')
-        file.write(f'SELECTED_VOICE = """{selected_voice}"""\n')
-        file.write(f'SYSTEM = """{system}"""\n')
-        file.write(f'MESSAGES = {conversation}\n')
+    with open(persona["conversation_file_path"], mode="w", encoding='utf-8') as file:
+        file.write('"""This is an example of a conversation that can be used by the podcaster_ai_controller.py script."""\n')
+        file.write(f"""from pathlib import Path, WindowsPath, PosixPath, PureWindowsPath, PurePosixPath, PurePath
+
+# This dictionary is used to save the conversation to a file.
+persona  = {repr(persona)}\n""")
 
 def main():
     # Loop until the user says "bye"
@@ -64,7 +61,7 @@ def main():
     
     # Save the MESSAGES list to the tsundere_ai_conversation.py file.
     conversation_path = Path(__file__).parent / "conversations" / "tsundere_ai_conversation.py"
-    save_conversation(MESSAGES, SYSTEM, str(conversation_path))
+    # save_conversation()
     
 
 if __name__ == "__main__":
