@@ -15,11 +15,7 @@ from controller.conversation.completion_create import generate_message
 from controller.conversation.completion_create import get_answer
 from controller.conversation.completion_create import save_conversation
 from controller.conversation.play_audio import play_audio
-from controller.conversation.conversations.azure_conversation import SYSTEM
-from controller.conversation.conversations.azure_conversation import MESSAGES
-from controller.conversation.conversations.azure_conversation import SELECTED_VOICE
-from controller.conversation.conversations.azure_conversation import CONVERSATION_FILE_PATH
-from controller.conversation.conversations.azure_conversation import TARGET_LANGUAGE
+from controller.conversation.conversations.conversation_example import persona
 from controller.conversation.load_openai import load_openai
 
 
@@ -66,17 +62,17 @@ def translator(selected_voice: str = "Jenny", target_language: str = "English"):
         print(f"Transcribed prompt: {transcribed_prompt}")
 
         # Step 3: Prompt OpenAI's GPT-3.5-Turbo API to generate a response.
-        # Save the user input to the messages list
-        MESSAGES.append(generate_message("user", transcribed_prompt))
+        # Save the user input to the persona["messages"] list
+        persona["messages"].append(generate_message("user", transcribed_prompt))
 
-        # Save the response to the messages list
-        response = get_answer(MESSAGES)['choices'][0]['message']['content']
-        MESSAGES.append(generate_message("assistant", response))
+        # Save the response to the persona["messages"] list
+        response = get_answer(persona["messages"])['choices'][0]['message']['content']
+        persona["messages"].append(generate_message("assistant", response))
         print(f'\nAssistant: {response}')
 
-        # Save the MESSAGES list to the conversation file.
-        conversation_path = Path(__file__).parent / "conversations" / CONVERSATION_FILE_PATH
-        save_conversation(MESSAGES, SYSTEM, str(conversation_path), selected_voice, target_language=target_language)
+        # Save the persona["messages"] list to the conversation file.
+        conversation_path = Path(__file__).parent / "conversations" / persona["conversation_file_path"]
+        save_conversation(persona["messages"], persona["system"], str(conversation_path), selected_voice, target_language=target_language)
 
         # Step 4: Convert the response to audio and play it back to the user.
         # Get a speech synthesizer
@@ -89,12 +85,12 @@ def translator(selected_voice: str = "Jenny", target_language: str = "English"):
         if transcribed_prompt.lower().find("bye.") != -1:
             break
 
-def conversation(selected_voice: str = "Juan"):
+def conversation(selected_voice: str = persona["selected_voice"]):
     # Load the OpenAI API key
     load_openai()
 
-    # Select an output path for the audio files: D:\podcaster-ai\MenteDoble\001-QueEsLaInteligenciaArtificial\
-    output_folder =  Path("D:") / "podcaster-ai" / "MenteDoble" / "005-ExpartoEnMicrosoftAzure"
+    # Select an output path for the audio files.
+    output_folder =  persona["audio_output_path"]
 
     # Create the output folder if it doesn't exist
     output_folder.mkdir(parents=True, exist_ok=True)
@@ -114,20 +110,19 @@ def conversation(selected_voice: str = "Juan"):
         print(f"Transcribed prompt: {transcribed_prompt}")
 
         # Step 3: Prompt OpenAI's GPT-3.5-Turbo API to generate a response.
-        # Save the user input to the messages list
-        MESSAGES.append(generate_message("user", transcribed_prompt))
+        # Save the user input to the persona["messages"] list
+        persona["messages"].append(generate_message("user", transcribed_prompt))
 
-        # Save the response to the messages list
-        response = get_answer(MESSAGES)['choices'][0]['message']['content']
-        MESSAGES.append(generate_message("assistant", response))
-
-        # Save the MESSAGES list to the conversation file.
-        conversation_path = Path(__file__).parent / "conversations" / CONVERSATION_FILE_PATH
-        save_conversation(MESSAGES, SYSTEM, str(conversation_path), selected_voice)
+        # Save the response to the persona["messages"] list
+        response = get_answer(persona["messages"])['choices'][0]['message']['content']
+        persona["messages"].append(generate_message("assistant", response))
+        
+        # If selected_voice is None, then use the default voice
+        save_conversation(persona)
 
         # Step 4: Convert the response to audio and play it back to the user.        
         # Generate the file path for the audio file
-        assistant_audio_file_path = str(generate_audio_file_path(output_folder, "Beatriz_AI"))
+        assistant_audio_file_path = str(generate_audio_file_path(output_folder, persona["name"]))
         
         # Get a speech synthesizer
         speech_synthesizer = get_speech_synthesizer(selected_voice, assistant_audio_file_path)
@@ -173,7 +168,7 @@ def dubbing(selected_voice: str = "Juan"):
             break
 
 def main():
-    conversation(selected_voice=SELECTED_VOICE)
+    conversation()
 
 if __name__ == '__main__':
     main()
