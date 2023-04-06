@@ -6,6 +6,7 @@ Finally, that response is converted to audio and played back to the user.
 """
 from pathlib import Path
 from datetime import datetime
+from typing import Dict, List
 import openai
 from controller.conversation import detect_audio
 from controller.conversation import transcribe_audio
@@ -18,6 +19,25 @@ from controller.conversation.play_audio import play_audio
 from controller.conversation.conversations.conversation_example import persona
 from controller.conversation.load_openai import load_openai
 
+
+def create_folder(folder_path: str = None) -> Path:
+    """Create a folder if it does not already exist.
+
+    Args:
+        folder_path (str): The path to the folder.
+
+    Returns:
+        Path: The path to the folder.
+    """
+    if folder_path is None:
+        folder_path = Path(__file__).parent / "conversations"
+    else:
+        folder_path = Path(folder_path)
+
+    if not folder_path.exists():
+        folder_path.mkdir(parents=True, exist_ok=True)
+    
+    return folder_path
 
 def generate_audio_file_path(output_path: str = None, name: str = 'prompt') -> Path:
     """Generate a file path for the audio file.
@@ -38,7 +58,6 @@ def generate_audio_file_path(output_path: str = None, name: str = 'prompt') -> P
         audio_file_path = Path(__file__).parent / f"{timestamp}_{name}.wav"
     else:
         audio_file_path = Path(output_path) / f"{timestamp}_{name}.wav"
-
 
     return audio_file_path
 
@@ -72,7 +91,7 @@ def translator(selected_voice: str = "Jenny", target_language: str = "English"):
 
         # Save the persona["messages"] list to the conversation file.
         conversation_path = Path(__file__).parent / "conversations" / persona["conversation_file_path"]
-        save_conversation(persona["messages"], persona["system"], str(conversation_path), selected_voice, target_language=target_language)
+        save_conversation(persona)
 
         # Step 4: Convert the response to audio and play it back to the user.
         # Get a speech synthesizer
@@ -90,7 +109,7 @@ def conversation(selected_voice: str = persona["selected_voice"]):
     load_openai()
 
     # Select an output path for the audio files.
-    output_folder =  persona["audio_output_path"]
+    output_folder = create_folder(persona["audio_output_path"])
 
     # Create the output folder if it doesn't exist
     output_folder.mkdir(parents=True, exist_ok=True)
@@ -168,7 +187,7 @@ def dubbing(selected_voice: str = "Juan"):
             break
 
 def main():
-    conversation()
+    translator()
 
 if __name__ == '__main__':
     main()
