@@ -5,6 +5,7 @@ import openai
 from controller.conversation.conversations.tsundere_ai_conversation import SYSTEM
 from controller.conversation.conversations.tsundere_ai_conversation import MESSAGES
 from controller.conversation.load_openai import load_openai
+from controller.tokenizer.num_tokens_from_messages import num_tokens_from_messages
 
 # Load the OpenAI API key
 load_openai()
@@ -22,12 +23,26 @@ def generate_message(role: str, content: str) -> Dict:
     return message
 
 def get_answer(messages: List = None) -> str:
-    answer = openai.ChatCompletion.create(
-    model="gpt-3.5-turbo",
-    messages=messages,
-    temperature=1.0,
-    max_tokens=200,
-    )
+    """
+    Get the answer from the OpenAI API.
+
+    Args:
+        messages (List): The messages to send to the OpenAI API.
+
+    Returns:
+        str: The answer from the OpenAI API.
+    """
+    try:
+        answer = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=messages,
+        temperature=1.0,
+        max_tokens=250,
+        )
+    except openai.error.InvalidRequestError as error:
+        print(f"Error: {error}")
+        return None
+    
     return answer
 
 def save_conversation(persona: Dict):
