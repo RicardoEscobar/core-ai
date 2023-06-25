@@ -8,19 +8,20 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List
 import openai
-from controller.conversation import detect_audio
-from controller.conversation import transcribe_audio
-from controller.conversation.speech_synthesis import get_speech_synthesizer
-from controller.conversation.speech_synthesis import speak_text
-from controller.conversation.completion_create import generate_message
-from controller.conversation.completion_create import get_answer
-from controller.conversation.completion_create import save_conversation
-from controller.conversation.play_audio import play_audio
-from controller.conversation.conversations.beta_conversation import persona
-from controller.conversation.load_openai import load_openai
+import detect_audio
+import transcribe_audio
+from speech_synthesis import get_speech_synthesizer
+from speech_synthesis import speak_text
+from completion_create import generate_message
+from completion_create import get_answer
+from completion_create import save_conversation
+from play_audio import play_audio
+from conversations.beta_conversation import persona
+from load_openai import load_openai
 
 
-def create_folder(folder_path: str = None) -> Path:
+
+def create_folder(folder_path: str = ".") -> Path:
     """Create a folder if it does not already exist.
 
     Args:
@@ -29,17 +30,17 @@ def create_folder(folder_path: str = None) -> Path:
     Returns:
         Path: The path to the folder.
     """
-    if folder_path is None:
-        folder_path = Path(__file__).parent / "conversations"
+    if folder_path == ".":
+        returned_folder_path = Path(__file__).parent / "conversations"
     else:
-        folder_path = Path(folder_path)
+        returned_folder_path = Path(folder_path)
 
-    if not folder_path.exists():
-        folder_path.mkdir(parents=True, exist_ok=True)
+    if not returned_folder_path.exists():
+        returned_folder_path.mkdir(parents=True, exist_ok=True)
     
-    return folder_path
+    return returned_folder_path
 
-def generate_audio_file_path(output_path: str = None, name: str = 'prompt') -> Path:
+def generate_audio_file_path(output_path: str = ".", name: str = 'prompt') -> Path:
     """Generate a file path for the audio file.
 
     Parameters:
@@ -54,7 +55,7 @@ def generate_audio_file_path(output_path: str = None, name: str = 'prompt') -> P
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
     # If the output_path is None, then use the current directory
-    if output_path is None:
+    if output_path == ".":
         audio_file_path = Path(__file__).parent / f"{timestamp}_{name}.wav"
     else:
         audio_file_path = Path(output_path) / f"{timestamp}_{name}.wav"
