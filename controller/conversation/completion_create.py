@@ -2,10 +2,7 @@
 from typing import List, Dict
 from pathlib import Path
 import openai
-from controller.conversation.conversations.tsundere_ai_conversation import SYSTEM
-from controller.conversation.conversations.tsundere_ai_conversation import MESSAGES
-from controller.conversation.load_openai import load_openai
-from controller.tokenizer.num_tokens_from_messages import num_tokens_from_messages
+from load_openai import load_openai
 
 # Load the OpenAI API key
 load_openai()
@@ -22,7 +19,7 @@ def generate_message(role: str, content: str) -> Dict:
     message = {"role": role, "content": content}
     return message
 
-def get_answer(messages: List = None) -> str:
+def get_answer(messages: List) -> str:
     """
     Get the answer from the OpenAI API.
 
@@ -56,28 +53,28 @@ persona  = {repr(persona)}\n""")
 
 def main():
     # Loop until the user says "bye"
-    while True:        
-        # Prompt the user for input
-        user_input = input("\nUser: ")
+    # while True:        
+    #     # Prompt the user for input
+    #     user_input = input("\nUser: ")
 
-        # Save the user input to the messages list
-        MESSAGES.append(generate_message("user", user_input))
+    #     # Save the user input to the messages list
+    #     MESSAGES.append(generate_message("user", user_input))
 
-        response = get_answer(MESSAGES)['choices'][0]['message']['content']
-        print(f'\nAssistant: {response}')
+    #     response = get_answer(MESSAGES)['choices'][0]['message']['content']
+    #     print(f'\nAssistant: {response}')
 
-        # Save the response to the messages list
-        MESSAGES.append(generate_message("assistant", response))
+    #     # Save the response to the messages list
+    #     MESSAGES.append(generate_message("assistant", response))
 
-        # If the user says "bye" then break out of the loop
-        if user_input == "bye":
-            break
+    #     # If the user says "bye" then break out of the loop
+    #     if user_input == "bye":
+    #         break
 
     
     # Save the MESSAGES list to the tsundere_ai_conversation.py file.
-    conversation_path = Path(__file__).parent / "conversations" / "tsundere_ai_conversation.py"
+    # conversation_path = Path(__file__).parent / "conversations" / "tsundere_ai_conversation.py"
     # save_conversation()
-    
+    pass
 
 if __name__ == "__main__":
     main()
