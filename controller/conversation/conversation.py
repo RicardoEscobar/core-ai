@@ -16,7 +16,7 @@ from controller.conversation.completion_create import generate_message
 from controller.conversation.completion_create import get_answer
 from controller.conversation.completion_create import save_conversation
 from controller.conversation.play_audio import play_audio
-from controller.conversation.conversations.conversation_example import persona
+from controller.conversation.conversations.beta_conversation import persona
 from controller.conversation.load_openai import load_openai
 
 
