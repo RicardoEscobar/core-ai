@@ -37,7 +37,7 @@ def create_folder(folder_path: str = ".") -> Path:
 
     if not returned_folder_path.exists():
         returned_folder_path.mkdir(parents=True, exist_ok=True)
-    
+
     return returned_folder_path
 
 def generate_audio_file_path(output_path: str = ".", name: str = 'prompt') -> Path:
