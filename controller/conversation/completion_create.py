@@ -53,7 +53,7 @@ persona  = {repr(persona)}\n""")
 
 def main():
     # Loop until the user says "bye"
-    # while True:        
+    # while True:
     #     # Prompt the user for input
     #     user_input = input("\nUser: ")
 
