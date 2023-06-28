@@ -78,7 +78,7 @@ def translator(selected_voice: str = "Jenny", target_language: str = "English"):
 
         # Step 2: Translate the audio to target language.
         transcribed_prompt = transcribe_audio.transcribe(audio_file_path)
-        
+
         # Add translation instructions to the prompt
         transcribed_prompt = f"Translate to {target_language}: {transcribed_prompt}"
         print(f"Transcribed prompt: {transcribed_prompt}")
@@ -118,7 +118,7 @@ def conversation(selected_voice: str = persona["selected_voice"]):
     while True:
         # Preparation: Generate the file paths for the audio files.
         human_audio_file_path = str(generate_audio_file_path(output_folder, "JorgeEscobar_human"))
-        
+
         # Step 1: Record audio from the microphone and save it to a file.
         print("Wait in silence to begin recording; wait in silence to terminate...\n")
         detect_audio.record_to_file(human_audio_file_path)
@@ -135,14 +135,14 @@ def conversation(selected_voice: str = persona["selected_voice"]):
         # Save the response to the persona["messages"] list
         response = get_answer(persona["messages"])['choices'][0]['message']['content']
         persona["messages"].append(generate_message("assistant", response))
-        
+
         # If selected_voice is None, then use the default voice
         save_conversation(persona)
 
-        # Step 4: Convert the response to audio and play it back to the user.        
+        # Step 4: Convert the response to audio and play it back to the user.
         # Generate the file path for the audio file
         assistant_audio_file_path = str(generate_audio_file_path(output_folder, persona["name"]))
-        
+
         # Get a speech synthesizer
         speech_synthesizer = get_speech_synthesizer(selected_voice, assistant_audio_file_path)
 
