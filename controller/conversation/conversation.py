@@ -7,7 +7,9 @@ Finally, that response is converted to audio and played back to the user.
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List
+
 import openai
+
 import detect_audio
 import transcribe_audio
 from speech_synthesis import get_speech_synthesizer
