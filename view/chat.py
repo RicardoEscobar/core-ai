@@ -5,27 +5,45 @@ from tkinter import ttk
 
 try:
     from ctypes import windll
+
     windll.shcore.SetProcessDpiAwareness(1)
 except ImportError:
     pass
 
-def send_text(chat_history: tk.Text, user_input: ttk.Entry, user_color: str = "red"):
+
+def send_text(
+    chat_history: tk.Text, user_name: str, text: str, user_color: str = "red"
+):
     """Sends text from input text widget to chat history."""
-    user_input_text = user_input.get()
 
     # Create a tag that specifies the color.
     chat_history.tag_config(user_color, foreground=user_color)
 
     # if the user_input_text is empty, return
-    if not user_input_text:
+    if not text:
         return
 
-    # Clear the user_input widget.
-    user_input.delete(0, tk.END)
-
     # Insert the user_input_text into the chat_history widget.
-    chat_history.insert(tk.END, "User:\n", "red")
-    chat_history.insert(tk.END, user_input_text + "\n")
+    chat_history.insert(tk.END, f"{user_name}:\n", user_color)
+    chat_history.insert(tk.END, f"{text}\n\n")
+
+
+def send_command(
+    user_input_text: tk.Entry,
+    chat_history: tk.Text,
+    user_name: str,
+    user_color: str = "red",
+):
+    """Gets the user input from the input text widget and sends it to the chat history widget."""
+
+    # Get the user input text from the input text widget.
+    text = user_input_text.get().strip()
+
+    # Clears the user input text from the input text widget.
+    user_input_text.delete(0, tk.END)
+
+    send_text(chat_history, user_name, text, user_color)
+
 
 def create_gui():
     """Creates the GUI."""
@@ -74,10 +92,16 @@ def create_gui():
     user_input = ttk.Entry(user_input_frame, width=50)
 
     # Bind the <Return> event to the user_input widget.
-    user_input.bind("<Return>", lambda event: send_text(chat_history, user_input))
+    user_input.bind(
+        "<Return>", lambda event: send_command(user_input, chat_history, "User", "red")
+    )
 
     # Button to send the user's input.
-    send_button = ttk.Button(user_input_frame, text="Send", command=lambda: send_text(chat_history, user_input))
+    send_button = ttk.Button(
+        user_input_frame,
+        text="Send",
+        command=lambda: send_command(user_input, chat_history, "User", "red"),
+    )
 
     # Grid the main_frame widget with the sticky option set to "nsew".
     main_frame.grid(row=0, column=0, sticky="nsew")
@@ -102,9 +126,11 @@ def create_gui():
     # Run the mainloop
     root.mainloop()
 
+
 def main():
     """The main function."""
     create_gui()
+
 
 if __name__ == "__main__":
     main()
