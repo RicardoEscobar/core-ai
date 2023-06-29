@@ -46,6 +46,54 @@ CREATE TABLE IF NOT EXISTS message (
     FOREIGN KEY (role_id) REFERENCES role(id)
 );
 
+-- Views
+
+-- Create a view to get the last message of a conversation
+CREATE VIEW IF NOT EXISTS last_message AS
+SELECT
+    conversation.id AS conversation_id,
+    conversation.human_id AS human_id,
+    conversation.assistant_id AS assistant_id,
+    message.id AS message_id,
+    message.role_id AS role_id,
+    message.message AS message,
+    message.timestamp AS timestamp
+FROM conversation
+INNER JOIN message ON message.conversation_id = conversation.id
+WHERE message.id = (
+    SELECT MAX(message.id)
+    FROM message
+    WHERE message.conversation_id = conversation.id
+);
+
+-- Create a view to get the all the messages from a conversation with a given id.
+CREATE VIEW IF NOT EXISTS conversation_messages AS
+SELECT
+    conversation.id AS conversation_id,
+    conversation.human_id AS human_id,
+    conversation.assistant_id AS assistant_id,
+    message.id AS message_id,
+    message.role_id AS role_id,
+    message.message AS message,
+    message.timestamp AS timestamp
+FROM conversation
+INNER JOIN message ON message.conversation_id = conversation.id
+WHERE conversation.id = ?;
+
+-- Create a view to get the all conversations given a human id.
+CREATE VIEW IF NOT EXISTS human_conversations AS
+SELECT
+    conversation.id AS conversation_id,
+    conversation.human_id AS human_id,
+    conversation.assistant_id AS assistant_id,
+    message.id AS message_id,
+    message.role_id AS role_id,
+    message.message AS message,
+    message.timestamp AS timestamp
+FROM conversation
+INNER JOIN message ON message.conversation_id = conversation.id
+WHERE conversation.human_id = ?;
+
 -- Insert data into the tables
 
 -- Test subjects
