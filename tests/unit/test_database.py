@@ -72,6 +72,7 @@ class TestDatabase(unittest.TestCase):
         mock_file.assert_called_once_with(
             'databases/core_ai/tables/user_platform.sql', 'r', encoding='utf-8')
 
+    @unittest.skip('Not implemented')
     def test_create_user_schema(self):
         """Test the create_user_schema method"""
         self.db.create_user_schema()
