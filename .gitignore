@@ -332,3 +332,8 @@ git-sim_media/
 
 # Conversations
 controller/conversation/conversations
+
+# SQLite3 Databases
+*.sqlite3
+*.db
+*.db3
