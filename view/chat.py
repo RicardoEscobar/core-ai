@@ -1,8 +1,19 @@
 """This module creates the GUI for the chatbot."""
+
+# Add root directory to path, to fix imports
+if __name__ == "__main__":
+    from sys import path
+    from pathlib import Path
+    root = Path(__file__).parent.parent
+    path.append(str(root))
+
 import tkinter as tk
 from tkinter import ttk
 
+from controller.conversation.completion_create import generate_message, get_answer, save_conversation
+from controller.conversation.conversations.conversation_example import persona
 
+# Fix blurry text on Windows
 try:
     from ctypes import windll
 
@@ -42,7 +53,24 @@ def send_command(
     # Clears the user input text from the input text widget.
     user_input_text.delete(0, tk.END)
 
+    # Send the user input text to the chat history widget.
     send_text(chat_history, user_name, text, user_color)
+
+    # Save the response to the persona["messages"] list
+    messages_list = persona["messages"]
+    messages_list.append(generate_message("user", text))
+    response = get_answer(messages_list)['choices'][0]['message']['content']
+    messages_list.append(generate_message("assistant", response))
+    persona["messages"] = messages_list
+
+    # If selected_voice is None, then use the default voice
+    save_conversation(persona)
+
+    # Send the response to the chat history widget.
+    send_text(chat_history, "Assistant", response, "blue")
+
+    # Scroll the chat history to the bottom.
+    chat_history.see(tk.END)
 
 
 def create_gui():
@@ -59,28 +87,28 @@ def create_gui():
     style.configure("Blue.TFrame", background="blue")
 
     # Create the main_frame widget with the custom style.
-    main_frame = ttk.Frame(root, padding=10, style="Blue.TFrame")
+    main_frame = ttk.Frame(root, padding=10)
 
     # Configure the row and column weights of the main_frame widget's grid manager.
     main_frame.rowconfigure(0, weight=1)
     main_frame.columnconfigure(0, weight=1)
 
     # Chatlog frame
-    chatlog_frame = ttk.Frame(main_frame)
+    chatlog_frame = ttk.Frame(main_frame, padding=10)
 
     # Configure the row and column weights of the chatlog_frame widget's grid manager.
     chatlog_frame.rowconfigure(0, weight=1)
     chatlog_frame.columnconfigure(0, weight=1)
 
     # User input frame
-    user_input_frame = ttk.Frame(main_frame)
+    user_input_frame = ttk.Frame(main_frame, padding=10)
 
     # Configure the row and column weights of the user_input_frame widget's grid manager.
     user_input_frame.rowconfigure(0, weight=0)
     user_input_frame.columnconfigure(0, weight=1)
 
     # Text widget that contains the chat history.
-    chat_history = tk.Text(chatlog_frame, height=20, width=50)
+    chat_history = tk.Text(chatlog_frame, height=20, width=50, wrap='word')
 
     # Scrollbar for the chat history.
     chat_history_scrollbar = ttk.Scrollbar(
