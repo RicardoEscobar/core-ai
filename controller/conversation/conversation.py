@@ -18,7 +18,7 @@ from completion_create import generate_message
 from completion_create import get_answer
 from completion_create import save_conversation
 from play_audio import play_audio
-from conversations.beta_conversation import persona
+from conversations.conversation_example import persona
 from load_openai import load_openai
 
 
@@ -70,6 +70,9 @@ def translator(selected_voice: str = "Jenny", target_language: str = "English"):
         # Load the OpenAI API key
         load_openai()
 
+        # Create the output folder if it doesn't exist
+        output_folder = create_folder(persona["audio_output_path"])
+
         # Step 1: Record audio from the microphone and save it to a file.
         print("Wait in silence to begin recording; wait in silence to terminate")
         audio_file_path = str(generate_audio_file_path())
@@ -80,7 +83,7 @@ def translator(selected_voice: str = "Jenny", target_language: str = "English"):
         transcribed_prompt = transcribe_audio.transcribe(audio_file_path)
 
         # Add translation instructions to the prompt
-        transcribed_prompt = f"Translate to {target_language}: {transcribed_prompt}"
+        transcribed_prompt = f"Translate from spanish to {target_language}: \"{transcribed_prompt}\""
         print(f"Transcribed prompt: {transcribed_prompt}")
 
         # Step 3: Prompt OpenAI's GPT-3.5-Turbo API to generate a response.
@@ -98,10 +101,15 @@ def translator(selected_voice: str = "Jenny", target_language: str = "English"):
 
         # Step 4: Convert the response to audio and play it back to the user.
         # Get a speech synthesizer
-        speech_synthesizer = get_speech_synthesizer(selected_voice)
+        # speech_synthesizer = get_speech_synthesizer(selected_voice)
+        assistant_audio_file_path = str(generate_audio_file_path(output_folder, persona["name"]))
+
+        # Get a speech synthesizer
+        speech_synthesizer = get_speech_synthesizer(selected_voice, assistant_audio_file_path)
 
         # Speak the text
         speak_text(speech_synthesizer, response)
+        play_audio(assistant_audio_file_path)
 
         # If the transcribed_prompt contains "bye." then break out of the loop
         if transcribed_prompt.lower().find("bye.") != -1:
@@ -187,7 +195,7 @@ def dubbing(selected_voice: str = "Juan"):
             break
 
 def main():
-    conversation()
+    translator(persona["selected_voice"], persona["target_language"])
 
 if __name__ == '__main__':
     main()
