@@ -2,7 +2,7 @@
 from typing import List, Dict
 from pathlib import Path
 import openai
-from controller.conversation.load_openai import load_openai
+from load_openai import load_openai
 
 # Load the OpenAI API key
 load_openai()
@@ -35,7 +35,7 @@ def get_answer(messages: List) -> str:
             model="gpt-3.5-turbo-16k",  # 16,384 tokens
             messages=messages,
             temperature=1.0,
-            max_tokens=16284,
+            max_tokens=1000,
         )
     except openai.error.InvalidRequestError as error:
         print(f"Error: {error}")
