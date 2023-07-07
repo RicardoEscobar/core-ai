@@ -75,7 +75,7 @@ def translator(selected_voice: str = "Jenny", target_language: str = "English"):
 
         # Step 1: Record audio from the microphone and save it to a file.
         print("Wait in silence to begin recording; wait in silence to terminate")
-        audio_file_path = str(generate_audio_file_path())
+        audio_file_path = str(generate_audio_file_path(output_folder, "JorgeEscobar_human"))
         detect_audio.record_to_file(audio_file_path)
         print(f"done - result written to {audio_file_path}")
 
@@ -83,7 +83,7 @@ def translator(selected_voice: str = "Jenny", target_language: str = "English"):
         transcribed_prompt = transcribe_audio.transcribe(audio_file_path)
 
         # Add translation instructions to the prompt
-        transcribed_prompt = f"Translate from spanish to {target_language}: \"{transcribed_prompt}\""
+        transcribed_prompt = f"{transcribed_prompt}\""
         print(f"Transcribed prompt: {transcribed_prompt}")
 
         # Step 3: Prompt OpenAI's GPT-3.5-Turbo API to generate a response.
@@ -173,9 +173,12 @@ def dubbing(selected_voice: str = "Juan"):
         # Load the OpenAI API key
         load_openai()
 
+        # Create the output folder if it doesn't exist
+        output_folder = create_folder(persona["audio_output_path"])
+
         # Step 1: Record audio from the microphone and save it to a file.
         print("Wait in silence to begin recording; wait in silence to terminate")
-        audio_file_path = str(generate_audio_file_path())
+        audio_file_path = str(generate_audio_file_path(output_folder, "JorgeEscobar_human"))
         detect_audio.record_to_file(audio_file_path)
         print(f"done - result written to {audio_file_path}")
 
@@ -185,17 +188,18 @@ def dubbing(selected_voice: str = "Juan"):
 
         # Step 3: Convert the response to audio and play it back to the user.
         # Get a speech synthesizer
-        speech_synthesizer = get_speech_synthesizer(selected_voice)
+        speech_synthesizer = get_speech_synthesizer(selected_voice, audio_file_path)
 
         # Speak the text
         speak_text(speech_synthesizer, transcribed_prompt)
+        play_audio(audio_file_path)
 
         # If the transcribed_prompt contains "bye." then break out of the loop
         if transcribed_prompt.lower().find("bye.") != -1:
             break
 
 def main():
-    translator(persona["selected_voice"], persona["target_language"])
+    dubbing(persona["selected_voice"])
 
 if __name__ == '__main__':
     main()
