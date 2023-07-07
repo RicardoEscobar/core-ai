@@ -41,13 +41,13 @@ def get_speech_synthesizer(
     }
 
     # This example requires environment variables named "SPEECH_KEY" and "SPEECH_REGION"
-    speech_config = speechsdk.SpeechConfig(subscription=SPEECH_KEY, region=SPEECH_REGION)    
+    speech_config = speechsdk.SpeechConfig(subscription=SPEECH_KEY, region=SPEECH_REGION)
     audio_config = speechsdk.audio.AudioOutputConfig(use_default_speaker=False, filename=filename)
-    
+
     # The language of the voice that speaks.
     speech_config.speech_synthesis_voice_name=VOICE_NAME[selected_voice]
-
     speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
+
     return speech_synthesizer
 
 def speak_text(speech_synthesizer: speechsdk.SpeechSynthesizer, text: str):
