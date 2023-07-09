@@ -1,5 +1,5 @@
-# Created by https://www.toptal.com/developers/gitignore/api/text,venv,linux,macos,python,windows,visualstudiocode,audio,video
-# Edit at https://www.toptal.com/developers/gitignore?templates=text,venv,linux,macos,python,windows,visualstudiocode,audio,video
+# Created by https://www.toptal.com/developers/gitignore/api/text,venv,audio,linux,macos,video,python,windows,visualstudiocode,images
+# Edit at https://www.toptal.com/developers/gitignore?templates=text,venv,audio,linux,macos,video,python,windows,visualstudiocode,images
 
 ### Audio ###
 *.aif
@@ -14,6 +14,71 @@
 *.wma
 *.ogg
 *.flac
+
+### Images ###
+# JPEG
+*.jpg
+*.jpeg
+*.jpe
+*.jif
+*.jfif
+*.jfi
+
+# JPEG 2000
+*.jp2
+*.j2k
+*.jpf
+*.jpx
+*.jpm
+*.mj2
+
+# JPEG XR
+*.jxr
+*.hdp
+*.wdp
+
+# Graphics Interchange Format
+*.gif
+
+# RAW
+*.raw
+
+# Web P
+*.webp
+
+# Portable Network Graphics
+*.png
+
+# Animated Portable Network Graphics
+*.apng
+
+# Multiple-image Network Graphics
+*.mng
+
+# Tagged Image File Format
+*.tiff
+*.tif
+
+# Scalable Vector Graphics
+*.svg
+*.svgz
+
+# Portable Document Format
+*.pdf
+
+# X BitMap
+*.xbm
+
+# BMP
+*.bmp
+*.dib
+
+# ICO
+*.ico
+
+# 3D Images
+*.3dm
+*.max
 
 ### Linux ###
 *~
@@ -320,7 +385,7 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/text,venv,linux,macos,python,windows,visualstudiocode,audio,video
+# End of https://www.toptal.com/developers/gitignore/api/text,venv,audio,linux,macos,video,python,windows,visualstudiocode,images
 
 # Custom
 
