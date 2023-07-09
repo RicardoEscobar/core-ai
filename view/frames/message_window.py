@@ -1,12 +1,15 @@
+from pathlib import Path
 import datetime
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
 
 
-AVATAR_IMG_PATH = "assets/avatar_mipha_big.png"
-AVATAR_SIZE = 70
+# Constants
 
+ROOT_DIR = Path(__file__).parent.parent.parent
+AVATAR_IMG_PATH = ROOT_DIR / "view" / "assets" / "avatar_mipha_big.png"
+AVATAR_SIZE = 70
 SCREEN_SIZE_TO_MESSAGE_WIDTH = {1100: 900, 950: 700, 750: 550}
 
 
