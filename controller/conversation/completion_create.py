@@ -2,7 +2,7 @@
 from typing import List, Dict
 from pathlib import Path
 import openai
-from load_openai import load_openai
+from controller.conversation.load_openai import load_openai
 
 # Load the OpenAI API key
 load_openai()
@@ -32,10 +32,10 @@ def get_answer(messages: List) -> str:
     """
     try:
         answer = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-3.5-turbo",
             messages=messages,
             temperature=1.0,
-            max_tokens=1000, # 8,192 tokens is the max for GPT-4
+            max_tokens=400, # 8,192 tokens is the max for GPT-4
         )
     except openai.error.InvalidRequestError as error:
         print(f"Error: {error}")
