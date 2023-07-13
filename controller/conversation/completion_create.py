@@ -36,6 +36,7 @@ def get_answer(messages: List) -> str:
             messages=messages,
             temperature=1.0,
             max_tokens=400, # 8,192 tokens is the max for GPT-4
+            stop=["\n\n", "Link:", "system:"],
         )
     except openai.error.InvalidRequestError as error:
         print(f"Error: {error}")
