@@ -4,22 +4,30 @@ Then that file is used to convert the audio to text.
 Then that text is used to prompt OpenAI's GPT-3.5-Turbo API to generate a response.
 Finally, that response is converted to audio and played back to the user.
 """
+# If this file is running alone, then add the root folder to the Python path
+if __name__ == "__main__":
+    import sys
+    from pathlib import Path
+
+    root_folder = Path(__file__).parent.parent.parent
+    sys.path.append(str(root_folder))
+
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List
 
 import openai
 
-import detect_audio
-import transcribe_audio
-from speech_synthesis import get_speech_synthesizer
-from speech_synthesis import speak_text
-from completion_create import generate_message
-from completion_create import get_answer
-from completion_create import save_conversation
-from play_audio import play_audio
-from conversations.conversation_example import persona
-from load_openai import load_openai
+import controller.conversation.detect_audio as detect_audio
+import controller.conversation.transcribe_audio as transcribe_audio
+from controller.conversation.speech_synthesis import get_speech_synthesizer
+from controller.conversation.speech_synthesis import speak_text
+from controller.conversation.completion_create import generate_message
+from controller.conversation.completion_create import get_answer
+from controller.conversation.completion_create import save_conversation
+from controller.conversation.play_audio import play_audio
+from controller.conversation.conversations.conversation_example import persona
+from controller.conversation.load_openai import load_openai
 
 
 
@@ -199,7 +207,8 @@ def dubbing(selected_voice: str = "Juan"):
             break
 
 def main():
-    dubbing(persona["selected_voice"])
+    # dubbing(persona["selected_voice"])
+    conversation(persona["selected_voice"])
 
 if __name__ == '__main__':
     main()
