@@ -33,37 +33,40 @@ class Messenger(tk.Tk):
         self.chat_frame.grid(row=0, column=0, sticky="NSEW")
 
 
+def main():
+    root = Messenger()
 
-root = Messenger()
+    font.nametofont("TkDefaultFont").configure(size=14)
 
-font.nametofont("TkDefaultFont").configure(size=14)
+    style = ttk.Style(root)
+    style.theme_use("clam")
 
-style = ttk.Style(root)
-style.theme_use("clam")
+    style.configure("Messages.TFrame", background=COLOUR_LIGHT_BACKGROUND_3)
 
-style.configure("Messages.TFrame", background=COLOUR_LIGHT_BACKGROUND_3)
+    style.configure("Controls.TFrame", background=COLOUR_LIGHT_BACKGROUND_2)
 
-style.configure("Controls.TFrame", background=COLOUR_LIGHT_BACKGROUND_2)
+    style.configure("SendButton.TButton", borderwidth=0, background=COLOUR_BUTTON_NORMAL)
+    style.map(
+        "SendButton.TButton",
+        background=[("pressed", COLOUR_BUTTON_PRESSED), ("active", COLOUR_BUTTON_ACTIVE)],
+    )
 
-style.configure("SendButton.TButton", borderwidth=0, background=COLOUR_BUTTON_NORMAL)
-style.map(
-    "SendButton.TButton",
-    background=[("pressed", COLOUR_BUTTON_PRESSED), ("active", COLOUR_BUTTON_ACTIVE)],
-)
+    style.configure(
+        "SystemButton.TButton", background=COLOUR_LIGHT_BACKGROUND_1, borderwidth=0
+    )
 
-style.configure(
-    "SystemButton.TButton", background=COLOUR_LIGHT_BACKGROUND_1, borderwidth=0
-)
+    style.configure(
+        "Time.TLabel",
+        padding=5,
+        background=COLOUR_LIGHT_BACKGROUND_1,
+        foreground=COLOUR_LIGHT_TEXT,
+        font=8
+    )
 
-style.configure(
-    "Time.TLabel",
-    padding=5,
-    background=COLOUR_LIGHT_BACKGROUND_1,
-    foreground=COLOUR_LIGHT_TEXT,
-    font=8
-)
+    style.configure("Avatar.TLabel", background=COLOUR_LIGHT_BACKGROUND_3)
+    style.configure("Message.TLabel", background=COLOUR_LIGHT_BACKGROUND_2)
 
-style.configure("Avatar.TLabel", background=COLOUR_LIGHT_BACKGROUND_3)
-style.configure("Message.TLabel", background=COLOUR_LIGHT_BACKGROUND_2)
+    root.mainloop()
 
-root.mainloop()
+if __name__ == "__main__":
+    main()
