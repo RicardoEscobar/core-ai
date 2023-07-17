@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import os
 
 
-def get_response(human_input: str) -> str:
+def get_response_unfiltered(human_input: str) -> str:
     """Get response from the LLMChain class."""
     name = "Lumina"
     age = 18
@@ -39,5 +39,5 @@ Novio: {{human_input}}
 if __name__ == '__main__':
     load_dotenv()
     human_input = "Hola mi amor, ¿como estas?"
-    response = get_response(human_input=human_input)
+    response = get_response_unfiltered(human_input=human_input)
     print(response)
