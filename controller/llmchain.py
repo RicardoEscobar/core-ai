@@ -1,8 +1,9 @@
 """This is a test script for the LLMChain class."""
+import os
+
+from dotenv import load_dotenv
 from langchain import LLMChain, OpenAI, PromptTemplate
 from langchain.memory import ConversationBufferWindowMemory
-from dotenv import load_dotenv
-import os
 
 
 def get_response_unfiltered(human_input: str) -> str:
