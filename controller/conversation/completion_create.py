@@ -20,7 +20,7 @@ def generate_message(role: str, content: str) -> Dict:
     return message
 
 
-def get_answer(messages: List) -> str:
+def get_response(messages: List) -> str:
     """
     Get the answer from the OpenAI API.
 
