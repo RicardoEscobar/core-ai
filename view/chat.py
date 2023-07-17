@@ -10,7 +10,7 @@ if __name__ == "__main__":
 import tkinter as tk
 from tkinter import ttk
 
-from controller.conversation.completion_create import generate_message, get_answer, save_conversation
+from controller.conversation.completion_create import generate_message, get_response, save_conversation
 from controller.conversation.conversations.conversation_example import persona
 
 # Fix blurry text on Windows
@@ -59,7 +59,7 @@ def send_command(
     # Save the response to the persona["messages"] list
     messages_list = persona["messages"]
     messages_list.append(generate_message("user", text))
-    response = get_answer(messages_list)['choices'][0]['message']['content']
+    response = get_response(messages_list)['choices'][0]['message']['content']
     messages_list.append(generate_message("assistant", response))
     persona["messages"] = messages_list
 
