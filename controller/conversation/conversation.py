@@ -23,7 +23,8 @@ import controller.conversation.transcribe_audio as transcribe_audio
 from controller.conversation.speech_synthesis import get_speech_synthesizer
 from controller.conversation.speech_synthesis import speak_text
 from controller.conversation.completion_create import generate_message
-from controller.conversation.completion_create import get_answer
+from controller.conversation.completion_create import get_response
+from controller.llmchain import get_response_unfiltered
 from controller.conversation.completion_create import save_conversation
 from controller.conversation.play_audio import play_audio
 from controller.conversation.conversations.conversation_example import persona
@@ -64,7 +65,7 @@ def generate_audio_file_path(output_path: str = ".", name: str = 'prompt') -> Pa
     # https://stackoverflow.com/questions/415511/how-to-get-current-time-in-python
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    # If the output_path is None, then use the current directory
+    # If the output_path is ".", then use the current directory
     if output_path == ".":
         audio_file_path = Path(__file__).parent / f"{timestamp}_{name}.wav"
     else:
@@ -99,7 +100,7 @@ def translator(selected_voice: str = "Jenny", target_language: str = "English"):
         persona["messages"].append(generate_message("user", transcribed_prompt))
 
         # Save the response to the persona["messages"] list
-        response = get_answer(persona["messages"])['choices'][0]['message']['content']
+        response = get_response(persona["messages"])['choices'][0]['message']['content']
         persona["messages"].append(generate_message("assistant", response))
         print(f'\nAssistant: {response}')
 
@@ -123,7 +124,7 @@ def translator(selected_voice: str = "Jenny", target_language: str = "English"):
         if transcribed_prompt.lower().find("bye.") != -1:
             break
 
-def conversation(selected_voice: str = persona["selected_voice"]):
+def conversation(selected_voice: str = persona["selected_voice"], is_filtered: bool = True):
     # Load the OpenAI API key
     load_openai()
 
@@ -148,8 +149,15 @@ def conversation(selected_voice: str = persona["selected_voice"]):
         # Save the user input to the persona["messages"] list
         persona["messages"].append(generate_message("user", transcribed_prompt))
 
+        # if is_unfiltered is True, run normally, this filters out the AI response.
+        if is_filtered:
+            # Save the filtered response to the persona["messages"] list
+            response = get_response(persona["messages"])['choices'][0]['message']['content']
+        else:
+            # Save the unfiltered response to the persona["messages"] list
+            response = get_response_unfiltered(human_input=transcribed_prompt)
+
         # Save the response to the persona["messages"] list
-        response = get_answer(persona["messages"])['choices'][0]['message']['content']
         persona["messages"].append(generate_message("assistant", response))
 
         # If selected_voice is None, then use the default voice
@@ -208,7 +216,7 @@ def dubbing(selected_voice: str = "Juan"):
 
 def main():
     # dubbing(persona["selected_voice"])
-    conversation(persona["selected_voice"])
+    conversation(persona["selected_voice"], is_filtered=False)
 
 if __name__ == '__main__':
     main()
