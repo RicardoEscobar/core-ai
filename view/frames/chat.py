@@ -92,7 +92,7 @@ class Chat(ttk.Frame):
         global messages
         global message_labels
         timestamp = int(time.time())
-        response = completion_create.get_answer(messages_ai)["choices"][0]["message"]["content"]
+        response = completion_create.get_response(messages_ai)["choices"][0]["message"]["content"]
         assistant_message = completion_create.generate_message("assistant", response)
         messages_ai.append(assistant_message)
         messages.append({"role": "assistant", "content": response, "timestamp": timestamp})
