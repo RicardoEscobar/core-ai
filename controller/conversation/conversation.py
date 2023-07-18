@@ -271,9 +271,9 @@ def main():
 
     # Run the conversation
     conversation(
-        persona["selected_voice"],
-        is_filtered=True,
-        natural_voice=natural_voice,
+        persona["selected_voice"],  # The default voice is used
+        is_filtered=True,  # Set to False to enable NSFW content
+        natural_voice=natural_voice,  # Set to None to use the default voice
     )
 
 
