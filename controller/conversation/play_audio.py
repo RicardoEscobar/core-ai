@@ -1,6 +1,7 @@
 import wave
 import pyaudio
 
+
 def get_audio_device_index(device_name: str) -> int:
     """Get the audio device index from the device name."""
     # Create the PyAudio object
