@@ -14,9 +14,10 @@ if __name__ == "__main__":
 
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import openai
+from elevenlabs.api import Voice, VoiceSettings
 
 import controller.conversation.detect_audio as detect_audio
 import controller.conversation.transcribe_audio as transcribe_audio
@@ -29,7 +30,7 @@ from controller.conversation.completion_create import save_conversation
 from controller.conversation.play_audio import play_audio
 from controller.conversation.conversations.conversation_example import persona
 from controller.conversation.load_openai import load_openai
-
+from controller.natural_voice import generate_multilingual
 
 
 def create_folder(folder_path: str = ".") -> Path:
@@ -51,7 +52,8 @@ def create_folder(folder_path: str = ".") -> Path:
 
     return returned_folder_path
 
-def generate_audio_file_path(output_path: str = ".", name: str = 'prompt') -> Path:
+
+def generate_audio_file_path(output_path: str = ".", name: str = "prompt") -> Path:
     """Generate a file path for the audio file.
 
     Parameters:
@@ -73,6 +75,7 @@ def generate_audio_file_path(output_path: str = ".", name: str = 'prompt') -> Pa
 
     return audio_file_path
 
+
 def translator(selected_voice: str = "Jenny", target_language: str = "English"):
     # Loop until the user says "bye"
     while True:
@@ -84,7 +87,9 @@ def translator(selected_voice: str = "Jenny", target_language: str = "English"):
 
         # Step 1: Record audio from the microphone and save it to a file.
         print("Wait in silence to begin recording; wait in silence to terminate")
-        audio_file_path = str(generate_audio_file_path(output_folder, "JorgeEscobar_human"))
+        audio_file_path = str(
+            generate_audio_file_path(output_folder, "JorgeEscobar_human")
+        )
         detect_audio.record_to_file(audio_file_path)
         print(f"done - result written to {audio_file_path}")
 
@@ -92,7 +97,7 @@ def translator(selected_voice: str = "Jenny", target_language: str = "English"):
         transcribed_prompt = transcribe_audio.transcribe(audio_file_path)
 
         # Add translation instructions to the prompt
-        transcribed_prompt = f"{transcribed_prompt}\""
+        transcribed_prompt = f'{transcribed_prompt}"'
         print(f"Transcribed prompt: {transcribed_prompt}")
 
         # Step 3: Prompt OpenAI's GPT-3.5-Turbo API to generate a response.
@@ -100,21 +105,27 @@ def translator(selected_voice: str = "Jenny", target_language: str = "English"):
         persona["messages"].append(generate_message("user", transcribed_prompt))
 
         # Save the response to the persona["messages"] list
-        response = get_response(persona["messages"])['choices'][0]['message']['content']
+        response = get_response(persona["messages"])["choices"][0]["message"]["content"]
         persona["messages"].append(generate_message("assistant", response))
-        print(f'\nAssistant: {response}')
+        print(f"\nAssistant: {response}")
 
         # Save the persona["messages"] list to the conversation file.
-        conversation_path = Path(__file__).parent / "conversations" / persona["conversation_file_path"]
+        conversation_path = (
+            Path(__file__).parent / "conversations" / persona["conversation_file_path"]
+        )
         save_conversation(persona)
 
         # Step 4: Convert the response to audio and play it back to the user.
         # Get a speech synthesizer
         # speech_synthesizer = get_speech_synthesizer(selected_voice)
-        assistant_audio_file_path = str(generate_audio_file_path(output_folder, persona["name"]))
+        assistant_audio_file_path = str(
+            generate_audio_file_path(output_folder, persona["name"])
+        )
 
         # Get a speech synthesizer
-        speech_synthesizer = get_speech_synthesizer(selected_voice, assistant_audio_file_path)
+        speech_synthesizer = get_speech_synthesizer(
+            selected_voice, assistant_audio_file_path
+        )
 
         # Speak the text
         speak_text(speech_synthesizer, response)
@@ -124,7 +135,12 @@ def translator(selected_voice: str = "Jenny", target_language: str = "English"):
         if transcribed_prompt.lower().find("bye.") != -1:
             break
 
-def conversation(selected_voice: str = persona["selected_voice"], is_filtered: bool = True):
+
+def conversation(
+    selected_voice: str = persona["selected_voice"],
+    is_filtered: bool = True,
+    natural_voice: Union[Voice, str] = None,
+):
     # Load the OpenAI API key
     load_openai()
 
@@ -134,7 +150,9 @@ def conversation(selected_voice: str = persona["selected_voice"], is_filtered: b
     # Loop until the user says "bye"
     while True:
         # Preparation: Generate the file paths for the audio files.
-        human_audio_file_path = str(generate_audio_file_path(output_folder, "JorgeEscobar_human"))
+        human_audio_file_path = str(
+            generate_audio_file_path(output_folder, "JorgeEscobar_human")
+        )
 
         # Step 1: Record audio from the microphone and save it to a file.
         print("Wait in silence to begin recording; wait in silence to terminate...\n")
@@ -152,7 +170,9 @@ def conversation(selected_voice: str = persona["selected_voice"], is_filtered: b
         # if is_unfiltered is True, run normally, this filters out the AI response.
         if is_filtered:
             # Save the filtered response to the persona["messages"] list
-            response = get_response(persona["messages"])['choices'][0]['message']['content']
+            response = get_response(persona["messages"])["choices"][0]["message"][
+                "content"
+            ]
         else:
             # Save the unfiltered response to the persona["messages"] list
             response = get_response_unfiltered(human_input=transcribed_prompt)
@@ -165,18 +185,31 @@ def conversation(selected_voice: str = persona["selected_voice"], is_filtered: b
 
         # Step 4: Convert the response to audio and play it back to the user.
         # Generate the file path for the audio file
-        assistant_audio_file_path = str(generate_audio_file_path(output_folder, persona["name"]))
+        assistant_audio_file_path = str(
+            generate_audio_file_path(output_folder, persona["name"])
+        )
 
-        # Get a speech synthesizer
-        speech_synthesizer = get_speech_synthesizer(selected_voice, assistant_audio_file_path)
+        if natural_voice is None:
+            # Get a speech synthesizer
+            speech_synthesizer = get_speech_synthesizer(
+                selected_voice, assistant_audio_file_path
+            )
+
+            # Generate the audio file
+            speak_text(speech_synthesizer, response)
+
+        else:
+            # Generates the audio file using the natural voice
+            generate_multilingual(response, natural_voice, assistant_audio_file_path)
 
         # Speak the text
-        speak_text(speech_synthesizer, response)
+        print(assistant_audio_file_path)
         play_audio(assistant_audio_file_path)
 
         # If the transcribed_prompt contains "bye." then break out of the loop
         if transcribed_prompt.lower().find("bye.") != -1:
             break
+
 
 def dubbing(selected_voice: str = "Juan"):
     """
@@ -194,7 +227,9 @@ def dubbing(selected_voice: str = "Juan"):
 
         # Step 1: Record audio from the microphone and save it to a file.
         print("Wait in silence to begin recording; wait in silence to terminate")
-        audio_file_path = str(generate_audio_file_path(output_folder, "JorgeEscobar_human"))
+        audio_file_path = str(
+            generate_audio_file_path(output_folder, "JorgeEscobar_human")
+        )
         detect_audio.record_to_file(audio_file_path)
         print(f"done - result written to {audio_file_path}")
 
@@ -214,9 +249,33 @@ def dubbing(selected_voice: str = "Juan"):
         if transcribed_prompt.lower().find("bye.") != -1:
             break
 
+
 def main():
     # dubbing(persona["selected_voice"])
-    conversation(persona["selected_voice"], is_filtered=False)
+    natural_voice = Voice(
+        voice_id="chQ8GR2cY20KeFjeSaXI",
+        name="[ElevenVoices] Hailey - American Female Teen",
+        category="generated",
+        description="",
+        labels={
+            "accent": "american",
+            "age": "young",
+            "voicefrom": "ElevenVoices",
+            "gender": "female",
+        },
+        samples=None,
+        settings=VoiceSettings(stability=0.5, similarity_boost=0.75),
+        design=None,
+        preview_url="https://storage.googleapis.com/eleven-public-prod/PyUBusauIUbpupKTM31Yp4fHtgd2/voices/OgTivnXy9Bsc96AcZaQz/44dc6d49-cd44-4aad-a453-73a12c215702.mp3",
+    )
 
-if __name__ == '__main__':
+    # Run the conversation
+    conversation(
+        persona["selected_voice"],
+        is_filtered=True,
+        natural_voice=natural_voice,
+    )
+
+
+if __name__ == "__main__":
     main()
