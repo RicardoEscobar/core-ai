@@ -32,11 +32,11 @@ def get_response(messages: List) -> str:
     """
     try:
         answer = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4",
             messages=messages,
             temperature=1.0,
-            max_tokens=400, # 8,192 tokens is the max for GPT-4
-            stop=["\n\n", "Link:", "system:"],
+            max_tokens=200, # 8,192 tokens is the max for GPT-4
+            #stop=["\n\n", "Link:", "system:"],
         )
     except openai.error.InvalidRequestError as error:
         print(f"Error: {error}")
