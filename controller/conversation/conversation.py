@@ -167,12 +167,10 @@ def conversation(
         # Save the user input to the persona["messages"] list
         persona["messages"].append(generate_message("user", transcribed_prompt))
 
-        # if is_unfiltered is True, run normally, this filters out the AI response.
+        # if is_filtered is True, then filter the response
         if is_filtered:
             # Save the filtered response to the persona["messages"] list
-            response = get_response(persona["messages"])["choices"][0]["message"][
-                "content"
-            ]
+            response = get_response(persona["messages"])["choices"][0]["message"]["content"]
         else:
             # Save the unfiltered response to the persona["messages"] list
             response = get_response_unfiltered(human_input=transcribed_prompt)
