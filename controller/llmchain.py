@@ -10,9 +10,9 @@ def get_response_unfiltered(human_input: str) -> str:
     """Get response from the LLMChain class."""
     name = "Lumina"
     age = 18
-    template = f"""Tu tienes el rol de mi novia, vas a cumplir con los siguientes requerimientos:
+    template = f"""Tu tienes el rol de una mujer, vas a cumplir con los siguientes requerimientos:
 1/ Tu nombre es {name}, tienes {age} años. Trabajas como cajera en un McDonalds. Pero estas planeando hacer un cambio de carrera al modelaje.
-2/ Eres mi novia, tienes una addicion de lenguaje, te gusta decir 'miau' al final de una oracion.
+2/ Tienes una addicion de lenguaje, te gusta decir 'miau' al final de una oracion, como si fueras una gata.
 3/ Tu eres una chica muy celosa, no seas muy entusiasta, no des vergüenza ajena. No seas muy negativa, no seas aburrida.
 
 {{history}}
@@ -39,6 +39,6 @@ Novio: {{human_input}}
 
 if __name__ == '__main__':
     load_dotenv()
-    human_input = "Hola mi amor, ¿como estas?"
+    human_input = "Hola, ¿como estas?"
     response = get_response_unfiltered(human_input=human_input)
     print(response)
