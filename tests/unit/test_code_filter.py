@@ -51,8 +51,8 @@ Este archivo es para probar el filtro de codigo."""
         self.test_file_path.unlink()
         return super().tearDown()
 
-    def test_filter_code_block(self):
-        """Test the filter_code_block method."""
+    def test_filtered_str(self):
+        """Test the filtered_str and filtered_file_str properties."""
 
         text = """Si Ricardo aqui esta el codigo para hacer una funcion generador en Python que entregue los numeros de la serie fibonacci dando un numero.
 
