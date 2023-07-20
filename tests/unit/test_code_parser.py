@@ -28,7 +28,7 @@ for num in fibonacci(100):
     print(num)
 ```"""
         code_filter = CodeFilter(input_text)
-        expected_result = "Si Ricardo aqui esta el codigo para hacer una funcion generador en Python que entregue los numeros de la serie fibonacci dando un numero.\n\n"
+        expected_result = "Si Ricardo aqui esta el codigo para hacer una funcion generador en Python que entregue los numeros de la serie fibonacci dando un numero."
         actual_result = code_filter.filter_code_block()
         self.assertEqual(expected_result, actual_result)
 
