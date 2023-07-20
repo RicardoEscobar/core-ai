@@ -34,11 +34,18 @@ class CodeFilter:
         filtered_text = ""
         code_block = False
         for line in self.text.splitlines():
+            self.logger.debug("Line: %s", repr(line))
             if line.startswith("```"):
+                self.logger.debug("Code block: %s", repr(line))
                 code_block = not code_block
             elif not code_block:
                 filtered_text += line + "\n"
                 self.logger.debug("Filtered text: %s", repr(filtered_text))
+
+        # Remove trailing whitespace and newlines.
+        filtered_text = filtered_text.rstrip()
+        self.logger.debug("Filtered text: %s", repr(filtered_text))
+        
         return filtered_text
 
     @classmethod
@@ -51,7 +58,7 @@ class CodeFilter:
 
         # create console handler with a higher log level
         cls.console_handler = logging.StreamHandler()
-        cls.console_handler.setLevel(logging.DEBUG)
+        cls.console_handler.setLevel(logging.ERROR)
 
         # create formatter and add it to the handlers
         formater_str = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
