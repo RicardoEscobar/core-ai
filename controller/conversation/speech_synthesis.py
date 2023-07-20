@@ -37,16 +37,19 @@ def get_speech_synthesizer(
         'Gisela' : 'de-DE-GiselaNeural',
         'Amala' : 'de-DE-AmalaNeural',
         'Jorge' : 'es-MX-JorgeNeural',
+        'Isabella' : 'it-IT-IsabellaNeural',
+        'Valentina' : 'es-UY-ValentinaNeural',
+        'Lia': 'es-ES-LiaNeural',
     }
 
     # This example requires environment variables named "SPEECH_KEY" and "SPEECH_REGION"
-    speech_config = speechsdk.SpeechConfig(subscription=SPEECH_KEY, region=SPEECH_REGION)    
+    speech_config = speechsdk.SpeechConfig(subscription=SPEECH_KEY, region=SPEECH_REGION)
     audio_config = speechsdk.audio.AudioOutputConfig(use_default_speaker=False, filename=filename)
-    
+
     # The language of the voice that speaks.
     speech_config.speech_synthesis_voice_name=VOICE_NAME[selected_voice]
-
     speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
+
     return speech_synthesizer
 
 def speak_text(speech_synthesizer: speechsdk.SpeechSynthesizer, text: str):
@@ -59,7 +62,7 @@ def speak_text(speech_synthesizer: speechsdk.SpeechSynthesizer, text: str):
     speech_synthesis_result = speech_synthesizer.speak_text_async(text).get()
 
     if speech_synthesis_result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-        print(f"Assistant: {text}")
+        print(f"\033[34mAssistant:\033[0m \033[33m{text}\033[0m\n")
     elif speech_synthesis_result.reason == speechsdk.ResultReason.Canceled:
         cancellation_details = speech_synthesis_result.cancellation_details
         print(f"Speech synthesis canceled: {cancellation_details.reason}")
