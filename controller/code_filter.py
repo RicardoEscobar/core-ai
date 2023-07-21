@@ -85,10 +85,14 @@ class CodeFilter:
         # Open the file and read the contents
         with open(self.file_path, 'r', encoding='utf-8') as file:
             self.text = file.read()
-        
+            self.logger.debug("self.text: %s", repr(self.text))
+
         # Calls the filtered_str property and returns the filtered text.
-        return self.filtered_str
-    
+        result = self.filtered_str
+        self.logger.debug("Filtered text ===>>> %s", repr(result))
+
+        return result
+
     @filtered_file_str.setter
     def filtered_file_str(self, value: str):
         """This method is used to set the filtered_file_str property."""
@@ -123,3 +127,26 @@ class CodeFilter:
         cls.logger.addHandler(cls.console_handler)
         cls.logger.addHandler(cls.file_handler)
         cls.logger.debug("Logging configuration finished.")
+
+    @staticmethod
+    def remove_duplicate_lines(filepath: str = 'logs/code_filter.log') -> None:
+        """This method is used to remove duplicate lines from a file.
+
+        Parameters
+        ----------
+        filepath : str
+            The path to the file to be filtered.
+
+        Returns
+        -------
+        str
+            The filtered text.
+        """
+        filepath_path = Path(filepath)
+        with open(filepath_path, 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+
+        lines = list(dict.fromkeys(lines))
+
+        with open(filepath_path, 'w', encoding='utf-8') as file:
+            file.writelines(lines)
