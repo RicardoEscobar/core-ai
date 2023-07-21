@@ -171,7 +171,9 @@ def conversation(
         # if is_filtered is True, then filter the response
         if is_filtered:
             # Save the filtered response to the persona["messages"] list
-            response = get_response(persona["messages"])["choices"][0]["message"]["content"]
+            response = get_response(persona["messages"])["choices"][0]["message"][
+                "content"
+            ]
         else:
             # Save the unfiltered response to the persona["messages"] list
             response = get_response_unfiltered(human_input=transcribed_prompt)
@@ -284,11 +286,23 @@ def main():
         preview_url="https://storage.googleapis.com/eleven-public-prod/udmG0I9oKegHHyrU3sEvatdvG2p1/voices/qA6nnGfIRBPIRDeNkPCa/725ee1eb-06f4-4521-9e49-1511cb3a5fb7.mp3",
     )
 
+    loona_natural_voice = Voice(
+        voice_id="07If6JkaNiXuzSTEgKuj",
+        name="Christina - Trained on over 900 characters with emotional dialogue",
+        category="generated",
+        description="",
+        labels={"accent": "american", "age": "young", "gender": "female"},
+        samples=None,
+        settings=VoiceSettings(stability=0.5, similarity_boost=0.75),
+        design=None,
+        preview_url="https://storage.googleapis.com/eleven-public-prod/U1Rx6ByQzXTKXc5wPxu4fXvSRqO2/voices/07If6JkaNiXuzSTEgKuj/c973d3e5-89f1-43e8-861d-89ef866ce41f.mp3",
+    )
+
     # Run the conversation
     conversation(
         persona["selected_voice"],  # The default voice is used
         is_filtered=True,  # Set to False to enable NSFW content
-        natural_voice=male_natural_voice,  # Set to None to use the default voice
+        natural_voice=loona_natural_voice,  # Set to None to use the default voice
     )
 
 
