@@ -59,6 +59,9 @@ class CodeFilter:
 
         self.logger.debug("Filtered text: %s", repr(filtered_str))
 
+        # Remove duplicate lines.
+        self.remove_duplicate_lines()
+
         return filtered_str
 
     @filtered_str.setter
@@ -90,6 +93,9 @@ class CodeFilter:
         # Calls the filtered_str property and returns the filtered text.
         result = self.filtered_str
         self.logger.debug("Filtered text ===>>> %s", repr(result))
+
+        # Remove duplicate lines.
+        self.remove_duplicate_lines()
 
         return result
 
