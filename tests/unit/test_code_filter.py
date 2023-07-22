@@ -3,9 +3,8 @@ if __name__ == "__main__":
     import sys
     import os
 
-    sys.path.append(
-        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-    )
+    ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    sys.path.append(ROOT_DIR)
 
 import unittest
 from pathlib import Path
@@ -15,7 +14,7 @@ from controller.code_filter import CodeFilter
 
 
 class TestCodeFilter(unittest.TestCase):
-    """Test the chat module."""
+    """Test the code_filter module."""
 
     @classmethod
     def setup_logging(cls):
