@@ -16,7 +16,7 @@ from controller.code_filter import CodeFilter
 
 class TestCodeFilter(unittest.TestCase):
     """Test the chat module."""
-    
+
     @classmethod
     def setup_logging(cls):
         """Setup logging configuration."""
@@ -30,7 +30,7 @@ class TestCodeFilter(unittest.TestCase):
         cls.console_handler.setLevel(logging.ERROR)
 
         # create formatter and add it to the handlers
-        formater_str = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        formater_str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         cls.formatter = logging.Formatter(formater_str)
         cls.console_handler.setFormatter(cls.formatter)
         cls.file_handler.setFormatter(cls.formatter)
@@ -78,7 +78,7 @@ Este archivo es para probar el filtro de codigo."""
         self.test_file_path.unlink()
 
         # Remove duplicate lines.
-        CodeFilter.remove_duplicate_lines('logs/code_filter.log')
+        CodeFilter.remove_duplicate_lines("logs/code_filter.log")
 
         return super().tearDown()
 
@@ -111,7 +111,9 @@ for num in fibonacci(100):
 
         # Test with a file path.
         file_path = str(self.test_file_path.resolve())
-        self.logger.info("First instance of file_path: %s on test_filtered_file_str", file_path)
+        self.logger.info(
+            "First instance of file_path: %s on test_filtered_file_str", file_path
+        )
         code_filter = CodeFilter(file_path=file_path)
         expected_result = "Si Ricardo aqui esta el codigo para hacer una funcion generador en Python que entregue los numeros de la serie fibonacci dando un numero.\nEste archivo es para probar el filtro de codigo."
         actual_result = code_filter.filtered_file_str
