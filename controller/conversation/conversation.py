@@ -15,6 +15,7 @@ if __name__ == "__main__":
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Union
+import threading
 
 import openai
 from elevenlabs.api import Voice, VoiceSettings
@@ -28,10 +29,12 @@ from controller.conversation.completion_create import get_response
 from controller.llmchain import get_response_unfiltered
 from controller.conversation.completion_create import save_conversation
 from controller.conversation.play_audio import play_audio
+from controller.conversation.play_audio import get_wav_duration
 from controller.conversation.conversations.conversation_example import persona
 from controller.conversation.load_openai import load_openai
 from controller.natural_voice import generate_multilingual
 from controller.code_filter import CodeFilter
+from controller.vrchat import VRChat
 
 
 def create_folder(folder_path: str = ".") -> Path:
@@ -191,7 +194,7 @@ def conversation(
         )
 
         # Clean the response from code blocks before synthesizing the audio.
-        response = CodeFilter(text=response).filtered_str
+        # response = CodeFilter(text=response).filtered_str # TODO replace, refactor, or remove this line.
 
         # If natural_voice is None, then use the default voice, else use the natural voice.
         if natural_voice is None:
@@ -209,6 +212,24 @@ def conversation(
 
         # Speak the text
         print(assistant_audio_file_path)
+
+        # Calculate the duration of the audio file
+        duration = get_wav_duration(assistant_audio_file_path)
+
+        # Create a VRChat instance
+        vrchat = VRChat()
+
+        # Split the response into chunks of 144 characters
+        response_chunks = vrchat.split_string(response)
+
+        # Send the response to VRChat
+        vrchat.send_text_list(response_chunks, duration)
+
+        # Play the audio file on a separate thread
+        # play_audio_thread = threading.Thread(
+        #     target=play_audio, args=(assistant_audio_file_path,)
+        # )
+        # play_audio_thread.start()
         play_audio(assistant_audio_file_path)
 
         # If the transcribed_prompt contains "bye." then break out of the loop
@@ -302,7 +323,7 @@ def main():
     conversation(
         persona["selected_voice"],  # The default voice is used
         is_filtered=True,  # Set to False to enable NSFW content
-        natural_voice=loona_natural_voice,  # Set to None to use the default voice
+        natural_voice=None,  # Set to None to use the default voice
     )
 
 
