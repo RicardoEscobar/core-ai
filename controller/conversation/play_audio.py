@@ -63,5 +63,24 @@ def play_audio(audio_file_path: str):
         stream.close()
         audio.terminate()
 
+def get_wav_duration(audio_file_path: str) -> float:
+    """Get the duration of a WAV file in seconds."""
+    with wave.open(audio_file_path, 'rb') as wave_file:
+        # Get the frame rate
+        frame_rate = wave_file.getframerate()
+
+        # Get the number of frames
+        num_frames = wave_file.getnframes()
+
+        # Calculate the duration
+        duration = num_frames / frame_rate
+
+        # Return the duration
+        return duration
+
 if __name__ == "__main__":
-    play_audio('example.wav')
+    from pathlib import Path
+
+    filepath = Path(r'D:\conversation-ai\005-Loona-V4\2023-07-23_03-18-58_Loona.wav')
+    #play_audio('example.wav')
+    print(f'duration = {get_wav_duration(str(filepath))} seconds it should be 37 seconds')
