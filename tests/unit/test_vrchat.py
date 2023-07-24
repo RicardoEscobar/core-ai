@@ -160,8 +160,9 @@ She retains the same outfit as before, but with the addition of black knee-high 
         # Send test list
         self.vrchat.send_text_list(expected_split_strings, duration_seconds)
 
-        # Assert that last_sent_text is changed after sending text.
-        self.assertEqual(self.vrchat.last_sent_text, "Hello World!")
+        # Assert that last_sent_text is not changed after sending text since
+        # it's running in a thread and it's not blocking.
+        self.assertEqual(self.vrchat.last_sent_text, "")
         self.logger.info("End of test_send_text_list")
 
 
