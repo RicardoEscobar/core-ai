@@ -233,7 +233,7 @@ def conversation(
         play_audio(assistant_audio_file_path)
 
         # If the transcribed_prompt contains "bye." then break out of the loop
-        if transcribed_prompt.lower().find("bye.") != -1:
+        if transcribed_prompt.lower().find("bye") != -1:
             break
 
 
@@ -323,7 +323,7 @@ def main():
     conversation(
         persona["selected_voice"],  # The default voice is used
         is_filtered=True,  # Set to False to enable NSFW content
-        natural_voice=None,  # Set to None to use the default voice
+        natural_voice=loona_natural_voice,  # Set to None to use the default voice
     )
 
 
