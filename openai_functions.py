@@ -6,6 +6,8 @@ from controller.vrchat import VRChat
 
 load_openai()
 
+MODEL_USED = "gpt-3.5-turbo-0613" # "gpt-4-0613"
+
 
 def dance():
     """Send the dance emote to the VRChat client, when assistant is asked to dance or to show a talent it has."""
@@ -62,11 +64,11 @@ def run_conversation():
     messages = [
         {
             "role": "system",
-            "content": "You are connected to VRChat as an AI assistant. The user may ask you to do things in VRChat. You may dance, since now you control the avatar in VRChat. So answer like you would as if you did the action yourself. Your name is Ann, you may greet the user.",
+            "content": "You are connected to VRChat as an AI assistant. The user may ask you to do things in VRChat. You may dance, since now you control the avatar in VRChat. So answer like you would as if you did the action yourself. Your name is Ann.",
         },
         {
             "role": "user",
-            "content": "Hello there! My name is Ricardo. What's your name?",
+            "content": "Hello there! My name is Ricardo. How are you doing?",
         },
     ]
     functions = [
@@ -110,7 +112,7 @@ def run_conversation():
         },
     ]
     response = openai.ChatCompletion.create(
-        model="gpt-4-0613", # "gpt-3.5-turbo-0613",
+        model=MODEL_USED, #"gpt-4-0613", # "gpt-3.5-turbo-0613",
         messages=messages,
         functions=functions,
         function_call="auto",  # auto is default, but we'll be explicit
@@ -147,7 +149,7 @@ def run_conversation():
         )  # extend conversation with function response
 
         second_response = openai.ChatCompletion.create(
-            model="gpt-4-0613", # "gpt-3.5-turbo-0613",
+            model=MODEL_USED, # "gpt-4-0613", # "gpt-3.5-turbo-0613",
             messages=messages,
         )  # get a new response from GPT where it can see the function response
         print(f"second_response = {repr(second_response)}")
