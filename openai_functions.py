@@ -6,7 +6,7 @@ from controller.vrchat import VRChat
 
 load_openai()
 
-MODEL_USED = "gpt-3.5-turbo-0613" # "gpt-4-0613"
+MODEL_USED = "gpt-3.5-turbo-0613"  # "gpt-4-0613"
 
 
 def dance():
@@ -70,6 +70,14 @@ def run_conversation():
             "role": "user",
             "content": "Hello there! My name is Ricardo. How are you doing?",
         },
+        {
+            "role": "assistant",
+            "content": "Hello Ricardo! I'm Ann, your AI assistant for VRChat. I'm doing great, thank you! How can I assist you today?",
+        },
+        {
+            "role": "user",
+            "content": "I wonder what talents you have? Can you show me something?",
+        },
     ]
     functions = [
         {
@@ -112,7 +120,7 @@ def run_conversation():
         },
     ]
     response = openai.ChatCompletion.create(
-        model=MODEL_USED, #"gpt-4-0613", # "gpt-3.5-turbo-0613",
+        model=MODEL_USED,  # "gpt-4-0613", # "gpt-3.5-turbo-0613",
         messages=messages,
         functions=functions,
         function_call="auto",  # auto is default, but we'll be explicit
@@ -149,7 +157,7 @@ def run_conversation():
         )  # extend conversation with function response
 
         second_response = openai.ChatCompletion.create(
-            model=MODEL_USED, # "gpt-4-0613", # "gpt-3.5-turbo-0613",
+            model=MODEL_USED,  # "gpt-4-0613", # "gpt-3.5-turbo-0613",
             messages=messages,
         )  # get a new response from GPT where it can see the function response
         print(f"second_response = {repr(second_response)}")
