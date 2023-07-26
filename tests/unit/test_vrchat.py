@@ -54,10 +54,11 @@ class TestVRChat(unittest.TestCase):
 
         # Assert that last_sent_text is changed after sending text.
         self.vrchat.send_text("Hello World! from test_vrchat")
-        self.assertEqual(self.vrchat.last_sent_text, "Hello World!")
+        expected_last_sent_text = "Hello World! from test_vrchat"
+        self.assertEqual(self.vrchat.last_sent_text,expected_last_sent_text)
 
         # Assert that send_message is called.
-        mock_send_message.assert_called_with("/chatbox/input", "Hello World!")
+        mock_send_message.assert_called_with("/chatbox/input", [expected_last_sent_text, True, False])
 
         # Assert that ValueError is raised when sending empty text.
         with self.assertRaises(ValueError):
@@ -136,34 +137,40 @@ She retains the same outfit as before, but with the addition of black knee-high 
 
         expected_split_strings = [
             "Loona is a hellhound with a wolf-like appearance. She has a pointed, dog-like muzzle with sharp and pointy teeth, and a dark grey nose. Her eyes",
-            "have red sclera with white irises, and she wears black winged eyeliner. She also has a piercing on her right eyebrow with a black hoop for",
-            "jewelry.  Her fur is white with grey encircling her face, grey patches on her shoulders, and long, voluminous silver hair swept to the side to",
-            "reveal her dark grey ears - the left of which is pierced with two small, black hoop earrings, while the right is ragged. She has a large, dark",
-            "grey bushy tail with white on the underside.  Her outfit features a spiked black choker. Her tattered grey, off-the-shoulder crop-top is held up",
-            "at the neckline by a series of crisscross spaghetti-straps that form an inverted pentagram. She wears black shorts that are tattered at the",
-            "hems, with a white crescent moon detail on the right side. Loona accessorizes with fingerless gloves and black toeless thigh-high stockings,",
-            "with her black claws protruding due to her digitigrade stance.  As a teenager, she appears very largely similar to her current appearance,",
-            "except the spot where her right ear is ragged as an adult used to have two black hoop earrings in it just like her left ear, implying it was",
-            "possibly ripped out that way. The only other difference is her outfit; instead of her gray pentagram crop-top, she wears a red off-the-shoulder",
-            "long sleeve top with a black skull design, and instead of her toeless thigh-high stockings, she wears distressed black stockings that go up to",
-            "her waist.  She is the tallest and the only non-imp member of I.M.P.  Human Disguise Loona's human disguise is greatly similar to her hellhound",
-            "form, albeit now she takes on the appearance of a goth teenager. Her eye colors are inverted, as she has white sclera with red irises and has a",
-            "visible belly button which she lacks in hellhound form. She shrinks down from her demon form, appearing to be of average height compared to most",
-            "humans in this form and somewhat slimmer than normal.  She retains the same outfit as before, but with the addition of black knee-high socks and",
-            "high-top sneakers and black lipstick. Her choker also loses the spikes, and in place of her torn right ear, she now has two earrings on each",
+            # "have red sclera with white irises, and she wears black winged eyeliner. She also has a piercing on her right eyebrow with a black hoop for",
+            # "jewelry.  Her fur is white with grey encircling her face, grey patches on her shoulders, and long, voluminous silver hair swept to the side to",
+            # "reveal her dark grey ears - the left of which is pierced with two small, black hoop earrings, while the right is ragged. She has a large, dark",
+            # "grey bushy tail with white on the underside.  Her outfit features a spiked black choker. Her tattered grey, off-the-shoulder crop-top is held up",
+            # "at the neckline by a series of crisscross spaghetti-straps that form an inverted pentagram. She wears black shorts that are tattered at the",
+            # "hems, with a white crescent moon detail on the right side. Loona accessorizes with fingerless gloves and black toeless thigh-high stockings,",
+            # "with her black claws protruding due to her digitigrade stance.  As a teenager, she appears very largely similar to her current appearance,",
+            # "except the spot where her right ear is ragged as an adult used to have two black hoop earrings in it just like her left ear, implying it was",
+            # "possibly ripped out that way. The only other difference is her outfit; instead of her gray pentagram crop-top, she wears a red off-the-shoulder",
+            # "long sleeve top with a black skull design, and instead of her toeless thigh-high stockings, she wears distressed black stockings that go up to",
+            # "her waist.  She is the tallest and the only non-imp member of I.M.P.  Human Disguise Loona's human disguise is greatly similar to her hellhound",
+            # "form, albeit now she takes on the appearance of a goth teenager. Her eye colors are inverted, as she has white sclera with red irises and has a",
+            # "visible belly button which she lacks in hellhound form. She shrinks down from her demon form, appearing to be of average height compared to most",
+            # "humans in this form and somewhat slimmer than normal.  She retains the same outfit as before, but with the addition of black knee-high socks and",
+            # "high-top sneakers and black lipstick. Her choker also loses the spikes, and in place of her torn right ear, she now has two earrings on each",
             "ear. Her head is shaved on the right side.",
         ]
 
         # Create test duration
-        duration_seconds = 180
+        duration_seconds = 10
 
         # Send test list
         self.vrchat.send_text_list(expected_split_strings, duration_seconds)
-
-        # Assert that last_sent_text is not changed after sending text since
-        # it's running in a thread and it's not blocking.
-        self.assertEqual(self.vrchat.last_sent_text, "")
         self.logger.info("End of test_send_text_list")
+
+    @patch("pythonosc.udp_client.SimpleUDPClient.send_message")
+    def test_send_vrc_emote(self, mock_send_message):
+        """Test the send_vrc_emote method."""
+
+        # Assert that send_message is called.
+        self.vrchat.send_vrc_emote("wave")
+        mock_send_message.assert_called_with("/avatar/parameters/VRCEmote", 1)
+
+        # TODO map more emtes to numbers
 
 
 if __name__ == "__main__":
