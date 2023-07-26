@@ -9,20 +9,34 @@ load_openai()
 MODEL_USED = "gpt-3.5-turbo-0613"  # "gpt-4-0613"
 
 
-def dance():
+def sad(message: str = "I'm sad."):
+    """Send the sad emote to the VRChat client, when assistant is sad."""
+    vrchat = VRChat()
+    # Send the greeting to the VRChat client.
+    vrchat.send_text(message)
+    # Send wave emote to the VRChat client.
+    vrchat.send_vrc_emote("sad")
+
+    response = {
+        "response": message,
+    }
+
+    return json.dumps(response)
+
+
+def dance(message: str = "Of course! look I'm Dancing!"):
     """Send the dance emote to the VRChat client, when assistant is asked to dance or to show a talent it has."""
     vrchat = VRChat()
-    response = "Of course! look I'm Dancing!"
     # Send the greeting to the VRChat client.
-    vrchat.send_text(response)
+    vrchat.send_text(message)
     # Send wave emote to the VRChat client.
     vrchat.send_vrc_emote("a1-dance")
 
-    result = {
-        "response": response,
+    response = {
+        "response": message,
     }
 
-    return json.dumps(result)
+    return json.dumps(response)
 
 
 # Example dummy function hard coded to return the hello world message.
@@ -76,6 +90,18 @@ def run_conversation():
             "role": "user",
             "content": "I wonder what talents you have? Can you show me something?",
         },
+        {
+            "role": "assistant",
+            "content": "Alright, let's get the party started! *Ann's avatar starts grooving to the beat, showcasing a lively dance routine* Ta-da! How was that?",
+        },
+        {
+            "role": "user",
+            "content": "I'm sorry but I got to go now. I'll see you later, we are never going to see each otehr ever again.",
+        },
+        {
+            "role": "system",
+            "content": "The user disconnected from VRChat. You feel sad.",
+        },
     ]
     functions = [
         {
@@ -112,8 +138,27 @@ def run_conversation():
             "description": "Send the dance emote to the VRChat client, when assistant is asked to dance or to show a talent it has",
             "parameters": {
                 "type": "object",
-                "properties": {},
-                "required": [],
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "description": "The `message` sent to the VRChat client",
+                    },
+                },
+                "required": ["message"],
+            },
+        },
+        {
+            "name": "sad",
+            "description": "Send the sad emote to the VRChat client, when assistant is sad",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "description": "The `message` sent to the VRChat client",
+                    },
+                },
+                "required": ["message"],
             },
         },
     ]
@@ -134,6 +179,7 @@ def run_conversation():
             "get_current_weather": get_current_weather,
             "greet_user": greet_user,
             "dance": dance,
+            "sad": sad,
         }  # only one function in this example, but you can have multiple
         function_name = response_message["function_call"]["name"]
         fuction_to_call = available_functions[function_name]
