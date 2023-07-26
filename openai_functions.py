@@ -26,9 +26,7 @@ def dance():
 
 
 # Example dummy function hard coded to return the hello world message.
-def greet_user(
-    greeting: str = "Hello world!",
-):
+def greet_user(greeting: str = "Hello world!"):
     """Response to the user the greeting message when the user greets the assistant, if the user mentions his or her name, it uses it as part of the greeting message."""
     # Create VRChat client to send the greeting to the VRChat client.
     vrchat = VRChat()
