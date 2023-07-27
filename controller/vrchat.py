@@ -55,7 +55,7 @@ class VRChat:
         emote_dict = {
             "none": 0,
             "wave": 1,
-            "applause": 2,
+            "applause": 2, # loops, needs to be stopped
             "point": 3,
             "cheer": 4, # loops, needs to be stopped
             "dance": 5, # loops, needs to be stopped
