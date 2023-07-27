@@ -55,20 +55,20 @@ class VRChat:
         emote_dict = {
             "none": 0,
             "wave": 1,
-            "applause": 2, # loops, needs to be stopped
+            "applause": {"emote": 2, "duration": 5}, # loops, needs to be stopped
             "point": 3,
-            "cheer": 4, # loops, needs to be stopped
+            "cheer": {"emote": 4, "duration": 5},# loops, needs to be stopped
             "dance": 5, # loops, needs to be stopped
             "backflip": 6,
             "sad": 7,
             "die": 8, # loops, needs to be stopped
             "t-pose": 9, # loops, needs to be stopped
-            "hk-walk": 10, # loops, needs to be stopped
+            "hk-walk": {"emote": 10, "duration": 5}, # loops, needs to be stopped
             "dont-start-now": 11, # loops, needs to be stopped
             "ashton-salt-lake": 12, # loops, needs to be stopped
             "blinding-lights": 13, # loops, needs to be stopped
             "skinwalker": 14, # loops, needs to be stopped
-            "laugh": 15, # loops, needs to be stopped
+            "laugh": {"emote": 15, "duration": 5}, # loops, needs to be stopped
             "moonwalking": 16, # loops, needs to be stopped
             "armup": 17, # loops, needs to be stopped
             "afrohouse": 18, # loops, needs to be stopped
@@ -77,11 +77,32 @@ class VRChat:
             "a1-dance": 21, # loops, needs to be stopped
             "bbd": 22, # loops, needs to be stopped
             "balletspin": 23, # loops, needs to be stopped
-            "calculated" : 24, # loops, needs to be stopped
+            "calculated" : {"emote": 24, "duration": 3}, # loops, needs to be stopped
         }
         address = "/avatar/parameters/VRCEmote"
-        self.client.send_message(address, emote_dict[emote_key])
-        self.logger.debug("Sent emote '%s' with value: %d  to %s", emote_key, emote_dict[emote_key], address)
+        # If emote_dict[emote_key] us a dictionary, save the duration and send the emote.
+        if isinstance(emote_dict[emote_key], dict):
+            duration = emote_dict[emote_key]["duration"]
+            emote_value = emote_dict[emote_key]["emote"]
+            self.logger.debug("Sending emote '%s' with value: %d  to %s", emote_key, emote_value, address)
+            self.client.send_message(address, emote_value)
+
+            # Wait for the amount of seconds specified at 'duration' argument, then stop the emote.
+            start_time = time.monotonic()
+
+            while True:
+                current_time = time.monotonic()
+                elapsed_time = current_time - start_time
+
+                if elapsed_time >= duration + 1:
+                    self.logger.debug("Sending emote '%s' with value: %d  to %s", emote_key, 0, address)
+                    # stop emote
+                    self.client.send_message(address, 0)
+                    break
+        else:
+            # If emote_key is in emote_dict, send emote to the VRChat client.
+            self.client.send_message(address, emote_dict[emote_key])
+            self.logger.debug("Sent emote '%s' with value: %d  to %s", emote_key, emote_dict[emote_key], address)
 
     def send_text(self, text: str = ""):
         """This method sends the text to the VRChat client."""
