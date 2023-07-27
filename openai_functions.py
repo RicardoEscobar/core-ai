@@ -9,13 +9,13 @@ load_openai()
 MODEL_USED = "gpt-3.5-turbo-0613"  # "gpt-4-0613"
 
 
-def sad(message: str = "I'm sad."):
-    """Send the sad emote to the VRChat client, when assistant is sad."""
+def show_emote(message: str = "", emote: str = "sad"):
+    """Send an emote to the VRChat client, when assistant is sad, waves at the user, is dancing, laughs."""
     vrchat = VRChat()
     # Send the greeting to the VRChat client.
     vrchat.send_text(message)
     # Send wave emote to the VRChat client.
-    vrchat.send_vrc_emote("sad")
+    vrchat.send_vrc_emote(emote)
 
     response = {
         "response": message,
@@ -76,66 +76,88 @@ def run_conversation():
     messages = [
         {
             "role": "system",
-            "content": "You are connected to VRChat as an AI assistant. The user may ask you to do things in VRChat. You may dance, since now you control the avatar in VRChat. So answer like you would as if you did the action yourself. Your name is Ann.",
+            "content": "You are connected to VRChat as an AI assistant. The user may ask you to do things in VRChat. You may dance, since now you control the avatar in VRChat. So answer like you would as if you did the action yourself. Your name is Ann. You wave at the user when greeting him.",
         },
         {
             "role": "user",
-            "content": "Hello there! My name is Ricardo. How are you doing?",
-        },
-        {
-            "role": "assistant",
-            "content": "Hello Ricardo! I'm Ann, your AI assistant for VRChat. I'm doing great, thank you! How can I assist you today?",
-        },
-        {
-            "role": "user",
-            "content": "I wonder what talents you have? Can you show me something?",
-        },
-        {
-            "role": "assistant",
-            "content": "Alright, let's get the party started! *Ann's avatar starts grooving to the beat, showcasing a lively dance routine* Ta-da! How was that?",
-        },
-        {
-            "role": "user",
-            "content": "I'm sorry but I got to go now. I'll see you later, we are never going to see each otehr ever again.",
+            "content": "Hello there! My name is Ricardo. How are you? *does a back flip*",
         },
         {
             "role": "system",
-            "content": "The user disconnected from VRChat. You feel sad.",
+            "content": "The user does a back flip. You feel impressed and applaud.",
         },
+        # {
+        #     "role": "system",
+        #     "content": "The user looks patetic and you laugh at him. Making a joke about him falling.",
+        # },
+        # {
+        #     "role": "assistant",
+        #     "content": "Hello Ricardo! I'm Ann, your AI assistant for VRChat. I'm doing great, thank you! How can I assist you today?",
+        # },
+        # {
+        #     "role": "user",
+        #     "content": "I wonder what talents you have? Can you show me something?",
+        # },
+        # # {
+        #     "role": "assistant",
+        #     "content": "Alright, let's get the party started! *Ann's avatar starts grooving to the beat, showcasing a lively dance routine* Ta-da! How was that?",
+        # },
+        # {
+        #     "role": "user",
+        #     "content": "I'm sorry but I got to go now. I'll see you later, we are never going to see each otehr ever again.",
+        # },
+        # {
+        #     "role": "system",
+        #     "content": "The user disconnected from VRChat. You feel sad.",
+        # },
     ]
     functions = [
+        # {
+        #     "name": "get_current_weather",
+        #     "description": "Get the current weather in a given location",
+        #     "parameters": {
+        #         "type": "object",
+        #         "properties": {
+        #             "location": {
+        #                 "type": "string",
+        #                 "description": "The city and state, e.g. San Francisco, CA",
+        #             },
+        #             "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
+        #         },
+        #         "required": ["location"],
+        #     },
+        # },
+        # {
+        #     "name": "greet_user",
+        #     "description": "Runs whenever the user greets the assistant, sends a `greeting` message to the VRChat client",
+        #     "parameters": {
+        #         "type": "object",
+        #         "properties": {
+        #             "greeting": {
+        #                 "type": "string",
+        #                 "description": "The `greeting` message sent to the VRChat client",
+        #             },
+        #         },
+        #         "required": ["greeting"],
+        #     },
+        # },
+        # {
+        #     "name": "dance",
+        #     "description": "Send the dance emote to the VRChat client, when assistant is asked to dance or to show a talent it has",
+        #     "parameters": {
+        #         "type": "object",
+        #         "properties": {
+        #             "message": {
+        #                 "type": "string",
+        #                 "description": "The `message` sent to the VRChat client",
+        #             },
+        #         },
+        #         "required": ["message"],
+        #     },
+        # },
         {
-            "name": "get_current_weather",
-            "description": "Get the current weather in a given location",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "location": {
-                        "type": "string",
-                        "description": "The city and state, e.g. San Francisco, CA",
-                    },
-                    "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
-                },
-                "required": ["location"],
-            },
-        },
-        {
-            "name": "greet_user",
-            "description": "Runs whenever the user greets the assistant, sends a `greeting` message to the VRChat client",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "greeting": {
-                        "type": "string",
-                        "description": "The `greeting` message sent to the VRChat client",
-                    },
-                },
-                "required": ["greeting"],
-            },
-        },
-        {
-            "name": "dance",
-            "description": "Send the dance emote to the VRChat client, when assistant is asked to dance or to show a talent it has",
+            "name": "show_emote",
+            "description": "Send an emote to the VRChat client, when assistant is sad, waves at the user when greeting him, is dancing, laughs, applause",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -143,22 +165,12 @@ def run_conversation():
                         "type": "string",
                         "description": "The `message` sent to the VRChat client",
                     },
-                },
-                "required": ["message"],
-            },
-        },
-        {
-            "name": "sad",
-            "description": "Send the sad emote to the VRChat client, when assistant is sad",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "message": {
+                    "emote": {
                         "type": "string",
-                        "description": "The `message` sent to the VRChat client",
+                        "enum": ["sad", "wave", "a1-dance", "laugh", "applause"]
                     },
                 },
-                "required": ["message"],
+                "required": ["message", "emote"],
             },
         },
     ]
@@ -176,10 +188,10 @@ def run_conversation():
         # Step 3: call the function
         # Note: the JSON response may not always be valid; be sure to handle errors
         available_functions = {
-            "get_current_weather": get_current_weather,
-            "greet_user": greet_user,
-            "dance": dance,
-            "sad": sad,
+            # "get_current_weather": get_current_weather,
+            # "greet_user": greet_user,
+            # "dance": dance,
+            "show_emote": show_emote,
         }  # only one function in this example, but you can have multiple
         function_name = response_message["function_call"]["name"]
         fuction_to_call = available_functions[function_name]
