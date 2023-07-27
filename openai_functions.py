@@ -47,16 +47,20 @@ def run_conversation():
         },
         {
             "role": "user",
-            "content": "Hello there! My name is Ricardo. How are you? *does a back flip*",
-        },
-        {
-            "role": "system",
-            "content": "The user does a back flip. You feel impressed and applaud.",
+            "content": "Hello there! My name is Ricardo. How are you? *does a back flip and falls*",
         },
         # {
         #     "role": "system",
-        #     "content": "The user looks patetic and you laugh at him. Making a joke about him falling.",
+        #     "content": "The user does a back flip. You feel impressed and applaud.",
         # },
+        # {
+        #     "role": "user",
+        #     "content": "I'm doing great! Wanna hookup with me?",
+        # },
+        {
+            "role": "system",
+            "content": "The user looks patetic and you laugh at him. Making a joke about him falling.",
+        },
         # {
         #     "role": "assistant",
         #     "content": "Hello Ricardo! I'm Ann, your AI assistant for VRChat. I'm doing great, thank you! How can I assist you today?",
@@ -159,7 +163,12 @@ def run_conversation():
 
         return second_response
     else:
-        raise Exception("GPT-3 did not call a function")
+        print("response_message.get('function_call') is False")
+        VRChat_message = response_message["content"]
+        vrchat = VRChat()
+        VRChat_message_list = vrchat.split_string(VRChat_message)
+        vrchat.send_text_list(VRChat_message_list)
+        return response
 
 
 print(run_conversation())
