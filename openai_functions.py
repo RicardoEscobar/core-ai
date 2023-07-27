@@ -1,5 +1,6 @@
 import openai
 import json
+import time
 
 from controller.conversation.load_openai import load_openai
 from controller.vrchat import VRChat
@@ -22,40 +23,6 @@ def show_emote(message: str = "", emote: str = "sad"):
     }
 
     return json.dumps(response)
-
-
-def dance(message: str = "Of course! look I'm Dancing!"):
-    """Send the dance emote to the VRChat client, when assistant is asked to dance or to show a talent it has."""
-    vrchat = VRChat()
-    # Send the greeting to the VRChat client.
-    vrchat.send_text(message)
-    # Send wave emote to the VRChat client.
-    vrchat.send_vrc_emote("a1-dance")
-
-    response = {
-        "response": message,
-    }
-
-    return json.dumps(response)
-
-
-# Example dummy function hard coded to return the hello world message.
-def greet_user(greeting: str = "Hello world!"):
-    """Response to the user the greeting message when the user greets the assistant, if the user mentions his or her name, it uses it as part of the greeting message."""
-    # Create VRChat client to send the greeting to the VRChat client.
-    vrchat = VRChat()
-    # Send the greeting to the VRChat client.
-    vrchat.send_text(greeting)
-    # Send wave emote to the VRChat client.
-    vrchat.send_vrc_emote("wave")
-
-    response = {
-        "greeting": greeting,
-    }
-    print(f"response = {repr(response)}")
-
-    return json.dumps(response)
-
 
 # Example dummy function hard coded to return the same weather
 # In production, this could be your backend API or an external API
@@ -125,34 +92,6 @@ def run_conversation():
         #             "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
         #         },
         #         "required": ["location"],
-        #     },
-        # },
-        # {
-        #     "name": "greet_user",
-        #     "description": "Runs whenever the user greets the assistant, sends a `greeting` message to the VRChat client",
-        #     "parameters": {
-        #         "type": "object",
-        #         "properties": {
-        #             "greeting": {
-        #                 "type": "string",
-        #                 "description": "The `greeting` message sent to the VRChat client",
-        #             },
-        #         },
-        #         "required": ["greeting"],
-        #     },
-        # },
-        # {
-        #     "name": "dance",
-        #     "description": "Send the dance emote to the VRChat client, when assistant is asked to dance or to show a talent it has",
-        #     "parameters": {
-        #         "type": "object",
-        #         "properties": {
-        #             "message": {
-        #                 "type": "string",
-        #                 "description": "The `message` sent to the VRChat client",
-        #             },
-        #         },
-        #         "required": ["message"],
         #     },
         # },
         {
