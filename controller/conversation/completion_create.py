@@ -32,7 +32,7 @@ def get_response(messages: List) -> str:
     """
     try:
         answer = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4-0613",
             messages=messages,
             temperature=1.0,
             max_tokens=200, # 8,192 tokens is the max for GPT-4
