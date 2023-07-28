@@ -51,25 +51,33 @@ def run_conversation():
         },
         # {
         #     "role": "system",
+        #     "content": "The user does a back flip. You feel sad  for him because he fell.",
+        # },
+        # {
+        #     "role": "system",
         #     "content": "The user does a back flip. You feel impressed and applaud.",
         # },
         # {
         #     "role": "user",
         #     "content": "I'm doing great! Wanna hookup with me?",
         # },
-        {
-            "role": "system",
-            "content": "The user looks patetic and you laugh at him. Making a joke about him falling.",
-        },
+        # {
+        #     "role": "system",
+        #     "content": "The user looks patetic and you laugh at him. Making a joke about him falling.",
+        # },
         # {
         #     "role": "assistant",
         #     "content": "Hello Ricardo! I'm Ann, your AI assistant for VRChat. I'm doing great, thank you! How can I assist you today?",
         # },
         # {
         #     "role": "user",
-        #     "content": "I wonder what talents you have? Can you show me something?",
+        #     "content": "I wonder what talents do you have? Can you show me something?",
         # },
-        # # {
+        {
+            "role": "system",
+            "content": "The user asks you to show him something. You feel excited and dance.",
+        },
+        # {
         #     "role": "assistant",
         #     "content": "Alright, let's get the party started! *Ann's avatar starts grooving to the beat, showcasing a lively dance routine* Ta-da! How was that?",
         # },
@@ -166,8 +174,7 @@ def run_conversation():
         print("response_message.get('function_call') is False")
         VRChat_message = response_message["content"]
         vrchat = VRChat()
-        VRChat_message_list = vrchat.split_string(VRChat_message)
-        vrchat.send_text_list(VRChat_message_list)
+        vrchat.send_text(VRChat_message)
         return response
 
 
