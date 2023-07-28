@@ -94,23 +94,6 @@ class VRChat:
             self.client.send_message(address, emote_value)
 
             # Wait for the amount of seconds specified at 'duration' argument, then stop the emote.
-            # start_time = time.monotonic()
-
-            # while True:
-            #     current_time = time.monotonic()
-            #     elapsed_time = current_time - start_time
-
-            #     if elapsed_time >= duration + 1:
-            #         self.logger.debug(
-            #             "Sending emote '%s' with value: %d  to %s",
-            #             emote_key,
-            #             0,
-            #             address,
-            #         )
-            #         # stop emote
-            #         self.client.send_message(address, 0)
-            #         break
-            # Send the 'none' emote (0) after a delay.
             threading.Timer(duration, self.client.send_message, args=[address, 0]).start()
 
         else:
