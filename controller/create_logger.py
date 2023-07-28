@@ -48,7 +48,7 @@ def create_logger(
 
     # create formatter and add it to the handlers
     formatter = logging.Formatter(
-        "%(asctime)s, %(name)s, %(lineno)d, %(funcName)s, %(levelname)s, %(thread)s, %(message)s"
+        "%(asctime)s, %(name)s, %(lineno)d, %(funcName)s, %(levelname)s, %(threadName)s, %(message)s"
     )
 
     file_handler.setFormatter(formatter)
