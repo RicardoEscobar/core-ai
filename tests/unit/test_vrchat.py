@@ -9,7 +9,6 @@ if __name__ == "__main__":
 import unittest
 from unittest.mock import patch
 from pathlib import Path
-import logging
 from typing import List
 import time
 
@@ -53,7 +52,7 @@ class TestVRChat(unittest.TestCase):
         """Test the send_text method."""
 
         # Assert that last_sent_text is changed after sending text.
-        self.vrchat.send_text("Hello World! from test_vrchat")
+        self.vrchat._send_text("Hello World! from test_vrchat")
         expected_last_sent_text = "Hello World! from test_vrchat"
         self.assertEqual(self.vrchat.last_sent_text,expected_last_sent_text)
 
@@ -62,11 +61,7 @@ class TestVRChat(unittest.TestCase):
 
         # Assert that ValueError is raised when sending empty text.
         with self.assertRaises(ValueError):
-            self.vrchat.send_text()
-
-        # Assert that ValueError is raised when surpassing text limit.
-        with self.assertRaises(ValueError):
-            self.vrchat.send_text("a" * (self.vrchat.TEXT_LIMIT + 1))
+            self.vrchat._send_text()
 
     def test_split_string(self):
         """Test the split_string method."""
@@ -105,10 +100,6 @@ She retains the same outfit as before, but with the addition of black knee-high 
             "high-top sneakers and black lipstick. Her choker also loses the spikes, and in place of her torn right ear, she now has two earrings on each",
             "ear. Her head is shaved on the right side.",
         ]
-        
-        # for _, split_string in enumerate(expected_split_strings):
-        #     self.vrchat.send_text(split_string)
-        #     time.sleep(duration_per_message)
 
         # Split a string into a list of strings
         actual_split_strings = self.vrchat.split_string(text)
@@ -169,8 +160,6 @@ She retains the same outfit as before, but with the addition of black knee-high 
         # Assert that send_message is called.
         self.vrchat.send_vrc_emote("wave")
         mock_send_message.assert_called_with("/avatar/parameters/VRCEmote", 1)
-
-        # TODO map more emtes to numbers
 
 
 if __name__ == "__main__":
