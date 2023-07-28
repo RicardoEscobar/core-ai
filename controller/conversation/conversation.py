@@ -224,12 +224,6 @@ def conversation(
 
         # Send the response to VRChat
         vrchat.send_text_list(response_chunks, duration)
-
-        # Play the audio file on a separate thread
-        # play_audio_thread = threading.Thread(
-        #     target=play_audio, args=(assistant_audio_file_path,)
-        # )
-        # play_audio_thread.start()
         play_audio(assistant_audio_file_path)
 
         # If the transcribed_prompt contains "bye." then break out of the loop
@@ -323,7 +317,7 @@ def main():
     conversation(
         persona["selected_voice"],  # The default voice is used
         is_filtered=True,  # Set to False to enable NSFW content
-        natural_voice=loona_natural_voice,  # Set to None to use the default voice
+        natural_voice=female_natural_voice,  # Set to None to use the default voice
     )
 
 
