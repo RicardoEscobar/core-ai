@@ -3,7 +3,6 @@ elevenlabs==0.2.21
 langchain==0.0.246
 numpy==1.24.1
 openai==0.26.5
-Pillow==9.3.0
 Pillow==10.0.0
 psycopg==3.1.8
 pyaudio==0.2.13
