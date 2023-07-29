@@ -1,4 +1,9 @@
 """Testing grounds for the new text to speech system. It should sound more natural than the old one."""
+if __name__ == '__main__':
+    import os
+    import sys
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import os
 from typing import Union
 from pathlib import Path
@@ -9,6 +14,7 @@ from elevenlabs import generate, play, voices, save
 from elevenlabs.api import Voices, Voice, VoiceSettings
 
 from controller.conversation.load_openai import load_openai
+
 
 # Load environment variables from .env file
 load_openai()
@@ -90,8 +96,8 @@ def main():
         preview_url="https://storage.googleapis.com/eleven-public-prod/PyUBusauIUbpupKTM31Yp4fHtgd2/voices/OgTivnXy9Bsc96AcZaQz/44dc6d49-cd44-4aad-a453-73a12c215702.mp3",
     )
 
-    generate_multilingual(text="¡Hola! Mi nombre es Lumina, encantada de conocerte.", voice=lumine_voice)
-    # get_voices()
+    #generate_multilingual(text="¡Hola! Mi nombre es Lumina, encantada de conocerte.", voice=lumine_voice)
+    get_voices()
     # get_voice_info()
 
 

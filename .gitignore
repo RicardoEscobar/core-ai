@@ -403,3 +403,6 @@ controller/conversation/conversations
 *.sqlite3
 *.db
 *.db3
+
+# Python requirements
+!requirements.txt

@@ -15,6 +15,7 @@ if __name__ == "__main__":
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Union
+import threading
 
 import openai
 from elevenlabs.api import Voice, VoiceSettings
@@ -28,9 +29,12 @@ from controller.conversation.completion_create import get_response
 from controller.llmchain import get_response_unfiltered
 from controller.conversation.completion_create import save_conversation
 from controller.conversation.play_audio import play_audio
+from controller.conversation.play_audio import get_wav_duration
 from controller.conversation.conversations.conversation_example import persona
 from controller.conversation.load_openai import load_openai
 from controller.natural_voice import generate_multilingual
+from controller.code_filter import CodeFilter
+from controller.vrchat import VRChat
 
 
 def create_folder(folder_path: str = ".") -> Path:
@@ -170,7 +174,9 @@ def conversation(
         # if is_filtered is True, then filter the response
         if is_filtered:
             # Save the filtered response to the persona["messages"] list
-            response = get_response(persona["messages"])["choices"][0]["message"]["content"]
+            response = get_response(persona["messages"])["choices"][0]["message"][
+                "content"
+            ]
         else:
             # Save the unfiltered response to the persona["messages"] list
             response = get_response_unfiltered(human_input=transcribed_prompt)
@@ -182,11 +188,15 @@ def conversation(
         save_conversation(persona)
 
         # Step 4: Convert the response to audio and play it back to the user.
-        # Generate the file path for the audio file
+        # Generate the file path for the audio file, removing spaces from the persona["name"].
         assistant_audio_file_path = str(
-            generate_audio_file_path(output_folder, persona["name"])
+            generate_audio_file_path(output_folder, persona["name"].replace(" ", "_"))
         )
 
+        # Clean the response from code blocks before synthesizing the audio.
+        # response = CodeFilter(text=response).filtered_str # TODO replace, refactor, or remove this line.
+
+        # If natural_voice is None, then use the default voice, else use the natural voice.
         if natural_voice is None:
             # Get a speech synthesizer
             speech_synthesizer = get_speech_synthesizer(
@@ -202,10 +212,22 @@ def conversation(
 
         # Speak the text
         print(assistant_audio_file_path)
+
+        # Calculate the duration of the audio file
+        duration = get_wav_duration(assistant_audio_file_path)
+
+        # Create a VRChat instance
+        vrchat = VRChat()
+
+        # Split the response into chunks of 144 characters
+        response_chunks = vrchat.split_string(response)
+
+        # Send the response to VRChat
+        vrchat.send_text_list(response_chunks, duration)
         play_audio(assistant_audio_file_path)
 
         # If the transcribed_prompt contains "bye." then break out of the loop
-        if transcribed_prompt.lower().find("bye.") != -1:
+        if transcribed_prompt.lower().find("bye") != -1:
             break
 
 
@@ -250,7 +272,7 @@ def dubbing(selected_voice: str = "Juan"):
 
 def main():
     # dubbing(persona["selected_voice"])
-    natural_voice = Voice(
+    female_natural_voice = Voice(
         voice_id="chQ8GR2cY20KeFjeSaXI",
         name="[ElevenVoices] Hailey - American Female Teen",
         category="generated",
@@ -267,11 +289,35 @@ def main():
         preview_url="https://storage.googleapis.com/eleven-public-prod/PyUBusauIUbpupKTM31Yp4fHtgd2/voices/OgTivnXy9Bsc96AcZaQz/44dc6d49-cd44-4aad-a453-73a12c215702.mp3",
     )
 
+    male_natural_voice = Voice(
+        voice_id="64EnPc3cxmsX0tj6z2lD",
+        name="Deep resonant male voice; confident, light British accent, sexy",
+        category="generated",
+        description="",
+        labels={"accent": "british", "age": "middle_aged", "gender": "male"},
+        samples=None,
+        settings=VoiceSettings(stability=0.5, similarity_boost=0.75),
+        design=None,
+        preview_url="https://storage.googleapis.com/eleven-public-prod/udmG0I9oKegHHyrU3sEvatdvG2p1/voices/qA6nnGfIRBPIRDeNkPCa/725ee1eb-06f4-4521-9e49-1511cb3a5fb7.mp3",
+    )
+
+    loona_natural_voice = Voice(
+        voice_id="07If6JkaNiXuzSTEgKuj",
+        name="Christina - Trained on over 900 characters with emotional dialogue",
+        category="generated",
+        description="",
+        labels={"accent": "american", "age": "young", "gender": "female"},
+        samples=None,
+        settings=VoiceSettings(stability=0.5, similarity_boost=0.75),
+        design=None,
+        preview_url="https://storage.googleapis.com/eleven-public-prod/U1Rx6ByQzXTKXc5wPxu4fXvSRqO2/voices/07If6JkaNiXuzSTEgKuj/c973d3e5-89f1-43e8-861d-89ef866ce41f.mp3",
+    )
+
     # Run the conversation
     conversation(
         persona["selected_voice"],  # The default voice is used
         is_filtered=True,  # Set to False to enable NSFW content
-        natural_voice=natural_voice,  # Set to None to use the default voice
+        natural_voice=female_natural_voice,  # Set to None to use the default voice
     )
 
 
