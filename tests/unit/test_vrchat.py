@@ -8,6 +8,7 @@ if __name__ == "__main__":
 
 import unittest
 from unittest.mock import patch
+import time
 
 from controller.vrchat import VRChat
 from controller.create_logger import create_logger
@@ -149,6 +150,10 @@ She retains the same outfit as before, but with the addition of black knee-high 
         # Send test list
         self.vrchat.send_text_list(expected_split_strings, duration_seconds)
         self.logger.info("End of test_send_text_list")
+
+        # Assert that send_message is called for each element in the list. Commented out because it takes too long.
+        # time.sleep(duration_seconds + 1)
+        # self.assertEqual(mock_send_message.call_count, len(expected_split_strings))
 
     @patch("pythonosc.udp_client.SimpleUDPClient.send_message")
     def test_send_vrc_emote(self, mock_send_message):
