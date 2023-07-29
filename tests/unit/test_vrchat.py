@@ -8,9 +8,6 @@ if __name__ == "__main__":
 
 import unittest
 from unittest.mock import patch
-from pathlib import Path
-from typing import List
-import time
 
 from controller.vrchat import VRChat
 from controller.create_logger import create_logger
@@ -160,6 +157,13 @@ She retains the same outfit as before, but with the addition of black knee-high 
         # Assert that send_message is called.
         self.vrchat.send_vrc_emote("wave")
         mock_send_message.assert_called_with("/avatar/parameters/VRCEmote", 1)
+
+        # Assert that if an emote with a dictionary as value is used, save the duration and send the emote.
+        # The applause emote has a duration of 5 seconds.
+        self.vrchat.send_vrc_emote("applause")
+        mock_send_message.assert_called_with("/avatar/parameters/VRCEmote", 2)
+
+
 
 
 if __name__ == "__main__":
