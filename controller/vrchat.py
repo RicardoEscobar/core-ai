@@ -24,7 +24,6 @@ module_logger = create_logger(
     add_date_to_filename=False,
 )
 
-
 class VRChat:
     """This class controls the VRChat client."""
 
@@ -46,14 +45,11 @@ class VRChat:
         # Create logger
         self.logger = module_logger
 
-    def send_vrc_emote(self, emote_key: str = "none"):
-        """This method sends the emote to the VRChat client."""
-
         # Dictionary of emotes for the Runa avatar.
         # id: avtr_f0036585-e4fc-4b3e-b65d-02193fb3a86d
         # name: Runa
         # filepath: C:\Users\Jorge\AppData\LocalLow\VRChat\VRChat\OSC\usr_b7061573-c133-411b-a8c4-aa2ea519bb94\Avatars\avtr_f0036585-e4fc-4b3e-b65d-02193fb3a86d.json
-        emote_dict = {
+        self.emote_dict = {
             "none": 0,
             "wave": 1,
             "applause": {"emote": 2, "duration": 5},  # loops, needs to be stopped
@@ -80,11 +76,15 @@ class VRChat:
             "balletspin": 23,  # loops, needs to be stopped
             "calculated": {"emote": 24, "duration": 3},  # loops, needs to be stopped
         }
+
+    def send_vrc_emote(self, emote_key: str = "none"):
+        """This method sends the emote to the VRChat client."""
+
         address = "/avatar/parameters/VRCEmote"
         # If emote_dict[emote_key] us a dictionary, save the duration and send the emote.
-        if isinstance(emote_dict[emote_key], dict):
-            duration = emote_dict[emote_key]["duration"]
-            emote_value = emote_dict[emote_key]["emote"]
+        if isinstance(self.emote_dict[emote_key], dict):
+            duration = self.emote_dict[emote_key]["duration"]
+            emote_value = self.emote_dict[emote_key]["emote"]
             self.logger.debug(
                 "Sending emote '%s' with value: %d  to %s",
                 emote_key,
@@ -94,15 +94,22 @@ class VRChat:
             self.client.send_message(address, emote_value)
 
             # Wait for the amount of seconds specified at 'duration' argument, then stop the emote.
-            threading.Timer(duration, self.client.send_message, args=[address, 0]).start()
+            timer_thread = threading.Timer(
+                duration, self.client.send_message, args=[address, 0]
+            )
+            timer_thread.name = "timer_thread"
+            timer_thread.start()
+            self.logger.debug(
+                "Stopping emote '%s' after %d seconds", emote_key, duration
+            )
 
         else:
             # If emote_key is in emote_dict, send emote to the VRChat client.
-            self.client.send_message(address, emote_dict[emote_key])
+            self.client.send_message(address, self.emote_dict[emote_key])
             self.logger.debug(
                 "Sent emote '%s' with value: %d  to %s",
                 emote_key,
-                emote_dict[emote_key],
+                self.emote_dict[emote_key],
                 address,
             )
 
@@ -175,7 +182,6 @@ class VRChat:
             name="send_text_thread",
         )
         thread.start()
-
 
 def main():
     # Create VRChat object
