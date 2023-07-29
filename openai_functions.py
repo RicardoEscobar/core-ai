@@ -9,7 +9,6 @@ load_openai()
 
 MODEL_USED = "gpt-3.5-turbo-0613"  # "gpt-4-0613"
 
-
 def show_emote(message: str = "", emote: str = "sad"):
     """Send an emote to the VRChat client, when assistant is sad, waves at the user, is dancing, laughs."""
     vrchat = VRChat()
