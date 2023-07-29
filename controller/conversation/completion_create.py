@@ -50,7 +50,6 @@ def get_response(messages: List) -> str:
     new_messages = messages.copy()
 
     try:
-        # TODO Clean first_response from the function call <OpenAIObject chat.completion id=chatcmpl-7hT6Eb2ILdAssFb1YCBkF7kgjrBvf at 0x1858658dd90> JSON: {...
         first_response = openai.ChatCompletion.create(
             model=MODEL_USED,
             messages=new_messages,
