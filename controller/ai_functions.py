@@ -8,7 +8,9 @@ def show_emote(message: str = "", emote: str = "sad"):
     """Send an emote to the VRChat client, when assistant is sad, waves at the user, is dancing, laughs."""
     vrchat = VRChat()
     # Send the greeting to the VRChat client.
-    vrchat.send_text(message)
+    # Removed to avoid different messages generated from the second message to cause confusion.
+    # vrchat.send_text(message)
+
     # Send wave emote to the VRChat client.
     vrchat.send_vrc_emote(emote)
 
