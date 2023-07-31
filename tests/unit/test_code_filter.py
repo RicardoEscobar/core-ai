@@ -11,39 +11,25 @@ from pathlib import Path
 import logging
 
 from controller.code_filter import CodeFilter
+from controller.create_logger import create_logger
+
+# Create logger
+module_logger = create_logger(
+    logger_name="tests.unit.test_code_filter",
+    logger_filename="code_filter.log",
+    log_directory="logs",
+    add_date_to_filename=False,
+)
 
 
 class TestCodeFilter(unittest.TestCase):
     """Test the code_filter module."""
 
-    @classmethod
-    def setup_logging(cls):
-        """Setup logging configuration."""
-        cls.logger = logging.getLogger(__name__)
-        cls.logger.setLevel(logging.DEBUG)
-        cls.file_handler = logging.FileHandler("logs/code_filter.log")
-        cls.file_handler.setLevel(logging.DEBUG)
-
-        # create console handler with a higher log level
-        cls.console_handler = logging.StreamHandler()
-        cls.console_handler.setLevel(logging.ERROR)
-
-        # create formatter and add it to the handlers
-        formater_str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        cls.formatter = logging.Formatter(formater_str)
-        cls.console_handler.setFormatter(cls.formatter)
-        cls.file_handler.setFormatter(cls.formatter)
-
-        # add the handlers to the logger
-        cls.logger.addHandler(cls.console_handler)
-        cls.logger.addHandler(cls.file_handler)
-        cls.logger.debug("Logging configuration for test_code_filter finished.")
-
     def setUp(self) -> None:
         """Set up the test."""
 
         # Setup logging configuration.
-        self.setup_logging()
+        self.logger = module_logger
 
         # Create test file
         file_path = "tests/unit/markdown_test_file.md"
@@ -75,9 +61,6 @@ Este archivo es para probar el filtro de codigo."""
         """Tear down the test."""
         # delete test file
         self.test_file_path.unlink()
-
-        # Remove duplicate lines.
-        CodeFilter.remove_duplicate_lines("logs/code_filter.log")
 
         return super().tearDown()
 

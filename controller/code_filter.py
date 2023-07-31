@@ -2,6 +2,15 @@
 from pathlib import Path
 import logging
 
+from controller.create_logger import create_logger
+
+# Create logger
+module_logger = create_logger(
+    logger_name="controller.code_filter",
+    logger_filename="code_filter.log",
+    log_directory="logs",
+    add_date_to_filename=False,
+)
 
 class CodeFilter:
     """This class is used to remove the code blocks from markdown files and return the filtered text to be used on a text to speak software."""
@@ -16,7 +25,7 @@ class CodeFilter:
         """
 
         # Initialize logging from code_filter.py
-        self.setup_logging()
+        self.logger = module_logger
 
         self.text = text
         if file_path == '':
@@ -59,9 +68,6 @@ class CodeFilter:
 
         self.logger.debug("Filtered text: %s", repr(filtered_str))
 
-        # Remove duplicate lines.
-        self.remove_duplicate_lines()
-
         return filtered_str
 
     @filtered_str.setter
@@ -94,9 +100,6 @@ class CodeFilter:
         result = self.filtered_str
         self.logger.debug("Filtered text ===>>> %s", repr(result))
 
-        # Remove duplicate lines.
-        self.remove_duplicate_lines()
-
         return result
 
     @filtered_file_str.setter
@@ -110,49 +113,3 @@ class CodeFilter:
         """This method is used to delete the filtered_file_str property."""
         self.logger.info("Deleting filtered_file_str property.")
         del self.filtered_file_str
-
-    @classmethod
-    def setup_logging(cls):
-        """Setup logging configuration."""
-        cls.logger = logging.getLogger(__name__)
-        cls.logger.setLevel(logging.DEBUG)
-        cls.file_handler = logging.FileHandler("logs/code_filter.log")
-        cls.file_handler.setLevel(logging.DEBUG)
-
-        # create console handler with a higher log level
-        cls.console_handler = logging.StreamHandler()
-        cls.console_handler.setLevel(logging.ERROR)
-
-        # create formatter and add it to the handlers
-        formater_str = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        cls.formatter = logging.Formatter(formater_str)
-        cls.console_handler.setFormatter(cls.formatter)
-        cls.file_handler.setFormatter(cls.formatter)
-
-        # add the handlers to the logger
-        cls.logger.addHandler(cls.console_handler)
-        cls.logger.addHandler(cls.file_handler)
-        cls.logger.debug("Logging configuration finished.")
-
-    @staticmethod
-    def remove_duplicate_lines(filepath: str = 'logs/code_filter.log') -> None:
-        """This method is used to remove duplicate lines from a file.
-
-        Parameters
-        ----------
-        filepath : str
-            The path to the file to be filtered.
-
-        Returns
-        -------
-        str
-            The filtered text.
-        """
-        filepath_path = Path(filepath)
-        with open(filepath_path, 'r', encoding='utf-8') as file:
-            lines = file.readlines()
-
-        lines = list(dict.fromkeys(lines))
-
-        with open(filepath_path, 'w', encoding='utf-8') as file:
-            file.writelines(lines)

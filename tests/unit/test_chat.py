@@ -20,6 +20,5 @@ class TestChat(unittest.TestCase):
     """Test the chat module."""
 
     @patch("view.chat.send_text")
-    def test_send_text(self):
+    def test_send_text(self, mock_send_text):
         """Test the send_text function."""
-        pass
