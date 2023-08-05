@@ -31,6 +31,8 @@ def generate_message(role: str, content: str) -> Dict:
     Args:
         role (str): The role of the message either "system", "user", or "assistant".
         content (str): The content of the message.
+    returns:
+        Dict: The message to send to the OpenAI API. e.g. {"role": "user", "content": "Hello!"}
     """
     message = {"role": role, "content": content}
     return message
