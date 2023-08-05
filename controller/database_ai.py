@@ -122,9 +122,14 @@ def main():
     messages = []
     # While loop to keep asking questions
     while True:
-        messages.append({"role": "system", "content": "Contesta preguntas del usuario generando consultas SQL contra la base de datos de pokemon."})
+        messages.append(
+            {
+                "role": "system",
+                "content": "Contesta preguntas del usuario generando consultas SQL contra la base de datos de pokemon.",
+            }
+        )
         user_message = input("User: ")
-        if user_message in ["quit","exit","q"]:
+        if user_message in ["quit", "exit", "q"]:
             break
         # messages.append({"role": "user", "content": "Hola, ¿cual es el primer pokemon de tipo metal o steel en ingles que salio en pokemon?"})
         messages.append({"role": "user", "content": user_message})
@@ -133,16 +138,23 @@ def main():
         messages.append(assistant_message)
         if assistant_message.get("function_call"):
             results = execute_function_call(assistant_message)
-            messages.append({"role": "function", "name": assistant_message["function_call"]["name"], "content": results})
-            
+            messages.append(
+                {
+                    "role": "function",
+                    "name": assistant_message["function_call"]["name"],
+                    "content": results,
+                }
+            )
+
             # get a new response from GPT where it can see the function response
             second_response = chat_completion_request(messages)
             messages.append(second_response.json()["choices"][0]["message"])
         pretty_print_conversation(messages)
 
     # Save messages to a file
-    with open("conversation.json", "a+", encoding='utf-8') as conversation_file:
+    with open("conversation.json", "a+", encoding="utf-8") as conversation_file:
         json.dump(messages, conversation_file, ensure_ascii=False, indent=4)
+
 
 if __name__ == "__main__":
     main()
