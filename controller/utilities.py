@@ -8,7 +8,6 @@ if __name__ == "__main__":
     # sys.path.insert(0, str(project_directory))
     sys.path.append(str(project_directory))
 
-import json
 import openai
 import requests
 from tenacity import retry, wait_random_exponential, stop_after_attempt
