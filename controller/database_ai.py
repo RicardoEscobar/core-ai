@@ -131,7 +131,7 @@ def main():
         user_message = input("User: ")
         if user_message in ["quit", "exit", "q"]:
             break
-        # messages.append({"role": "user", "content": "Hola, ¿cual es el primer pokemon de tipo metal o steel en ingles que salio en pokemon?"})
+
         messages.append({"role": "user", "content": user_message})
         chat_response = chat_completion_request(messages, functions)
         assistant_message = chat_response.json()["choices"][0]["message"]
