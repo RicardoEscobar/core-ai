@@ -32,7 +32,7 @@ GPT_MODEL = "gpt-3.5-turbo-0613"
 
 # Create a connection to the database
 root_directory = Path(__file__).parent.parent
-database_path = root_directory / "databases" / "Employee.db"
+database_path = root_directory / "databases" / "veekun-pokedex.sqlite"
 connection = sqlite3.connect(database_path)
 module_logger.info("Connected to database at %s", database_path)
 
@@ -151,8 +151,18 @@ def main():
             messages.append(second_response.json()["choices"][0]["message"])
         pretty_print_conversation(messages)
 
+    # Load the conversation from a file
+    with open("conversation.json", "r", encoding="utf-8") as previous_conversation_file:
+        previous_messages = json.load(previous_conversation_file)
+
+        # Add the new messages to the previous messages
+        messages = previous_messages + messages
+
+        # Remove duplicate messages
+        messages = list({json.dumps(message): message for message in messages}.values())
+
     # Save messages to a file
-    with open("conversation.json", "a+", encoding="utf-8") as conversation_file:
+    with open("conversation.json", "w", encoding="utf-8") as conversation_file:
         json.dump(messages, conversation_file, ensure_ascii=False, indent=4)
 
 
