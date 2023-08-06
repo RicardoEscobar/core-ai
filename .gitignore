@@ -406,3 +406,12 @@ controller/conversation/conversations
 
 # Python requirements
 !requirements.txt
+
+# SQLite databases
+*.sqlite
+*.sqlite3
+*.db
+*.db3
+
+# Conversation
+conversation.json
