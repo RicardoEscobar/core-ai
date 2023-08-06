@@ -116,9 +116,9 @@ def get_response(messages: List) -> str:
             )  # get a new response from GPT where it can see the function response
             module_logger.info("second_response = %s", repr(second_response))
 
-            return second_response
+            return second_response["choices"][0]["message"]["content"]
         else:
-            return first_response
+            return first_response["choices"][0]["message"]["content"]
 
 
 def save_conversation(persona: Dict):
