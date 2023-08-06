@@ -174,7 +174,7 @@ class TestUtilities(unittest.TestCase):
         chat_response = chat_completion_request(
             messages, functions=self.functions
         )
-        assistant_message = chat_response.json()["choices"][0]["message"]
+        assistant_message = chat_response.json()
         messages.append(assistant_message)
         self.logger.debug("assistant_message =  %s", assistant_message)
 
