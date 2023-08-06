@@ -109,7 +109,7 @@ def translator(selected_voice: str = "Jenny", target_language: str = "English"):
         persona["messages"].append(generate_message("user", transcribed_prompt))
 
         # Save the response to the persona["messages"] list
-        response = get_response(persona["messages"])["choices"][0]["message"]["content"]
+        response = get_response(persona["messages"])
         persona["messages"].append(generate_message("assistant", response))
         print(f"\nAssistant: {response}")
 
@@ -174,9 +174,7 @@ def conversation(
         # if is_filtered is True, then filter the response
         if is_filtered:
             # Save the filtered response to the persona["messages"] list
-            response = get_response(persona["messages"])["choices"][0]["message"][
-                "content"
-            ]
+            response = get_response(persona["messages"])
         else:
             # Save the unfiltered response to the persona["messages"] list
             response = get_response_unfiltered(human_input=transcribed_prompt)
