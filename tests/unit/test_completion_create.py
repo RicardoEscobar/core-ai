@@ -11,9 +11,14 @@ if __name__ == "__main__":
 
 import unittest
 from unittest.mock import patch
+from unittest.mock import mock_open
 
 from controller.create_logger import create_logger
-from controller.conversation.completion_create import generate_message, get_response
+from controller.conversation.completion_create import (
+    generate_message,
+    get_response,
+    save_conversation,
+)
 
 # Create a logger for this module
 module_logger = create_logger(
@@ -22,6 +27,7 @@ module_logger = create_logger(
     log_directory="logs/tests",
     add_date_to_filename=False,
 )
+
 
 class TestCompletitionCreate(unittest.TestCase):
     """Test case for completion_create.py"""
@@ -33,7 +39,9 @@ class TestCompletitionCreate(unittest.TestCase):
 
     def test_generate_message_system(self):
         """Test generate_message() for system, user, and assistant roles"""
-        self.logger.info("=> Testing generate_message() for system, user, and assistant roles")
+        self.logger.info(
+            "=> Testing generate_message() for system, user, and assistant roles"
+        )
         # Test system role
         message = generate_message("system", "Hello, world!")
         self.assertEqual(message["role"], "system")
@@ -55,7 +63,9 @@ class TestCompletitionCreate(unittest.TestCase):
     @patch("openai.ChatCompletion.create")
     def test_get_response(self, mock_completion_create):
         """Test get_response() function that gets the answer from the OpenAI API."""
-        self.logger.info("=> Testing get_response() function that gets the answer from the OpenAI API.")
+        self.logger.info(
+            "=> Testing get_response() function that gets the answer from the OpenAI API."
+        )
 
         # Mock the OpenAI API response
         mock_completion_create.return_value = {
@@ -64,10 +74,7 @@ class TestCompletitionCreate(unittest.TestCase):
                     "finish_reason": "length",
                     "index": 0,
                     "logprobs": None,
-                    "message": {
-                        "role":"assistant",
-                        "content":"Hello, world!"
-                    },
+                    "message": {"role": "assistant", "content": "Hello, world!"},
                 }
             ],
             "created": 1623523893,
@@ -83,12 +90,46 @@ class TestCompletitionCreate(unittest.TestCase):
                 {"role": "system", "content": "How are you?"},
             ]
         )
-        actual_response = actual_response["choices"][0]["message"]["content"]
+
         self.logger.debug("Actual response: %s", actual_response)
         expected_response = "Hello, world!"
         self.assertEqual(actual_response, expected_response)
         self.logger.debug("Asserted response: %s", actual_response)
 
+    @patch("builtins.open", new_callable=mock_open)
+    def test_save_conversation(self, mock_file):
+        """Test save_conversation() function that saves the conversation to a file."""
+
+        self.logger.info(
+            "=> Testing save_conversation() function that saves the conversation to a file."
+        )
+        persona = {
+            "conversation_file_path": "/path/to/conversation.py",
+            "name": "John",
+            "age": 30,
+        }
+        save_conversation(persona)
+        self.logger.debug("Saved conversation: %s", persona)
+
+        mock_file.assert_called_once_with(
+            "/path/to/conversation.py", mode="w", encoding="utf-8"
+        )
+        self.logger.debug("Asserted file path: %s", "/path/to/conversation.py")
+
+        expected_file_content = (
+            '"""This is an example of a conversation that can be used by the podcaster_ai_controller.py script."""\n'
+            f"from pathlib import Path, WindowsPath, PosixPath, PureWindowsPath, PurePosixPath, PurePath\n\n"
+            f"# This dictionary is used to save the conversation to a file.\n"
+            f"persona  = {repr(persona)}\n"
+        )
+
+        handle = mock_file()
+        handle.write.assert_called_once_with(expected_file_content)
+
+        # Assert that if the 'persona' argument is not a dictionary, then raise TypeError
+        with self.assertRaises(TypeError):
+            save_conversation("John")
+        self.logger.debug("Asserted TypeError: %s", "John")
 
 
 if __name__ == "__main__":
