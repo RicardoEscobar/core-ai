@@ -8,7 +8,6 @@ import openai
 from controller.conversation.load_openai import load_openai
 from controller.create_logger import create_logger
 from controller.ai_functions import available_functions
-from controller.ai_functions import functions
 
 # Load the OpenAI API key
 load_openai()
@@ -21,7 +20,7 @@ module_logger = create_logger(
 )
 
 # Constants
-MODEL_USED = "gpt-4-0613"  # "gpt-3.5-turbo-0613"
+MODEL_USED = "gpt-3.5-turbo-0613"  # "gpt-4-0613"
 
 
 def generate_message(role: str, content: str) -> Dict:
@@ -38,7 +37,14 @@ def generate_message(role: str, content: str) -> Dict:
     return message
 
 
-def get_response(messages: List) -> str:
+def get_response(
+    messages: List[Dict],
+    model: str = "gpt-3.5-turbo-0613",
+    temperature: float = 1.0,
+    max_tokens: int = 200,
+    functions: List[str] = None,
+    function_call: str = "auto",
+) -> str:
     """
     Get the answer from the OpenAI API.
 
@@ -48,18 +54,21 @@ def get_response(messages: List) -> str:
     Returns:
         str: The answer from the OpenAI API.
     """
+    if functions is None:
+        functions = list()
+
     # create a copy of the messages list
     new_messages = messages.copy()
 
     try:
         first_response = openai.ChatCompletion.create(
-            model=MODEL_USED,
             messages=new_messages,
-            functions=functions,
-            function_call="auto",  # auto is default, but we'll be explicit
-            temperature=1.0,
-            max_tokens=200,  # 8,192 tokens is the max for GPT-4
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,  # 8,192 tokens is the max for GPT-4
             # stop=["\n\n", "Link:", "system:"],
+            functions=functions,
+            function_call=function_call,  # auto is default, but we'll be explicit
         )
         module_logger.info(
             "Before processing: first_response = %s", repr(first_response)
@@ -111,7 +120,7 @@ def get_response(messages: List) -> str:
             messages.append(function_response_dict)
 
             second_response = openai.ChatCompletion.create(
-                model=MODEL_USED,  # "gpt-4-0613", "gpt-3.5-turbo-0613",
+                model=model,  # "gpt-4-0613", "gpt-3.5-turbo-0613",
                 messages=new_messages,
             )  # get a new response from GPT where it can see the function response
             module_logger.info("second_response = %s", repr(second_response))
@@ -122,17 +131,19 @@ def get_response(messages: List) -> str:
 
 
 def save_conversation(persona: Dict):
-    # Save the conversation to the conversation file.
-    with open(persona["conversation_file_path"], mode="w", encoding="utf-8") as file:
-        file.write(
-            '"""This is an example of a conversation that can be used by the podcaster_ai_controller.py script."""\n'
-        )
-        file.write(
-            f"""from pathlib import Path, WindowsPath, PosixPath, PureWindowsPath, PurePosixPath, PurePath
+    """Save the conversation to the conversation file."""
+    # if 'persona' argument is not a dictionary then raise a TypeError
+    if not isinstance(persona, dict):
+        raise TypeError("persona argument must be a dictionary")
 
-# This dictionary is used to save the conversation to a file.
-persona  = {repr(persona)}\n"""
+    with open(persona["conversation_file_path"], mode="w", encoding="utf-8") as file:
+        file_contents = (
+            '"""This is an example of a conversation that can be used by the podcaster_ai_controller.py script."""\n'
+            f"from pathlib import Path, WindowsPath, PosixPath, PureWindowsPath, PurePosixPath, PurePath\n\n"
+            f"# This dictionary is used to save the conversation to a file.\n"
+            f"persona  = {repr(persona)}\n"
         )
+        file.write(file_contents)
 
 
 def main():
