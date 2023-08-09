@@ -1,3 +1,13 @@
+# add the project root directory to the system path
+if __name__ == "__main__":
+    from pathlib import Path
+
+    project_directory = Path(__file__).parent
+    import sys
+
+    # sys.path.insert(0, str(project_directory))
+    sys.path.append(str(project_directory))
+
 import datetime
 import logging
 import os
@@ -46,14 +56,20 @@ def create_logger(
     file_handler = logging.FileHandler(filename, encoding="utf-8", mode="a+")
     file_handler.setLevel(logging.DEBUG)
 
+    # create console handler which logs even info messages
+    console_handler = logging.StreamHandler()
+
     # create formatter and add it to the handlers
     formatter = logging.Formatter(
         "%(asctime)s, %(name)s, %(lineno)d, %(funcName)s, %(levelname)s, %(threadName)s, %(message)s"
     )
 
+    # add formatter to handlers
     file_handler.setFormatter(formatter)
+    console_handler.setFormatter(formatter)
 
-    # add the handler to the logger
+    # add handlers to the logger
     logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
 
     return logger
