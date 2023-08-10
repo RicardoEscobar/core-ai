@@ -122,6 +122,7 @@ CREATE TABLE IF NOT EXISTS public.voice_elevenlabs
     short_name text NOT NULL,
     voice_id text NOT NULL,
     voice_object bytea NOT NULL,
+    pickle_protocol integer NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -132,7 +133,9 @@ COMMENT ON COLUMN public.voice_elevenlabs.name
     IS 'The actual name used by elevenlabs to identify the voice.';
 
 COMMENT ON COLUMN public.voice_elevenlabs.short_name
-    IS 'Short name used to identify the natural voice, this value is not unique in the column.';
+    IS 'Short name used to identify the natural voice, this value is not unique in the column.
+And is not used on Python side at this time.
+Is used to assign a nickname to the voice.';
 
 COMMENT ON COLUMN public.voice_elevenlabs.voice_id
     IS 'This is not a foraign key on this dfatabase.
@@ -140,6 +143,10 @@ This is the ide that elevenlabs gave to this particular voice.';
 
 COMMENT ON COLUMN public.voice_elevenlabs.voice_object
     IS 'The python code to instantiate the Voice object.';
+
+COMMENT ON COLUMN public.voice_elevenlabs.pickle_protocol
+    IS 'This is the highest protocol number we know how to read.
+In pickle module the HIGHEST_PROTOCOL = 5';
 
 DROP TABLE IF EXISTS public."user";
 
