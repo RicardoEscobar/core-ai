@@ -10,6 +10,7 @@ if __name__ == "__main__":
     sys.path.append(str(project_directory))
 
 import unittest
+import logging
 from unittest.mock import patch
 from unittest.mock import MagicMock
 from unittest.mock import call
@@ -25,8 +26,11 @@ module_logger = create_logger(
     logger_filename="test_utilities.log",
     log_directory="logs",
     add_date_to_filename=False,
+    console_logging=False,
+    console_log_level=logging.INFO,
 )
 
+module_logger.info("Starting unit tests for the utilities module...")
 
 class TestUtilities(unittest.TestCase):
     """Test the utilities module."""
