@@ -19,6 +19,8 @@ def create_logger(
     logger_filename: str = "log.log",
     log_directory: str = "logs",
     add_date_to_filename: bool = False,
+    console_logging=False,
+    console_log_level: int = logging.INFO,
 ) -> logging.Logger:
     """Create a logger with a file handler that logs to a file in the specified directory.
 
@@ -27,10 +29,12 @@ def create_logger(
         logger_filename (str, optional): The name of the log file. Defaults to "log.log".
         log_directory (str, optional): The directory where the log file will be saved. Defaults to "logs".
         add_date_to_filename (bool, optional): Whether to add the date to the log file name. Defaults to False.
+        is_unit_test (bool, optional): Whether the logger is being created for a unit test. Defaults to False.
 
     Returns:
         logging.Logger: The created logger instance.
     """
+    # Create csv compliant file header
     csv_compliant_file_header = "Timestamp,Logger,Line,Function,Level,Thread,Message\n"
     # Create logger directory
     logger_directory = Path(log_directory)
@@ -58,22 +62,25 @@ def create_logger(
 
     # create console handler which logs even info messages
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
+
+    # If the logger is being created for a unit test, don't output to console.
+    if console_logging:
+        console_handler.setLevel(console_log_level)
+        console_handler_formatter = logging.Formatter(
+            "%(message)s"
+        )  # Only log the message in the console.
+        console_handler.setFormatter(console_handler_formatter)
+        logger.addHandler(console_handler)
 
     # create formatters and add it to the handlers
     file_handler_formatter = logging.Formatter(
         "%(asctime)s, %(name)s, %(lineno)d, %(funcName)s, %(levelname)s, %(threadName)s, %(message)s"
     )
-    console_handler_formatter = logging.Formatter(
-        "%(message)s"
-    )  # Only log the message in the console.
 
     # add formatter to handlers
     file_handler.setFormatter(file_handler_formatter)
-    console_handler.setFormatter(console_handler_formatter)
 
     # add handlers to the logger
     logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
 
     return logger
