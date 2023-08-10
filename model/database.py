@@ -2,7 +2,6 @@
 This database module is used to connect to the database and perform database operations.
 """
 import os
-import logging
 import psycopg
 from dotenv import load_dotenv
 from controller.create_logger import create_logger
@@ -10,7 +9,8 @@ from controller.create_logger import create_logger
 module_logger = create_logger(
     logger_name='model.database',
     logger_filename='database.log',
-    log_directory='logs/database'
+    log_directory='logs/database',
+    add_date_to_filename=False,
 )
 
 
@@ -23,7 +23,7 @@ class Database():
         """
         This method is used to initialize the database connection.
         """
-        self.logger = logging.getLogger('model.database.Database')
+        self.logger = module_logger
         self.logger.info('Creating an instance of Database')
 
         # load the environment variables
