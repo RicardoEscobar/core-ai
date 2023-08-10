@@ -118,52 +118,62 @@ def main():
         }
     ]
 
-    # Testing out the chat function
-    messages = []
+    # Load the conversation from a file
+    if Path("conversation.json").exists():
+        with open("conversation.json", "r", encoding="utf-8") as previous_conversation_file:
+            previous_messages = json.load(previous_conversation_file)
+
+            # Add the new messages to the previous messages
+            messages = previous_messages
+
+            # Remove duplicate messages
+            messages = list({json.dumps(message): message for message in messages}.values())
+    else:
+        messages = []
+
     # While loop to keep asking questions
     while True:
-        messages.append(
-            {
-                "role": "system",
-                "content": "Contesta preguntas del usuario generando consultas SQL contra la base de datos de pokemon.",
-            }
-        )
-        user_message = input("User: ")
-        if user_message in ["quit", "exit", "q"]:
-            break
-
-        messages.append({"role": "user", "content": user_message})
-        chat_response = chat_completion_request(messages, functions)
-        assistant_message = chat_response.json()["choices"][0]["message"]
-        messages.append(assistant_message)
-        if assistant_message.get("function_call"):
-            results = execute_function_call(assistant_message)
+        try:
             messages.append(
                 {
-                    "role": "function",
-                    "name": assistant_message["function_call"]["name"],
-                    "content": results,
+                    "role": "system",
+                    "content": "Contesta preguntas del usuario generando consultas SQL contra la base de datos de pokemon.",
                 }
             )
+            user_message = input("User: ")
+            if user_message in ["quit", "exit", "q"]:
+                break
 
-            # get a new response from GPT where it can see the function response
-            second_response = chat_completion_request(messages)
-            messages.append(second_response.json()["choices"][0]["message"])
-        pretty_print_conversation(messages)
+            messages.append({"role": "user", "content": user_message})
+            chat_response = chat_completion_request(messages, functions)
+            module_logger.info("chat_response: %s", chat_response)
+            assistant_message = chat_response.json()["choices"][0]["message"]
+            messages.append(assistant_message)
+            if assistant_message.get("function_call"):
+                results = execute_function_call(assistant_message)
+                messages.append(
+                    {
+                        "role": "function",
+                        "name": assistant_message["function_call"]["name"],
+                        "content": results,
+                    }
+                )
 
-    # Load the conversation from a file
-    with open("conversation.json", "r", encoding="utf-8") as previous_conversation_file:
-        previous_messages = json.load(previous_conversation_file)
-
-        # Add the new messages to the previous messages
-        messages = previous_messages + messages
-
-        # Remove duplicate messages
-        messages = list({json.dumps(message): message for message in messages}.values())
-
-    # Save messages to a file
-    with open("conversation.json", "w", encoding="utf-8") as conversation_file:
-        json.dump(messages, conversation_file, ensure_ascii=False, indent=4)
+                # get a new response from GPT where it can see the function response
+                second_response = chat_completion_request(messages)
+                module_logger.info("second_response: %s", second_response)
+                messages.append(second_response.json()["choices"][0]["message"])
+            pretty_print_conversation(messages)
+        except KeyboardInterrupt:
+            break
+        except KeyError as error:
+            module_logger.exception(error)
+        except Exception as error:
+            module_logger.exception(error)
+        finally:
+            # Save messages to a file
+            with open("conversation.json", "w", encoding="utf-8") as conversation_file:
+                json.dump(messages, conversation_file, ensure_ascii=False, indent=4)
 
 
 if __name__ == "__main__":
