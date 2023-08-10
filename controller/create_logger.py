@@ -58,15 +58,19 @@ def create_logger(
 
     # create console handler which logs even info messages
     console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
 
-    # create formatter and add it to the handlers
-    formatter = logging.Formatter(
+    # create formatters and add it to the handlers
+    file_handler_formatter = logging.Formatter(
         "%(asctime)s, %(name)s, %(lineno)d, %(funcName)s, %(levelname)s, %(threadName)s, %(message)s"
     )
+    console_handler_formatter = logging.Formatter(
+        "%(message)s"
+    )  # Only log the message in the console.
 
     # add formatter to handlers
-    file_handler.setFormatter(formatter)
-    console_handler.setFormatter(formatter)
+    file_handler.setFormatter(file_handler_formatter)
+    console_handler.setFormatter(console_handler_formatter)
 
     # add handlers to the logger
     logger.addHandler(file_handler)
