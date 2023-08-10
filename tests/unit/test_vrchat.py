@@ -33,7 +33,7 @@ class TestVRChat(unittest.TestCase):
 
         # Create logger
         self.logger = module_logger
-        self.logger.info("Logging configuration for test_vrchat finished.")
+        self.logger.debug("Logging configuration for test_vrchat finished.")
 
     def tearDown(self) -> None:
         """Tear down the test."""
@@ -42,7 +42,7 @@ class TestVRChat(unittest.TestCase):
         del self.vrchat
 
         # Delete logger
-        self.logger.info("Logger configuration for test_vrchat deleted.")
+        self.logger.debug("Logger configuration for test_vrchat deleted.")
         del self.logger
 
     @patch("pythonosc.udp_client.SimpleUDPClient.send_message")
@@ -149,7 +149,7 @@ She retains the same outfit as before, but with the addition of black knee-high 
 
         # Send test list
         self.vrchat.send_text_list(expected_split_strings, duration_seconds)
-        self.logger.info("End of test_send_text_list")
+        self.logger.debug("End of test_send_text_list")
 
         # Assert that send_message is called for each element in the list. Commented out because it takes too long.
         # time.sleep(duration_seconds + 1)
