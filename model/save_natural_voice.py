@@ -30,6 +30,7 @@ def insert_natural_voice_data(
     voice_id: str,
     voice_object: Voice,
     connection: psycopg.Connection = None,
+    protocol: int = pickle.HIGHEST_PROTOCOL,
 ):
     if connection is None:
         raise ValueError(
@@ -41,10 +42,12 @@ def insert_natural_voice_data(
     try:
         cursor = connection.cursor()
         insert_query_voice = """INSERT INTO public.voice_elevenlabs(
-	name, short_name, voice_id, voice_object)
-	VALUES (%s, %s, %s, %b);"""
+	name, short_name, voice_id, voice_object, pickle_protocol)
+	VALUES (%s, %s, %s, %s, %s);"""
 
-        binary_data = psycopg.Binary(pickle.dumps(voice_object))
+        binary_data = psycopg.Binary(
+            pickle.dumps(voice_object, protocol=protocol)
+        )
         cursor.execute(
             insert_query_voice,
             (
@@ -52,6 +55,7 @@ def insert_natural_voice_data(
                 short_name,
                 voice_id,
                 binary_data,
+                protocol,
             ),
         )
 
@@ -128,7 +132,7 @@ def main():
         voice_id="chQ8GR2cY20KeFjeSaXI", connection=connection
     )
 
-    print(repr(voice_object))
+    print(f'\nVoice object =>\n{repr(voice_object)}')
 
     # Close the database connection
     connection.close()
