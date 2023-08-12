@@ -1,3 +1,4 @@
+"""This module is deprecated and will be removed in a future release."""
 # add the project root directory to the system path
 if __name__ == "__main__":
     from pathlib import Path
