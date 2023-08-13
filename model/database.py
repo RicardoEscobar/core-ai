@@ -2,7 +2,10 @@
 This database module is used to connect to the database and perform database operations.
 """
 import os
+from typing import Tuple, List
+
 import psycopg
+
 from dotenv import load_dotenv
 from controller.create_logger import create_logger
 
@@ -46,7 +49,7 @@ class Database():
         # Close the connection
         self.connection.close()
 
-    def execute(self, query: str, values: tuple = None) -> list:
+    def execute(self, query: str, values: Tuple[str] = None) -> List:
         """
         This method is used to execute a query on the database.
         """
