@@ -43,7 +43,7 @@ def get_response(
     temperature: float = 1.0,
     max_tokens: int = 200,
     functions: List[str] = None,
-    function_call: str = "auto",
+    function_call: str = "none",
 ) -> str:
     """
     Get the answer from the OpenAI API.
@@ -54,30 +54,37 @@ def get_response(
     Returns:
         str: The answer from the OpenAI API.
     """
-    if functions is None:
-        functions = list()
 
     # create a copy of the messages list
     new_messages = messages.copy()
 
     try:
-        first_response = openai.ChatCompletion.create(
-            messages=new_messages,
-            model=model,
-            temperature=temperature,
-            max_tokens=max_tokens,  # 8,192 tokens is the max for GPT-4
-            # stop=["\n\n", "Link:", "system:"],
-            functions=functions,
-            function_call=function_call,  # auto is default, but we'll be explicit
-        )
+        if functions is not None and function_call != "none":
+            first_response = openai.ChatCompletion.create(
+                messages=new_messages,
+                model=model,
+                temperature=temperature,
+                max_tokens=max_tokens,  # 8,192 tokens is the max for GPT-4
+                # stop=["\n\n", "Link:", "system:"],
+                functions=functions,
+                function_call=function_call, # auto is default, but we'll be explicit
+            )
+        else:
+            first_response = openai.ChatCompletion.create(
+                messages=new_messages,
+                model=model,
+                temperature=temperature,
+                max_tokens=max_tokens,  # 8,192 tokens is the max for GPT-4
+                # stop=["\n\n", "Link:", "system:"],
+            )
         module_logger.info(
             "Before processing: first_response = %s", repr(first_response)
         )
     except openai.error.InvalidRequestError as error:
-        print(f"Error: {error}")
+        module_logger.critical(f"openai.error.InvalidRequestError:\n{error}")
         return None
     else:
-        module_logger.info("Error ==> %s", first_response["choices"][0]["message"])
+        module_logger.error("Error ==> %s", first_response["choices"][0]["message"])
 
         # Get the response message
         response_message = first_response["choices"][0]["message"]
