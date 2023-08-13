@@ -125,6 +125,16 @@ class TestDatabase(unittest.TestCase):
             "databases/core_ai/tables/user_platform.sql", "r", encoding="utf-8"
         )
 
+    @unittest.skip("TODO - implement DELETE user table test")
+    def test_delete_user_table(self):
+        """Test the delete_user_table method"""
+        pass
+
+    @unittest.skip("TODO - implement UPDATE user table test")
+    def test_update_user_table(self):
+        """Test the update_user_table method"""
+        pass
+
 
 if __name__ == "__main__":
     unittest.main()
