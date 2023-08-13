@@ -313,25 +313,11 @@ def main():
     )
 
     # Run the conversation
-    # conversation(
-    #     persona["selected_voice"],  # The default voice is used
-    #     is_filtered=True,  # Set to False to enable NSFW content
-    #     natural_voice=female_natural_voice,  # Set to None to use the default voice
-    # )
-    print(f'pickle.HIGHEST_PROTOCOL = {pickle.HIGHEST_PROTOCOL}')
-    print(f'pickle.DEFAULT_PROTOCOL = {pickle.DEFAULT_PROTOCOL}')
-
-    # Serialize the object
-    with open("female_natural_voice.txt","wb") as file:
-        obj_str = pickle.dumps(obj=female_natural_voice,protocol=pickle.HIGHEST_PROTOCOL)
-        print(f'Serialized obj_str = {obj_str}')
-        file.write(obj_str)
-
-
-    # Deserialize the object
-    with open('female_natural_voice.txt', mode='rb') as file:
-        deserialized_obj = pickle.load(file)
-        print(f'\nDeserialized obj_str = {repr(deserialized_obj)}')
+    conversation(
+        persona["selected_voice"],  # The default voice is used
+        is_filtered=True,  # Set to False to enable NSFW content
+        natural_voice=None,  # Set to None to use the default voice
+    )
 
 
 if __name__ == "__main__":
