@@ -60,7 +60,7 @@ class Database():
             self.connection.commit()
             return cursor.fetchall()
 
-    def execute_many(self, query: str, values: list) -> list:
+    def execute_many(self, query: str, values: List[Tuple]) -> List[Tuple]:
         """
         This method is used to execute a query on the database.
         """
