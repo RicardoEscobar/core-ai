@@ -146,7 +146,9 @@ class TestDatabase(unittest.TestCase):
                 "psycopg.Cursor.fetchall", return_value=expected
             ) as mock_fetchall:
                 result = self.db.execute_many("SELECT %s", values)
-                mock_executemany.assert_called_once_with("SELECT %s", params_seq=values, returning=True)
+                mock_executemany.assert_called_once_with(
+                    "SELECT %s", params_seq=values, returning=True
+                )
                 mock_fetchall.assert_called_once()
                 self.assertEqual(result, expected)
 
@@ -169,7 +171,11 @@ class TestDatabase(unittest.TestCase):
     def test_execute_with_insert(self):
         """Test the execute method with an insert statement on public.user table"""
         self.logger.info("Testing execute method with an insert statement")
-        query = 'INSERT INTO public."user"(id, name, full_name)	VALUES (%s, %s, %s) RETURNING id, name, full_name;;'
+        query = """
+            INSERT INTO public."user"(id, name, full_name)
+            VALUES (%s, %s, %s)
+            RETURNING id, name, full_name;
+        """
         values = (1, "AnimArt3d", "AnimArt3d twitch viewer")
         expected_result = [(1, "AnimArt3d", "AnimArt3d twitch viewer")]
 
