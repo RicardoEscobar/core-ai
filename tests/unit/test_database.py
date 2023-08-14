@@ -15,6 +15,8 @@ import os
 import unittest
 import logging
 from unittest.mock import patch, mock_open
+import datetime
+import pytz
 
 import psycopg
 
@@ -41,6 +43,11 @@ class TestDatabase(unittest.TestCase):
         # Create class logger instance
         cls.logger = module_logger
         cls.logger.info("===Testing database module===")
+
+        # Create user timezone
+        cls.user_timezone = pytz.timezone("America/Mexico_City")
+        cls.user_timezone_localized = cls.user_timezone.localize(datetime.datetime.now())
+        cls.user_utc_datetime = cls.user_timezone_localized.astimezone(pytz.utc)
 
         # load the environment variables
         load_dotenv()
@@ -171,23 +178,27 @@ class TestDatabase(unittest.TestCase):
     def test_execute_with_insert(self):
         """Test the execute method with an insert statement on public.user table"""
         self.logger.info("Testing execute method with an insert statement")
+        date_of_birth = psycopg.Date(1990, 1, 1)
+        salary = "6970::money"
         query = """
-            INSERT INTO public."user"(id, name, full_name)
-            VALUES (%s, %s, %s)
-            RETURNING id, name, full_name;
+            INSERT INTO public.test_table
+                (name, email, date_of_birth, rank, salary)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id, name, email, date_of_birth, rank, salary;
         """
-        values = (1, "AnimArt3d", "AnimArt3d twitch viewer")
-        expected_result = [(1, "AnimArt3d", "AnimArt3d twitch viewer")]
+        values = ("AnimArt3d", "animart3d@gmail.com", date_of_birth, 1, salary)
+        expected_result = [(1, "AnimArt3d", "animart3d@gmail.com", "1990-01-01", 1, 6970.0)]
 
         # Create a mock cursor with a context manager
-        with patch("psycopg.Cursor.execute") as mock_execute:
-            with patch(
-                "psycopg.Cursor.fetchall", return_value=expected_result
-            ) as mock_fetchall:
-                actual_result = self.db.execute(query, values)
-                mock_execute.assert_called_once_with(query, values)
-                mock_fetchall.assert_called_once()
-                self.assertEqual(actual_result, expected_result)
+        # with patch("psycopg.Cursor.execute") as mock_execute:
+        #     with patch(
+        #         "psycopg.Cursor.fetchall", return_value=expected_result
+        #     ) as mock_fetchall:
+        #         actual_result = self.db.execute(query, values)
+        #         mock_execute.assert_called_once_with(query, values)
+        #         mock_fetchall.assert_called_once()
+        actual_result = self.db.execute(query, values)
+        self.assertEqual(actual_result, expected_result)
 
     @unittest.skip("TODO - implement DELETE user table test")
     def test_execute_delete_one_row(self):
