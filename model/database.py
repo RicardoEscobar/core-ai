@@ -71,11 +71,8 @@ class Database():
             self.connection.commit()
 
             # Fetch all the rows
-            resultset = []
-            try:
-                resultset = cursor.fetchall()
-            except psycopg.ProgrammingError:
-                pass
+            resultset = list(cursor.fetchall())
+            self.logger.info('execute_many method Resultset: %s', resultset)
 
             return resultset
 
