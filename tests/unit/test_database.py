@@ -15,7 +15,6 @@ import os
 import unittest
 import logging
 from unittest.mock import patch, mock_open
-import pdb
 
 import psycopg
 
@@ -38,6 +37,7 @@ class TestDatabase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        """Set up the database test"""
         # Create class logger instance
         cls.logger = module_logger
         cls.logger.info("===Testing database module===")
@@ -56,6 +56,7 @@ class TestDatabase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        """Tear down the database test"""
         cls.logger.info("===Finished testing database module===")
 
         # Clean up environment variables
@@ -65,49 +66,89 @@ class TestDatabase(unittest.TestCase):
         del os.environ["DB_HOST"]
         del os.environ["DB_PORT"]
 
+        # Close the database connection after each test
+        cls.connection.close()
+
     def setUp(self):
+        """Set up the database test"""
         # Create a new database instance for each test
         self.db = Database()
 
+        # Create a test table in the database to test INSERTS, UPDATES, and DELETES
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS public.test_table (
+                    id serial PRIMARY KEY,
+                    name text,
+                    email text,
+                    date_of_birth date,
+                    rank integer,
+                    salary money DEFAULT 6970.0);
+                """
+            )
+            self.connection.commit()
+
     def tearDown(self):
-        self.logger.info("Tearing down database test")
+        """Tear down the database test"""
         # Delete inserted user records after each test
+        self.logger.info("Tearing down database test")
         cursor = self.connection.cursor()
         cursor.execute('TRUNCATE TABLE public."user" CASCADE;')
         cursor.connection.commit()
 
-        # Close the database connection after each test
-        del self.db
+        # Drop test table in the database
+        with self.connection.cursor() as cursor:
+            cursor.execute("DROP TABLE public.test_table CASCADE;")
+            self.connection.commit()
+            if cursor.rowcount == 0:
+                self.logger.info("Dropped test table in the database")
+            else:
+                self.logger.error("Failed to drop test table in the database")
 
     def test_execute(self):
         """Test the execute method"""
-        result = self.db.execute("SELECT 1")
-        self.assertEqual(result, [(1,)])
+        expected = [(1,)]
+
+        # Create a mock cursor with a context manager
+        with patch("psycopg.Cursor.execute") as mock_execute:
+            with patch(
+                "psycopg.Cursor.fetchall", return_value=expected
+            ) as mock_fetchall:
+                result = self.db.execute("SELECT 1")
+                mock_execute.assert_called_once_with("SELECT 1", None)
+                mock_fetchall.assert_called_once()
+                self.assertEqual(result, expected)
 
     def test_execute_with_values(self):
         """Test the execute method with values"""
-        result = self.db.execute("SELECT %s", (1,))
-        self.assertEqual(result, [(1,)])
-
-    def test_execute_with_insert(self):
-        """Test the execute method with an insert statement"""
-        self.logger.info("Testing execute method with an insert statement")
-        query = 'INSERT INTO public."user"(id, name, full_name)	VALUES (%s, %s, %s) RETURNING id, name, full_name;;'
-        values = (1, "AnimArt3d", "AnimArt3d twitch viewer")
-        expected_result = [(1, "AnimArt3d", "AnimArt3d twitch viewer")]
+        values = (1,)
+        expected = [(1,)]
 
         # Create a mock cursor with a context manager
-        with patch('psycopg.Cursor.execute') as mock_execute:
-            with patch('psycopg.Cursor.fetchall', return_value=expected_result) as mock_fetchall:
-                actual_result = self.db.execute(query, values)
-                mock_execute.assert_called_once_with(query, values)
+        with patch("psycopg.Cursor.execute") as mock_execute:
+            with patch(
+                "psycopg.Cursor.fetchall", return_value=expected
+            ) as mock_fetchall:
+                result = self.db.execute("SELECT %s", values)
+                mock_execute.assert_called_once_with("SELECT %s", values)
                 mock_fetchall.assert_called_once()
-                self.assertEqual(actual_result, expected_result)
+                self.assertEqual(result, expected)
 
     def test_execute_many(self):
         """Test the execute_many method"""
-        result = self.db.execute_many("SELECT %s", [(1,), (2,), (3,)])
-        self.assertEqual(result, [(1,), (2,), (3,)])
+        values = [(1,), (2,), (3,)]
+        expected = [(1,), (2,), (3,)]
+
+        # Create a mock cursor with a context manager
+        with patch("psycopg.Cursor.executemany") as mock_executemany:
+            with patch(
+                "psycopg.Cursor.fetchall", return_value=expected
+            ) as mock_fetchall:
+                result = self.db.execute_many("SELECT %s", values)
+                mock_executemany.assert_called_once_with("SELECT %s", params_seq=values, returning=True)
+                mock_fetchall.assert_called_once()
+                self.assertEqual(result, expected)
 
     def test_execute_script(self):
         """Test the execute_script method"""
@@ -125,9 +166,26 @@ class TestDatabase(unittest.TestCase):
             "databases/core_ai/tables/user_platform.sql", "r", encoding="utf-8"
         )
 
+    def test_execute_with_insert(self):
+        """Test the execute method with an insert statement on public.user table"""
+        self.logger.info("Testing execute method with an insert statement")
+        query = 'INSERT INTO public."user"(id, name, full_name)	VALUES (%s, %s, %s) RETURNING id, name, full_name;;'
+        values = (1, "AnimArt3d", "AnimArt3d twitch viewer")
+        expected_result = [(1, "AnimArt3d", "AnimArt3d twitch viewer")]
+
+        # Create a mock cursor with a context manager
+        with patch("psycopg.Cursor.execute") as mock_execute:
+            with patch(
+                "psycopg.Cursor.fetchall", return_value=expected_result
+            ) as mock_fetchall:
+                actual_result = self.db.execute(query, values)
+                mock_execute.assert_called_once_with(query, values)
+                mock_fetchall.assert_called_once()
+                self.assertEqual(actual_result, expected_result)
+
     @unittest.skip("TODO - implement DELETE user table test")
-    def test_delete_user_table(self):
-        """Test the delete_user_table method"""
+    def test_execute_delete_one_row(self):
+        """Test the delete a single row from given a table"""
         pass
 
     @unittest.skip("TODO - implement UPDATE user table test")
