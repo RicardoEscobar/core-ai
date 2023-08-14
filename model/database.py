@@ -72,10 +72,10 @@ class Database():
 
             # Fetch all the rows
             resultset = []
-            for row in cursor:
-                resultset.append(row)
-                module_logger.debug("row=%s", row)
-                cursor.nextset()
+            try:
+                resultset = cursor.fetchall()
+            except psycopg.ProgrammingError:
+                pass
 
             return resultset
 
