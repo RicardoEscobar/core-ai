@@ -9,6 +9,8 @@ def load_openai():
 
     # Set the OpenAI API key
     openai.api_key = os.getenv("OPENAI_API_KEY")
+
+    # Set the Eleven API key
     ELEVEN_API_KEY = os.getenv("ELEVEN_API_KEY")
     set_api_key(ELEVEN_API_KEY)
 
