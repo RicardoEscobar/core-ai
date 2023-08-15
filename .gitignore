@@ -415,3 +415,6 @@ controller/conversation/conversations
 
 # Conversation
 conversation.json
+
+# Chat logs from Twitch
+**/chat/
