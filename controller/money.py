@@ -77,8 +77,11 @@ if __name__ == "__main__":
     print(money)
     print(money.cents)
 
+    # Get the current locale settings
+    current_locale = locale.getlocale()
+
     # Set the desired locale (e.g., en_US for US English)
-    locale.setlocale(locale.LC_ALL, 'en_US')
+    locale.setlocale(locale.LC_ALL, current_locale)
 
     # Numeric value representing money
     amount = 10575.50
@@ -86,4 +89,5 @@ if __name__ == "__main__":
     # Format the amount as currency using locale settings
     formatted_amount = locale.currency(amount, grouping=True)
 
+    print(current_locale)
     print(formatted_amount)
