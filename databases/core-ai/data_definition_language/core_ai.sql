@@ -3,7 +3,7 @@
 BEGIN;
 
 
-DROP TABLE IF EXISTS public.assistant;
+DROP TABLE IF EXISTS public.assistant CASCADE;
 
 CREATE TABLE IF NOT EXISTS public.assistant
 (
@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS public.assistant
     language text DEFAULT 'english',
     audio_output_path text NOT NULL,
     conversation_log_file_path text NOT NULL,
+    soul bytea NOT NULL,
     id_voice_microsoft_tts integer NOT NULL,
     id_voice_elevenlabs integer NOT NULL,
     PRIMARY KEY (id)
@@ -51,7 +52,7 @@ COMMENT ON COLUMN public.assistant.id_voice_microsoft_tts
 COMMENT ON COLUMN public.assistant.id_voice_elevenlabs
     IS 'This is the voice assigned to the asistant for use with ElevenLabs text to speech service.';
 
-DROP TABLE IF EXISTS public.role;
+DROP TABLE IF EXISTS public.role CASCADE;
 
 CREATE TABLE IF NOT EXISTS public.role
 (
@@ -66,7 +67,7 @@ COMMENT ON TABLE public.role
 COMMENT ON COLUMN public.role.name
     IS 'The role of the messages author. One of system, user, assistant, or function.';
 
-DROP TABLE IF EXISTS public.message;
+DROP TABLE IF EXISTS public.message CASCADE;
 
 CREATE TABLE IF NOT EXISTS public.message
 (
@@ -94,7 +95,7 @@ COMMENT ON COLUMN public.message.assistant_id
 COMMENT ON COLUMN public.message.user_id
     IS 'Foreing key for the user table to link the human user that is participating on this conversation''s message.';
 
-DROP TABLE IF EXISTS public.voice_microsoft_tts;
+DROP TABLE IF EXISTS public.voice_microsoft_tts CASCADE;
 
 CREATE TABLE IF NOT EXISTS public.voice_microsoft_tts
 (
@@ -113,7 +114,7 @@ COMMENT ON COLUMN public.voice_microsoft_tts.name
 COMMENT ON COLUMN public.voice_microsoft_tts.full_name
     IS 'Actual full name used for a voice.';
 
-DROP TABLE IF EXISTS public.voice_elevenlabs;
+DROP TABLE IF EXISTS public.voice_elevenlabs CASCADE;
 
 CREATE TABLE IF NOT EXISTS public.voice_elevenlabs
 (
@@ -148,7 +149,7 @@ COMMENT ON COLUMN public.voice_elevenlabs.pickle_protocol
     IS 'This is the highest protocol number we know how to read.
 In pickle module the HIGHEST_PROTOCOL = 5';
 
-DROP TABLE IF EXISTS public."user";
+DROP TABLE IF EXISTS public."user" CASCADE;
 
 CREATE TABLE IF NOT EXISTS public."user"
 (
