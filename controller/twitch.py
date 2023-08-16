@@ -8,6 +8,7 @@ if __name__ == "__main__":
     sys.path.append(str(project_directory))
 
 import os
+from typing import Union
 
 from twitchAPI import Twitch
 from twitchAPI.oauth import UserAuthenticator
@@ -31,11 +32,11 @@ class TextColor:
     RESET = "\033[0m"  # Reset to default color
 
     CHANNEL_COLOR_DICT = {
-        "bunnyblasty": RED,
-        "honey_goblin": GREEN,
-        "blossomvtuber": YELLOW,
-        "essievt": BLUE,
-        "superjuguito": MAGENTA,
+        "YashiroMiuna": RED,
+        "nootie": GREEN,
+        "gohuntleo": YELLOW,
+        "ironmouse": BLUE,
+        "nyanners": MAGENTA,
         "default": CYAN,
         "reset": RESET,
     }
@@ -52,13 +53,31 @@ APP_ID = TWITCH_APP_ID
 APP_SECRET = TWITCH_APP_SECRET
 USER_SCOPE = [AuthScope.CHAT_READ, AuthScope.CHAT_EDIT]
 TARGET_CHANNEL = [
-    "BunnyBlasty",
-    "honey_goblin",
-    "gumae",
-    "EssieVT",
-    "superjuguito",
-    "midnight_simon",
+    "YashiroMiuna",
+    "nootie",
+    "gohuntleo",
+    "ironmouse",
+    "nyanners",
+    "Revuwu",
 ]
+
+
+def save_log(msg: Union[ChatMessage, ChatSub, ChatCommand]):
+    """Save the message to a file for each channel, create the chat folder if it doesn't exist"""
+    if isinstance(msg, ChatMessage):
+        message = f"__{msg.user.name}__: {msg.text}"
+    elif isinstance(msg, ChatSub):
+        message = f"__New subscription: {msg.room.name}__, Type: {msg.sub_plan}, Message: {msg.sub_message}"
+    elif isinstance(msg, ChatCommand):
+        message = f"__{msg.user.name}:Command__: {msg.text}"
+    else:
+        raise TypeError(
+            f"msg must be of type ChatMessage, ChatSub, or ChatCommand, not {type(msg)}")
+
+    if not os.path.exists("chat"):
+        os.makedirs("chat")
+    with open(f"chat/{msg.room.name}.md", "a", encoding="utf-8") as chat_log_file:
+        chat_log_file.write(f"{message}\n\n")
 
 
 # this will be called when the event READY is triggered, which will be on bot start
@@ -84,19 +103,14 @@ async def on_message(msg: ChatMessage):
     )
 
     # Save the message to a file for each channel, create the chat folder if it doesn't exist
-    if not os.path.exists("chat"):
-        os.makedirs("chat")
-    with open(f"chat/{msg.room.name}.md", "a", encoding="utf-8") as chat_log_file:
-        chat_log_file.write(f"__{msg.user.name}__: {msg.text}\n\n")
+    save_log(msg)
 
 
 # this will be called whenever someone subscribes to a channel
 async def on_sub(sub: ChatSub):
-    print(
-        f"New subscription in {sub.room.name}:\\n"
-        f"  Type: {sub.sub_plan}\\n"
-        f"  Message: {sub.sub_message}"
-    )
+    message = f"New subscription: {sub.room.name}, Type: {sub.sub_plan}, Message: {sub.sub_message}"
+    print(message)
+    save_log(sub)
 
 
 # this will be called whenever the !reply command is issued
@@ -105,6 +119,7 @@ async def test_command(cmd: ChatCommand):
         await cmd.reply("you did not tell me what to reply with")
     else:
         await cmd.reply(f"{cmd.user.name}: {cmd.parameter}")
+        save_log(cmd)
 
 
 # this is where we set up the bot
