@@ -23,6 +23,7 @@ import psycopg
 from dotenv import load_dotenv
 from model.database import Database
 from controller.create_logger import create_logger
+from controller.money import Money
 
 # Create a logger instance
 module_logger = create_logger(
@@ -46,7 +47,9 @@ class TestDatabase(unittest.TestCase):
 
         # Create user timezone
         cls.user_timezone = pytz.timezone("America/Mexico_City")
-        cls.user_timezone_localized = cls.user_timezone.localize(datetime.datetime.now())
+        cls.user_timezone_localized = cls.user_timezone.localize(
+            datetime.datetime.now()
+        )
         cls.user_utc_datetime = cls.user_timezone_localized.astimezone(pytz.utc)
 
         # load the environment variables
@@ -66,15 +69,11 @@ class TestDatabase(unittest.TestCase):
         """Tear down the database test"""
         cls.logger.info("===Finished testing database module===")
 
-        # Clean up environment variables
-        del os.environ["DB_NAME"]
-        del os.environ["DB_USER"]
-        del os.environ["DB_PASSWORD"]
-        del os.environ["DB_HOST"]
-        del os.environ["DB_PORT"]
-
         # Close the database connection after each test
-        cls.connection.close()
+        try:
+            cls.connection.close()
+        except Exception as exception:
+            cls.logger.error("Error closing the database connection: %s", exception)
 
     def setUp(self):
         """Set up the database test"""
@@ -91,7 +90,9 @@ class TestDatabase(unittest.TestCase):
                     email text,
                     date_of_birth date,
                     rank integer,
-                    salary money DEFAULT 6970.0);
+                    salary integer DEFAULT 697000,
+                    currency text DEFAULT 'MXN'
+                );
                 """
             )
             self.connection.commit()
@@ -100,9 +101,6 @@ class TestDatabase(unittest.TestCase):
         """Tear down the database test"""
         # Delete inserted user records after each test
         self.logger.info("Tearing down database test")
-        cursor = self.connection.cursor()
-        cursor.execute('TRUNCATE TABLE public."user" CASCADE;')
-        cursor.connection.commit()
 
         # Drop test table in the database
         with self.connection.cursor() as cursor:
@@ -179,15 +177,34 @@ class TestDatabase(unittest.TestCase):
         """Test the execute method with an insert statement on public.user table"""
         self.logger.info("Testing execute method with an insert statement")
         date_of_birth = psycopg.Date(1990, 1, 1)
-        salary = "6970::money"
+        salary = Money(6970)
+
         query = """
             INSERT INTO public.test_table
-                (name, email, date_of_birth, rank, salary)
-            VALUES (%s, %s, %s, %s, %s)
-            RETURNING id, name, email, date_of_birth, rank, salary;
+                (name, email, date_of_birth, rank, salary, currency)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id, name, email, date_of_birth, rank, salary, currency;
         """
-        values = ("AnimArt3d", "animart3d@gmail.com", date_of_birth, 1, salary)
-        expected_result = [(1, "AnimArt3d", "animart3d@gmail.com", "1990-01-01", 1, 6970.0)]
+
+        values = (
+            "AnimArt3d",
+            "animart3d@gmail.com",
+            date_of_birth,
+            1,
+            salary.cents,
+            salary.currency,
+        )
+        expected_result = [
+            (
+                1,
+                "AnimArt3d",
+                "animart3d@gmail.com",
+                datetime.date(1990, 1, 1),
+                1,
+                salary.cents,
+                "USD",
+            )
+        ]
 
         # Create a mock cursor with a context manager
         # with patch("psycopg.Cursor.execute") as mock_execute:
