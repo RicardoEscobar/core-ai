@@ -62,9 +62,8 @@ def insert_natural_voice_data(
 
         connection.commit()
 
-    except (Exception, psycopg.Error) as error:
+    except psycopg.Error as error:
         module_logger.error("Error while inserting data: %s", error)
-
     finally:
         if connection:
             cursor.close()
@@ -87,10 +86,8 @@ def get_natural_voice_data(
         cursor.execute(select_query_voice, (voice_id,))
         voice_object = cursor.fetchone()[0]
         return pickle.loads(voice_object)
-
-    except (Exception, psycopg.Error) as error:
+    except psycopg.Error as error:
         module_logger.error("Error while inserting data: %s", error)
-
     finally:
         if connection:
             cursor.close()
