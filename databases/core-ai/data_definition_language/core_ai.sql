@@ -154,19 +154,25 @@ DROP TABLE IF EXISTS public."user" CASCADE;
 CREATE TABLE IF NOT EXISTS public."user"
 (
     id serial,
-    name text NOT NULL,
+    user_name text NOT NULL,
     full_name text,
-    PRIMARY KEY (id)
+    nick_name text,
+    PRIMARY KEY (id),
+    UNIQUE NULLS NOT DISTINCT (user_name)
 );
 
 COMMENT ON TABLE public."user"
     IS 'This table contains the human users that are speaking to the ai assistant.';
 
-COMMENT ON COLUMN public."user".name
-    IS 'User name. This is not unique. And is the name used by the ai assistant to refer to the human user in spoken word.';
+COMMENT ON COLUMN public."user".user_name
+    IS 'Unique column.
+User name. Used to identify each unique user.';
 
 COMMENT ON COLUMN public."user".full_name
     IS 'This is the actual name as it appears in an app like VRChat, Steam or Discord.';
+
+COMMENT ON COLUMN public."user".nick_name
+    IS 'Is the name used by the ai assistant to refer to the human user in spoken word.';
 
 ALTER TABLE IF EXISTS public.assistant
     ADD FOREIGN KEY (id_voice_microsoft_tts)
