@@ -5,7 +5,8 @@ if __name__ == "__main__":
     from pathlib import Path
 
     root_folder = Path(__file__).parent.parent
-    sys.path.append(str(root_folder))
+    if str(root_folder) not in sys.path:
+        sys.path.append(str(root_folder))
 
 import pickle
 import psycopg
