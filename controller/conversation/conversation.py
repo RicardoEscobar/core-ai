@@ -16,6 +16,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Union
 import threading
+import pickle
 
 import openai
 from elevenlabs.api import Voice, VoiceSettings
@@ -315,7 +316,7 @@ def main():
     conversation(
         persona["selected_voice"],  # The default voice is used
         is_filtered=True,  # Set to False to enable NSFW content
-        natural_voice=female_natural_voice,  # Set to None to use the default voice
+        natural_voice=None,  # Set to None to use the default voice
     )
 
 

@@ -1,3 +1,4 @@
+"""This module is deprecated and will be removed in a future release."""
 # add the project root directory to the system path
 if __name__ == "__main__":
     from pathlib import Path
@@ -51,7 +52,7 @@ def chat_completion_request(
             json=json_data,
             timeout=10,
         )
-        module_logger.debug("response: %s", response)
+        module_logger.debug("response: %s\n%s", response, response.json())
         return response
     except Exception as error:
         module_logger.debug("Unable to generate ChatCompletion response")

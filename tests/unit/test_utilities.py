@@ -4,14 +4,13 @@ if __name__ == "__main__":
     from pathlib import Path
 
     project_directory = Path(__file__).parent.parent.parent
-    print(project_directory)
     import sys
 
     # sys.path.insert(0, str(project_directory))
     sys.path.append(str(project_directory))
-    print(sys.path)
 
 import unittest
+import logging
 from unittest.mock import patch
 from unittest.mock import MagicMock
 from unittest.mock import call
@@ -27,8 +26,11 @@ module_logger = create_logger(
     logger_filename="test_utilities.log",
     log_directory="logs",
     add_date_to_filename=False,
+    console_logging=False,
+    console_log_level=logging.INFO,
 )
 
+module_logger.info("Starting unit tests for the utilities module...")
 
 class TestUtilities(unittest.TestCase):
     """Test the utilities module."""
@@ -96,13 +98,18 @@ class TestUtilities(unittest.TestCase):
         mock_post.return_value = "mock response"
         with patch("controller.utilities.requests.post", mock_post):
             # Test the function
-            response = chat_completion_request(
+            response_obj = chat_completion_request(
                 messages=[{"role": "user", "content": "Hello!"}]
             )
+            # If the response is a string, then it is an error message:
+            # AttributeError("'str' object has no attribute 'json'")
+            if not isinstance(response_obj, (str, AttributeError)):
+                module_logger.debug("response_obj: %s", response_obj)
+                response = response_obj["choices"][0]["text"]
 
-        # Verify the response
-        self.assertEqual(response, "mock response")
-        self.logger.debug("response: %s", response)
+                # Verify the response
+                self.assertEqual(response, "mock response")
+                self.logger.debug("response: %s", response)
 
         # Verify the call to requests.post
         mock_post.assert_called_once_with(

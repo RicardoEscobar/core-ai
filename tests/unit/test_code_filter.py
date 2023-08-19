@@ -67,7 +67,7 @@ Este archivo es para probar el filtro de codigo."""
     def test_filtered_str(self):
         """Test the filtered_str and filtered_file_str properties."""
 
-        self.logger.info("==========test_filtered_str==========")
+        self.logger.debug("==========test_filtered_str==========")
         text = """Si Ricardo aqui esta el codigo para hacer una funcion generador en Python que entregue los numeros de la serie fibonacci dando un numero.
 
 ```python
@@ -89,11 +89,11 @@ for num in fibonacci(100):
 
     def test_filtered_file_str(self):
         """Test the filtered_str and filtered_file_str properties."""
-        self.logger.info("==========test_filtered_file_str==========")
+        self.logger.debug("==========test_filtered_file_str==========")
 
         # Test with a file path.
         file_path = str(self.test_file_path.resolve())
-        self.logger.info(
+        self.logger.debug(
             "First instance of file_path: %s on test_filtered_file_str", file_path
         )
         code_filter = CodeFilter(file_path=file_path)
@@ -102,7 +102,7 @@ for num in fibonacci(100):
         self.assertEqual(expected_result, actual_result)
 
         # Assert that an exeption is raised if self.file_path is None, There is no file to read.
-        self.logger.info("Second instance of CodeFilter without file_path or text")
+        self.logger.debug("Second instance of CodeFilter without file_path or text")
         code_filter = CodeFilter()
         with self.assertRaises(ValueError):
             _ = code_filter.filtered_file_str

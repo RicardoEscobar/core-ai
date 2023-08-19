@@ -39,7 +39,7 @@ class TestCompletitionCreate(unittest.TestCase):
 
     def test_generate_message_system(self):
         """Test generate_message() for system, user, and assistant roles"""
-        self.logger.info(
+        self.logger.debug(
             "=> Testing generate_message() for system, user, and assistant roles"
         )
         # Test system role
@@ -63,7 +63,7 @@ class TestCompletitionCreate(unittest.TestCase):
     @patch("openai.ChatCompletion.create")
     def test_get_response(self, mock_completion_create):
         """Test get_response() function that gets the answer from the OpenAI API."""
-        self.logger.info(
+        self.logger.debug(
             "=> Testing get_response() function that gets the answer from the OpenAI API."
         )
 
@@ -100,7 +100,7 @@ class TestCompletitionCreate(unittest.TestCase):
     def test_save_conversation(self, mock_file):
         """Test save_conversation() function that saves the conversation to a file."""
 
-        self.logger.info(
+        self.logger.debug(
             "=> Testing save_conversation() function that saves the conversation to a file."
         )
         persona = {
