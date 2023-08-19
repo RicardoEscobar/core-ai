@@ -1,5 +1,6 @@
 import wave
 import pyaudio
+from typing import Any, Dict, List
 
 
 def get_audio_device_index(device_name: str) -> int:
@@ -22,6 +23,20 @@ def get_audio_device_index(device_name: str) -> int:
     # Return the device index
     return device_index
 
+def get_audio_devices() -> List[Dict[str, Any]]:
+    """Get the audio devices."""
+    # Create the PyAudio object
+    audio = pyaudio.PyAudio()
+
+    # Get the device index
+    devices = []
+    for i in range(audio.get_device_count()):
+        device = audio.get_device_info_by_index(i)
+        devices.append(device)
+
+    # Return the device index
+    return devices
+
 def play_audio(audio_file_path: str):
     # Open the WAV file
     with wave.open(audio_file_path, 'rb') as wave_file:
@@ -34,13 +49,6 @@ def play_audio(audio_file_path: str):
 
         # Create the PyAudio object
         audio = pyaudio.PyAudio()
-
-        # # Print out the list of output devices ID for playback audio
-        # print("List of output devices ID for playback audio:")
-        # for i in range(audio.get_device_count()):
-        #     device = audio.get_device_info_by_index(i)
-        #     if device['maxOutputChannels'] > 0:
-        #         print(f"    {device['index']}: {device['name']}")
 
         output_device_index = get_audio_device_index("VoiceMeeter Aux Input (VB-Audio")
 
