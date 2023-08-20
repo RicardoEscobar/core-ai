@@ -16,7 +16,7 @@ from twitchAPI.types import AuthScope, ChatEvent
 from twitchAPI.chat import Chat, EventData, ChatMessage, ChatSub, ChatCommand
 import asyncio
 
-from controller.conversation.load_openai import load_openai
+from controller.waifuai.load_openai import load_openai
 
 
 # ANSI escape codes for text color

@@ -13,7 +13,7 @@ import logging
 from elevenlabs import generate, play, voices, save
 from elevenlabs.api import Voices, Voice, VoiceSettings
 
-from controller.conversation.load_openai import load_openai
+from controller.waifuai.load_openai import load_openai
 
 
 # Load environment variables from .env file

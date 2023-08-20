@@ -10,8 +10,8 @@ if __name__ == "__main__":
 import tkinter as tk
 from tkinter import ttk
 
-from controller.conversation.completion_create import generate_message, get_response, save_conversation
-from controller.conversation.conversations.conversation_example import persona
+from controller.waifuai.completion_create import generate_message, get_response, save_conversation
+from controller.waifuai.conversations.conversation_example import persona
 
 # Fix blurry text on Windows
 try:

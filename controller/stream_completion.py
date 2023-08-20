@@ -23,9 +23,9 @@ from elevenlabs import generate, stream, save
 from elevenlabs.api import Voice, VoiceSettings
 import pyaudio
 
-from controller.conversation.load_openai import load_openai
+from controller.waifuai.load_openai import load_openai
 from controller.create_logger import create_logger
-from controller.conversation.record_voice import save_wav_file
+from controller.waifuai.record_voice import save_wav_file
 
 load_openai()
 
