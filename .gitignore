@@ -396,7 +396,7 @@ logs/
 git-sim_media/
 
 # Conversations
-controller/conversation/conversations
+controller/waifuai/conversations
 !controller/conversation/conversations/conversation_example.py
 
 # SQLite3 Databases
