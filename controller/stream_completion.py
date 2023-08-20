@@ -6,19 +6,26 @@ if __name__ == "__main__":
     root_folder = Path(__file__).parent.parent
     sys.path.append(str(root_folder))
 
+
 import os
+
 os.environ["PATH"] += os.pathsep + "E:\\downloads"
 
+import re
+import wave
 import time
+from datetime import datetime
 import logging
 from typing import Tuple
 
 import openai
-from elevenlabs import generate, stream
+from elevenlabs import generate, stream, save
 from elevenlabs.api import Voice, VoiceSettings
+import pyaudio
 
 from controller.conversation.load_openai import load_openai
 from controller.create_logger import create_logger
+from controller.conversation.record_voice import save_wav_file
 
 load_openai()
 
@@ -30,83 +37,6 @@ module_logger = create_logger(
     console_logging=True,
     console_log_level=logging.INFO,
 )
-
-
-def stream_completion_example1(
-    prompt,
-    max_tokens=100,
-    temperature=0.9,
-    top_p=1,
-    frequency_penalty=0,
-    presence_penalty=0,
-    stop=["\n"],
-    stream=True,
-    model="gpt-3.5-turbo",
-):
-    # Example of an OpenAI ChatCompletion request with stream=True
-    # https://platform.openai.com/docs/guides/chat
-
-    # a ChatCompletion request
-    response = openai.ChatCompletion.create(
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=temperature,
-        stream=stream,  # this time, we set stream=True
-    )
-
-    for chunk in response:
-        print(chunk)
-
-
-def stream_completion_example2(
-    prompt,
-    max_tokens=100,
-    temperature=0.9,
-    top_p=1,
-    frequency_penalty=0,
-    presence_penalty=0,
-    stop=["\n"],
-    stream=True,
-    model="gpt-3.5-turbo",
-):
-    """How much time is saved by streaming a chat completion. Now let's ask gpt-3.5-turbo to count to 100 again, and see how long it takes."""
-    # Example of an OpenAI ChatCompletion request with stream=True
-    # https://platform.openai.com/docs/guides/chat
-
-    # record the time before the request is sent
-    start_time = time.time()
-
-    # send a ChatCompletion request to count to 100
-    response = openai.ChatCompletion.create(
-        model=model,
-        messages=[
-            {
-                "role": "user",
-                "content": prompt,
-            }
-        ],
-        temperature=temperature,
-        stream=stream,  # again, we set stream=True
-    )
-
-    # create variables to collect the stream of chunks
-    collected_chunks = []
-    collected_messages = []
-    # iterate through the stream of events
-    for chunk in response:
-        chunk_time = time.time() - start_time  # calculate the time delay of the chunk
-        collected_chunks.append(chunk)  # save the event response
-        chunk_message = chunk["choices"][0]["delta"]  # extract the message
-        collected_messages.append(chunk_message)  # save the message
-        print(
-            f"Message received {chunk_time:.2f} seconds after request: {chunk_message}"
-        )  # print the delay and text
-
-    # print the time delay and text received
-    print(f"Full response received {chunk_time:.2f} seconds after request")
-    full_reply_content = "".join([m.get("content", "") for m in collected_messages])
-    print(f"Full conversation received: {full_reply_content}")
-
 
 def completion_generator(
     prompt,
@@ -168,9 +98,9 @@ def completion_generator(
             if chunk_delta["content"].endswith(yield_characters):
                 response = sentence
                 sentence = ""
+                print(response, end="", flush=True)
                 yield response
 
-        # sentence += chunk_delta['content']
         module_logger.debug(
             "Message received {:.2f} seconds after request: {}".format(
                 chunk_time, chunk_delta
@@ -184,57 +114,47 @@ def completion_generator(
     full_reply_content = "".join([m.get("content", "") for m in collected_deltas])
     module_logger.debug("Full conversation received: %s", full_reply_content)
 
+def get_mp3_filename(text: str) -> str:
+    """Return a filename for the mp3 file."""
+    filename = re.sub(r"[^\w\s-]", "", text[:100]).strip()
+    filename = re.sub(r"[-\s]+", "-", filename)
+    filename = re.sub(r"[.,:;¿?¡!]", "", filename)
+    # Add timestamp to filename
+    filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
+    return filename
 
 def main():
     """Run the main function."""
-    # prompt = "Count to 100, with a comma between each number and no newlines. E.g., 1, 2, 3, ..."
-    # prompt = "¿cual es el sentido de la vida?"
-    # generator = completion_generator(prompt)
-    # for sentence in generator:
-    #     print(sentence, end="", flush=True)
-    #     print(type(sentence), end="", flush=True)
 
-    # voice = Voice(
-    #     voice_id="chQ8GR2cY20KeFjeSaXI",
-    #     name="[ElevenVoices] Hailey - American Female Teen",
-    #     category="generated",
-    #     description="",
-    #     labels={
-    #         "accent": "american",
-    #         "age": "young",
-    #         "voicefrom": "ElevenVoices",
-    #         "gender": "female",
-    #     },
-    #     samples=None,
-    #     settings=VoiceSettings(stability=0.5, similarity_boost=0.75),
-    #     design=None,
-    #     preview_url="https://storage.googleapis.com/eleven-public-prod/PyUBusauIUbpupKTM31Yp4fHtgd2/voices/OgTivnXy9Bsc96AcZaQz/44dc6d49-cd44-4aad-a453-73a12c215702.mp3",
-    # )
-
-    # prompt = "¿cual es el sentido de la vida?"
-
-    # audio_stream = generate(
-    #     text=completion_generator(prompt),
-    #     voice=voice,
-    #     model="eleven_multilingual_v1",
-    #     stream=True,
-    # )
-
-    # stream(audio_stream)
-
-    # TODO: Make this example code work, ask in github issues
-    def text_stream():
-        yield "Hi there, I'm Eleven "
-        yield "I'm a text to speech API "
-
-    audio_stream = generate(
-        text=list(text_stream()),
-        voice="Bella",
-        model="eleven_monolingual_v1",
-        stream=True
+    vtuber_voice = Voice(
+        voice_id="chQ8GR2cY20KeFjeSaXI",
+        name="[ElevenVoices] Hailey - American Female Teen",
+        category="generated",
+        description="",
+        labels={
+            "accent": "american",
+            "age": "young",
+            "voicefrom": "ElevenVoices",
+            "gender": "female",
+        },
+        samples=None,
+        settings=VoiceSettings(stability=0.5, similarity_boost=0.75),
+        design=None,
+        preview_url="https://storage.googleapis.com/eleven-public-prod/PyUBusauIUbpupKTM31Yp4fHtgd2/voices/OgTivnXy9Bsc96AcZaQz/44dc6d49-cd44-4aad-a453-73a12c215702.mp3",
     )
 
-    stream(audio_stream)
+    prompt = "Habla como una vtuber, Yandere obsesionada con su chat despotricando sobre otras vtubers que puedan robar su atencion. (dos parrafos)"
+
+    audio_stream = generate(
+        text=completion_generator(prompt),
+        voice=vtuber_voice,
+        model="eleven_multilingual_v1",
+        stream=True,
+    )
+
+    audio_stream = stream(audio_stream)
+
+    save(audio_stream, f"{get_mp3_filename(prompt)}.mp3")
 
 
 if __name__ == "__main__":
