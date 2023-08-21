@@ -418,3 +418,6 @@ conversation.json
 
 # Chat logs from Twitch
 **/chat/
+
+# Voices from eleven labs in JSON format
+voices.json
