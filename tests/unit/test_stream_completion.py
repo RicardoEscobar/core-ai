@@ -17,7 +17,7 @@ import logging
 from controller.stream_completion import StreamCompletion
 from controller.create_logger import create_logger
 
-# create logger
+
 # Create a logger instance
 module_logger = create_logger(
     logger_name="tests.unit.test_stream_completion",
