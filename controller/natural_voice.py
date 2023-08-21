@@ -13,7 +13,7 @@ import logging
 from elevenlabs import generate, play, voices, save
 from elevenlabs.api import Voices, Voice, VoiceSettings
 
-from controller.conversation.load_openai import load_openai
+from controller.waifuai.load_openai import load_openai
 
 
 # Load environment variables from .env file
@@ -96,8 +96,10 @@ def main():
         preview_url="https://storage.googleapis.com/eleven-public-prod/PyUBusauIUbpupKTM31Yp4fHtgd2/voices/OgTivnXy9Bsc96AcZaQz/44dc6d49-cd44-4aad-a453-73a12c215702.mp3",
     )
 
-    #generate_multilingual(text="¡Hola! Mi nombre es Lumina, encantada de conocerte.", voice=lumine_voice)
-    get_voices()
+    # Save the list of voices to a file.
+    with open("voices.json", "w") as file:
+        file.write(voices().json())
+    
     # get_voice_info()
 
 

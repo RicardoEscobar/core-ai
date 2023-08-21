@@ -396,7 +396,7 @@ logs/
 git-sim_media/
 
 # Conversations
-controller/conversation/conversations
+controller/waifuai/conversations
 !controller/conversation/conversations/conversation_example.py
 
 # SQLite3 Databases
@@ -418,3 +418,6 @@ conversation.json
 
 # Chat logs from Twitch
 **/chat/
+
+# Voices from eleven labs in JSON format
+voices.json

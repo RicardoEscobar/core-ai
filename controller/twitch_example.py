@@ -14,7 +14,7 @@ from twitchAPI.twitch import Twitch
 from twitchAPI.helper import first
 import asyncio
 
-from controller.conversation.load_openai import load_openai
+from controller.waifuai.load_openai import load_openai
 
 # Login into Twitch API
 load_openai()

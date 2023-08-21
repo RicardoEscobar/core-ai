@@ -23,9 +23,9 @@ from elevenlabs import generate, stream, save
 from elevenlabs.api import Voice, VoiceSettings
 import pyaudio
 
-from controller.conversation.load_openai import load_openai
+from controller.waifuai.load_openai import load_openai
 from controller.create_logger import create_logger
-from controller.conversation.record_voice import save_wav_file
+from controller.waifuai.record_voice import save_wav_file
 
 load_openai()
 
@@ -99,7 +99,10 @@ def completion_generator(
                 response = sentence
                 sentence = ""
                 print(response, end="", flush=True)
-                yield response
+                if response.endswith((" ", ".", "?", "!")):
+                    yield response
+                else:
+                    yield response + " "
 
         module_logger.debug(
             "Message received {:.2f} seconds after request: {}".format(
@@ -143,10 +146,10 @@ def main():
         preview_url="https://storage.googleapis.com/eleven-public-prod/PyUBusauIUbpupKTM31Yp4fHtgd2/voices/OgTivnXy9Bsc96AcZaQz/44dc6d49-cd44-4aad-a453-73a12c215702.mp3",
     )
 
-    prompt = "Habla como una vtuber, Yandere obsesionada con su chat despotricando sobre otras vtubers que puedan robar su atencion. (dos parrafos)"
+    prompt = "Habla como una vtuber chilena, hablas con muchos modismos chilenos, y eres una Yandere obsesionada con su chat. (un parrafo, GRITANDO)"
 
     audio_stream = generate(
-        text=completion_generator(prompt),
+        text=completion_generator(prompt, model="gpt-4"),
         voice=vtuber_voice,
         model="eleven_multilingual_v1",
         stream=True,

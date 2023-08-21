@@ -14,7 +14,7 @@ from unittest.mock import patch
 from unittest.mock import mock_open
 
 from controller.create_logger import create_logger
-from controller.conversation.completion_create import (
+from controller.waifuai.completion_create import (
     generate_message,
     get_response,
     save_conversation,

@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 import pyaudio
 from typing import List
-from controller.conversation.record_voice import record_voice
+from controller.waifuai.record_voice import record_voice
 
 
 class TestRecordVoice(unittest.TestCase):

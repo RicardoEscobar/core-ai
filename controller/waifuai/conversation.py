@@ -21,18 +21,18 @@ import pickle
 import openai
 from elevenlabs.api import Voice, VoiceSettings
 
-import controller.conversation.detect_audio as detect_audio
-import controller.conversation.transcribe_audio as transcribe_audio
-from controller.conversation.speech_synthesis import get_speech_synthesizer
-from controller.conversation.speech_synthesis import speak_text
-from controller.conversation.completion_create import generate_message
-from controller.conversation.completion_create import get_response
+import controller.waifuai.detect_audio as detect_audio
+import controller.waifuai.transcribe_audio as transcribe_audio
+from controller.waifuai.speech_synthesis import get_speech_synthesizer
+from controller.waifuai.speech_synthesis import speak_text
+from controller.waifuai.completion_create import generate_message
+from controller.waifuai.completion_create import get_response
 from controller.llmchain import get_response_unfiltered
-from controller.conversation.completion_create import save_conversation
-from controller.conversation.play_audio import play_audio
-from controller.conversation.play_audio import get_wav_duration
-from controller.conversation.conversations.conversation_example import persona
-from controller.conversation.load_openai import load_openai
+from controller.waifuai.completion_create import save_conversation
+from controller.waifuai.play_audio import play_audio
+from controller.waifuai.play_audio import get_wav_duration
+from controller.waifuai.conversations.conversation_example import persona
+from controller.waifuai.load_openai import load_openai
 from controller.natural_voice import generate_multilingual
 from controller.code_filter import CodeFilter
 from controller.vrchat import VRChat
