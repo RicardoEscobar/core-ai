@@ -32,7 +32,7 @@ from controller.waifuai.completion_create import save_conversation
 from controller.waifuai.play_audio import play_audio
 from controller.waifuai.play_audio import get_wav_duration
 from controller.waifuai.conversations.conversation_example import persona
-from controller.waifuai.load_openai import load_openai
+from controller.load_openai import load_openai
 from controller.natural_voice import generate_multilingual
 from controller.code_filter import CodeFilter
 from controller.vrchat import VRChat

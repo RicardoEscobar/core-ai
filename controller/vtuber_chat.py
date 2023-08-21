@@ -18,7 +18,7 @@ from twitchAPI.types import AuthScope, ChatEvent
 from twitchAPI.chat import Chat, EventData, ChatMessage, ChatSub, ChatCommand
 import asyncio
 
-from controller.waifuai.load_openai import load_openai
+from controller.load_openai import load_openai
 from controller.create_logger import create_logger
 
 

@@ -15,7 +15,7 @@ import logging
 import elevenlabs
 
 from controller.create_logger import create_logger
-from controller.waifuai.load_openai import load_openai
+from controller.load_openai import load_openai
 # TODO: Refactor this and move it to a new file outside waifuai package
 
 

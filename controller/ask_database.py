@@ -10,7 +10,7 @@ if __name__ == "__main__":
     sys.path.append(str(project_directory))
 
 from controller.create_logger import create_logger
-from controller.waifuai.load_openai import load_openai
+from controller.load_openai import load_openai
 
 # Create a logger for this module
 module_logger = create_logger(

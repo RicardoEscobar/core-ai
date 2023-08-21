@@ -13,7 +13,7 @@ from pathlib import Path
 import json
 
 from controller.create_logger import create_logger
-from controller.waifuai.load_openai import load_openai
+from controller.load_openai import load_openai
 from controller.utilities import chat_completion_request
 from controller.utilities import pretty_print_conversation
 

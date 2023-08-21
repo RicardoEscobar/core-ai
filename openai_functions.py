@@ -2,7 +2,7 @@ import openai
 import json
 import time
 
-from controller.waifuai.load_openai import load_openai
+from controller.load_openai import load_openai
 from controller.vrchat import VRChat
 
 load_openai()
