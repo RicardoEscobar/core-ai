@@ -9,19 +9,19 @@ if __name__ == "__main__":
 
 import os
 
+# This is needed to load the path where the mpv player is located.
 os.environ["PATH"] += os.pathsep + "E:\\downloads"
 
 import re
-import wave
 import time
 from datetime import datetime
 import logging
 from typing import Tuple
+from deprecated import deprecated
 
 import openai
 from elevenlabs import generate, stream, save
 from elevenlabs.api import Voice, VoiceSettings
-import pyaudio
 import tiktoken
 
 from controller.load_openai import load_openai
@@ -75,6 +75,23 @@ class StreamCompletion:
         self.gpt_model = gpt_model
         self.token_threshold = token_threshold
 
+    @property
+    def token_count(self):
+        """Return the token count."""
+        if not hasattr(self, '_token_count'):
+            self._token_count = 0
+        return self._token_count
+    
+    @token_count.setter
+    def token_count(self, value):
+        """Set the token count."""
+        self._token_count = value
+
+    @token_count.deleter
+    def token_count(self):
+        """Delete the token count."""
+        self._token_count = 0
+
     def generate_completion(
         self,
         prompt: str = None,
@@ -94,8 +111,8 @@ class StreamCompletion:
             voice = self.vtuber_voice
 
         self.audio_stream = generate(
-            text=self.completion_generator(self.prompt, gpt_model=gpt_model),
-            voice=self.vtuber_voice,
+            text=self.completion_generator(prompt, gpt_model=gpt_model),
+            voice=voice,
             model="eleven_multilingual_v1",
             stream=True,
         )
@@ -104,14 +121,12 @@ class StreamCompletion:
         audio_stream = stream(self.audio_stream)
 
         # Create the filename as a Path object
-        mp3_file_path = Path(audio_dir_path) / StreamCompletion.get_mp3_filename(
-            self.prompt
-        )
+        mp3_file_path = Path(audio_dir_path) / StreamCompletion.get_mp3_filename(prompt)
 
         # Create the folder if it does not exist
         mp3_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-        print(f"Saving audio to {mp3_file_path.resolve()}")
+        self.logger.debug("Saving audio to %s", {mp3_file_path.resolve()})
 
         # Save the audio stream to a file
         save(audio_stream, str(mp3_file_path.resolve()))
@@ -181,10 +196,12 @@ class StreamCompletion:
                 if chunk_delta["content"].endswith(yield_characters):
                     response = sentence
                     sentence = ""
-                    print(response, end="", flush=True)
-                    if response.endswith((" ", ".", "?", "!")):
+
+                    if isinstance(response, str) and response.endswith((" ", ".", "?", "!")):
+                        print(response, end="", flush=True)
                         yield response
-                    else:
+                    elif isinstance(response, str):
+                        print(response, end="", flush=True)
                         yield response + " "
 
             module_logger.debug(
@@ -193,12 +210,13 @@ class StreamCompletion:
                 )
             )
 
-        # print the time delay and text received
+        # Log the time delay and text received
         module_logger.debug(
             "Full response received {:.2f} seconds after request".format(chunk_time)
         )
         full_reply_content = "".join([m.get("content", "") for m in collected_deltas])
         module_logger.debug("Full conversation received: %s", full_reply_content)
+        self.logger.debug("token count: %s", self.get_token_count(full_reply_content, gpt_model))
 
     @staticmethod
     def get_mp3_filename(text: str) -> str:
@@ -211,6 +229,7 @@ class StreamCompletion:
         return filename
     
     @staticmethod
+    @deprecated(reason="This method is no longer needed and will be removed in a future version.")
     def tiktoken_example():
         """TODO eliminate this method after refactor"""
         # Get the encoding object for the "cl100k_base" encoding
@@ -226,14 +245,30 @@ class StreamCompletion:
         # Count the number of tokens
         num_tokens = len(tokens)
 
-        print(f"The string has {num_tokens} tokens.")
+        module_logger.debug("The string has %s tokens.", {num_tokens})
+
+    def get_token_count(self, text:str, gpt_model:str=None) -> int:
+        """Return the number of tokens given a text and a GPT model"""
+        if gpt_model is None:
+            gpt_model = self.gpt_model
+
+        # To get the tokeniser corresponding to a specific model in the OpenAI API:
+        encoding = tiktoken.encoding_for_model(gpt_model)
+
+        # Encode a string into tokens
+        tokens = encoding.encode(text)
+
+        # Count the number of tokens
+        num_tokens = len(tokens)
+
+        return num_tokens
 
 
 
 def main():
     """Run the main function."""
     stream_completion = StreamCompletion()
-    stream_completion.generate_completion()
+    stream_completion.generate_completion(prompt="Eres una VTuber Mexicana tipo 'mommy' y consuelas a tu chat. (un parrafo)", gpt_model="gpt-4")
 
 
 
