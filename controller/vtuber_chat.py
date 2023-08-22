@@ -11,12 +11,12 @@ if __name__ == "__main__":
 import os
 from typing import Union, List
 import logging
+import asyncio
 
 from twitchAPI import Twitch
 from twitchAPI.oauth import UserAuthenticator
 from twitchAPI.types import AuthScope, ChatEvent
 from twitchAPI.chat import Chat, EventData, ChatMessage, ChatSub, ChatCommand
-import asyncio
 
 from controller.load_openai import load_openai
 from controller.create_logger import create_logger
@@ -58,7 +58,7 @@ class VTuberChat:
     def chat_log(self):
         """Return the chat log dictionary"""
         return self._chat_log
-    
+
     @chat_log.setter
     def chat_log(self, value):
         """Set the chat log dictionary"""
