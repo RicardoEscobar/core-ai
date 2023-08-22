@@ -209,28 +209,33 @@ class StreamCompletion:
         # Add timestamp to filename
         filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}.mp3"
         return filename
+    
+    @staticmethod
+    def tiktoken_example():
+        """TODO eliminate this method after refactor"""
+        # Get the encoding object for the "cl100k_base" encoding
+        enc = tiktoken.get_encoding("cl100k_base")
+        assert enc.decode(enc.encode("hello world")) == "hello world"
+
+        # To get the tokeniser corresponding to a specific model in the OpenAI API:
+        enc = tiktoken.encoding_for_model("gpt-4")
+
+        # Encode a string into tokens
+        tokens = enc.encode("Hello, world!")
+
+        # Count the number of tokens
+        num_tokens = len(tokens)
+
+        print(f"The string has {num_tokens} tokens.")
+
 
 
 def main():
     """Run the main function."""
-    enc = tiktoken.get_encoding("cl100k_base")
-    assert enc.decode(enc.encode("hello world")) == "hello world"
+    stream_completion = StreamCompletion()
+    stream_completion.generate_completion()
 
-    # To get the tokeniser corresponding to a specific model in the OpenAI API:
-    enc = tiktoken.encoding_for_model("gpt-4")
-
-    # Get the encoding object for the "cl100k_base" encoding
-    enc = tiktoken.get_encoding("cl100k_base")
-
-    # Encode a string into tokens
-    tokens = enc.encode("Hello, world!")
-
-    # Count the number of tokens
-    num_tokens = len(tokens)
-
-    print(f"The string has {num_tokens} tokens.")
 
 
 if __name__ == "__main__":
-    stream_completion = StreamCompletion()
-    stream_completion.generate_completion()
+    main()
