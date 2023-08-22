@@ -32,7 +32,6 @@ module_logger = create_logger(
 
 
 class TestVTuberChat(unittest.TestCase):
-
     logger = module_logger
 
     def __init__(self, *args, **kwargs):
@@ -107,10 +106,10 @@ class TestVTuberChat(unittest.TestCase):
         mock_message4.room.name = "testroom2"
         mock_message4.text = "test text4"
 
-        
         vtuber_chat.save_chat_log(mock_message4)
-        self.logger.info(f"Created a multiple message chat_log dict: {vtuber_chat.chat_log}")
-
+        self.logger.info(
+            "Created a multiple message chat_log dict: %s", vtuber_chat.chat_log
+        )
 
 
 if __name__ == "__main__":
