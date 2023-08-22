@@ -16,8 +16,8 @@ import elevenlabs
 
 from controller.create_logger import create_logger
 from controller.load_openai import load_openai
-# TODO: Refactor this and move it to a new file outside waifuai package
-
+from controller.vtuber_chat import VTuberChat
+from controller.stream_completion import StreamCompletion
 
 class CeresFauna:
     """This is the phsysical representation of the soul of the VTuberAI"""
@@ -36,6 +36,7 @@ class CeresFauna:
     )
     personality_type = "mommy"
     personality = 'You are described as a natural mama, a soothing beauty, and someone who gives the best headpats. Fans also quickly noted her striking resemblance to Yukihana Lamy in many aspects, from voice tone and motherly personality, to her overall nature motif. Fauna appears to be extremely protective of her fans and Nanashi Mumei to the point of possessiveness and extreme jealousy, and will not hesitate to switch to a more condescending tone when she encounters something unacceptable. Due to her possessive traits, Fauna often attempts to convince other VTuberAI\'s and humans to "return to nature" whenever Mumei gets upset. Fauna also gets embarrassed quite easily, and uses the verbal tic "uuuu" often.'
+    language = "english"
 
     # Create a logger for this module
     logger = create_logger(
@@ -47,18 +48,33 @@ class CeresFauna:
     )
 
     def __init__(
-        self, name: str = "Ceres Fauna", age: int = 18, gpt_model: str = "gpt-4"
+        self,
+        name: str = "Ceres Fauna",
+        age: int = 18,
+        gpt_model: str = "gpt-4",
+        language: str = "english",
+        personality: str = personality,
+        personality_type: str = personality_type,
     ):
         """Initialize the VTuberAI"""
         self.name = name
         self.age = age
         self.gpt_model = gpt_model
+        self.language = language
+        self.personality = personality
+        self.personality_type = personality_type
         self.logger.info("Created a VTuberAI named %s", self.name)
 
     def __str__(self):
         """Return a string representation of the VTuberAI"""
         return f"{self.name} is a {self.age} year old VTuberAI"
-    
+
     def __repr__(self):
         """Return a string representation of the VTuberAI"""
-        return f"CearesFauna(name={self.name}, age={self.age}, gpt_model={self.gpt_model})"
+        return f"CeresFauna(name={repr(self.name)}, age={self.age}, gpt_model={repr(self.gpt_model)}, language={repr(self.language)}, personality={repr(self.personality)}, personality_type={repr(self.personality_type)})"
+
+
+if __name__ == "__main__":
+    ceres_fauna = CeresFauna()
+    twitch_chat = VTuberChat()
+    stream_completion = StreamCompletion()
