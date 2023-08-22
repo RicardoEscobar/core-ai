@@ -48,13 +48,16 @@ class TestCeresFauna(unittest.TestCase):
 
     def test_repr(self):
         vtuber = CeresFauna(name="Ceres Fauna", age=18, gpt_model="gpt-4")
-        expected = "CeresFauna(name={}, age={}, gpt_model={}, language={}, personality={}, personality_type={})".format(
+        expected = "CeresFauna(name={}, age={}, gpt_model={}, language={}, personality={}, personality_type={}, voice={}, prompt={}, token_threshold={})".format(
             repr("Ceres Fauna"),
             18,
             repr("gpt-4"),
             repr(CeresFauna.language),
             repr(CeresFauna.personality),
             repr(CeresFauna.personality_type),
+            repr(CeresFauna.voice),
+            repr(CeresFauna.personality),
+            2000,
         )
         self.logger.debug("Expected: {}".format(expected))
 
