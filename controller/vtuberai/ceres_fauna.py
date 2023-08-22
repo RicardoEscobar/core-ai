@@ -18,6 +18,7 @@ from controller.create_logger import create_logger
 from controller.vtuber_chat import VTuberChat
 from controller.stream_completion import StreamCompletion
 
+
 class CeresFauna:
     """This is the phsysical representation of the soul of the VTuberAI"""
 
@@ -76,7 +77,15 @@ class CeresFauna:
 
     def __repr__(self):
         """Return a string representation of the VTuberAI"""
-        return f"CeresFauna(name={repr(self.name)}, age={self.age}, gpt_model={repr(self.gpt_model)}, language={repr(self.language)}, personality={repr(self.personality)}, personality_type={repr(self.personality_type)})"
+        result = "CeresFauna(name={}, age={}, gpt_model={}, language={}, personality={}, personality_type={})".format(
+            repr(self.name),
+            18,
+            repr(self.gpt_model),
+            repr(self.language),
+            repr(self.personality),
+            repr(self.personality_type),
+        )
+        return result
 
 
 if __name__ == "__main__":
