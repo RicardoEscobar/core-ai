@@ -15,7 +15,6 @@ import logging
 import elevenlabs
 
 from controller.create_logger import create_logger
-from controller.load_openai import load_openai
 from controller.vtuber_chat import VTuberChat
 from controller.stream_completion import StreamCompletion
 
@@ -65,6 +64,12 @@ class CeresFauna:
         self.personality_type = personality_type
         self.logger.info("Created a VTuberAI named %s", self.name)
 
+        # Create a VTuberChat instance
+        self.chat = VTuberChat()
+
+        # Create a StreamCompletion instance
+        self.stream_completion = StreamCompletion()
+
     def __str__(self):
         """Return a string representation of the VTuberAI"""
         return f"{self.name} is a {self.age} year old VTuberAI"
@@ -76,5 +81,4 @@ class CeresFauna:
 
 if __name__ == "__main__":
     ceres_fauna = CeresFauna()
-    twitch_chat = VTuberChat()
-    stream_completion = StreamCompletion()
+    print(ceres_fauna)
