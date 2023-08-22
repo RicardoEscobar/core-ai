@@ -36,8 +36,6 @@ module_logger = create_logger(
 load_openai()
 
 
-########################################################################################################################
-# Define a Twitch class to migrate the functions into a class for better organization
 class VTuberChat:
     """This class will handle the Twitch chat"""
 
@@ -72,6 +70,10 @@ class VTuberChat:
             os.makedirs("chat")
         with open(f"chat/{msg.room.name}.md", "a", encoding="utf-8") as chat_log_file:
             chat_log_file.write(f"{message}\n\n")
+
+    def save_chat(self, msg: Union[ChatMessage, ChatSub, ChatCommand]):
+        """Save the message to a file for each channel, create the chat folder if it doesn't exist"""
+        # TODO: Save the chat to a database or file or memory.
 
     # this will be called when the event READY is triggered, which will be on bot start
     async def on_ready(self, ready_event: EventData):
