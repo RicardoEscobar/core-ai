@@ -37,6 +37,7 @@ class CeresFauna:
     personality_type = "mommy"
     personality = 'You are described as a natural mama, a soothing beauty, and someone who gives the best headpats. Fans also quickly noted her striking resemblance to Yukihana Lamy in many aspects, from voice tone and motherly personality, to her overall nature motif. Fauna appears to be extremely protective of her fans and Nanashi Mumei to the point of possessiveness and extreme jealousy, and will not hesitate to switch to a more condescending tone when she encounters something unacceptable. Due to her possessive traits, Fauna often attempts to convince other VTuberAI\'s and humans to "return to nature" whenever Mumei gets upset. Fauna also gets embarrassed quite easily, and uses the verbal tic "uuuu" often.'
     language = "english"
+    gpt_model = "gpt-4"
 
     # Create a logger for this module
     logger = create_logger(
@@ -51,10 +52,12 @@ class CeresFauna:
         self,
         name: str = "Ceres Fauna",
         age: int = 18,
-        gpt_model: str = "gpt-4",
-        language: str = "english",
+        gpt_model: str = gpt_model,
+        language: str = language,
         personality: str = personality,
         personality_type: str = personality_type,
+        voice: elevenlabs.Voice = voice,
+        token_threshold: float = 2000,
     ):
         """Initialize the VTuberAI"""
         self.name = name
@@ -63,13 +66,34 @@ class CeresFauna:
         self.language = language
         self.personality = personality
         self.personality_type = personality_type
-        self.logger.info("Created a VTuberAI named %s", self.name)
+        self.logger.info("Created a VTuberAI: %s", self.name)
 
         # Create a VTuberChat instance
         self.chat = VTuberChat()
 
         # Create a StreamCompletion instance
-        self.stream_completion = StreamCompletion()
+        self.stream_completion = StreamCompletion(
+            voice=voice,
+            prompt=personality,
+            gpt_model=gpt_model,
+            token_threshold=token_threshold,
+        )
+
+
+    @property
+    def token_threshold(self):
+        """Return the token threshold"""
+        return self.stream_completion.token_threshold
+
+    @token_threshold.setter
+    def token_threshold(self, value):
+        """Set the token threshold"""
+        self.stream_completion.token_threshold = value
+
+    @token_threshold.deleter
+    def token_threshold(self):
+        """Delete the token threshold"""
+        self.stream_completion.token_threshold = 2000
 
     def __str__(self):
         """Return a string representation of the VTuberAI"""
@@ -77,14 +101,8 @@ class CeresFauna:
 
     def __repr__(self):
         """Return a string representation of the VTuberAI"""
-        result = "CeresFauna(name={}, age={}, gpt_model={}, language={}, personality={}, personality_type={})".format(
-            repr(self.name),
-            18,
-            repr(self.gpt_model),
-            repr(self.language),
-            repr(self.personality),
-            repr(self.personality_type),
-        )
+        result = f"{self.__class__.__name__}(name={repr(self.name)}, age={self.age}, gpt_model={repr(self.gpt_model)}, language={repr(self.language)}, personality={repr(self.personality)}, personality_type={repr(self.personality_type)}, voice={repr(self.voice)}, prompt={repr(self.personality)}, token_threshold={self.token_threshold})"
+
         return result
 
 
