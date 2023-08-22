@@ -52,7 +52,22 @@ class VTuberChat:
         self.logger.info("Initializing VTuberChat class.")
         self.user_scope = [AuthScope.CHAT_READ, AuthScope.CHAT_EDIT]
         self.target_channels = target_channels
-        self.chat_log = dict()
+        self._chat_log = dict()
+
+    @property
+    def chat_log(self):
+        """Return the chat log dictionary"""
+        return self._chat_log
+    
+    @chat_log.setter
+    def chat_log(self, value):
+        """Set the chat log dictionary"""
+        self._chat_log = value
+
+    @chat_log.deleter
+    def chat_log(self):
+        """Delete the chat log dictionary"""
+        self._chat_log = dict()
 
     def save_log(self, msg: Union[ChatMessage, ChatSub, ChatCommand]):
         """Save the message to a file for each channel, create the chat folder if it doesn't exist"""
@@ -87,10 +102,10 @@ class VTuberChat:
 
         try:
             # Save the message to the chat log dictionary
-            self.chat_log[msg.room.name].append(msg)
+            self._chat_log[msg.room.name].append(msg)
         except KeyError:
             # Create a new chat log list for the channel
-            self.chat_log[msg.room.name] = [msg]
+            self._chat_log[msg.room.name] = [msg]
             self.logger.error("KeyError: %s, a new key was created.", msg.room.name)
 
     # this will be called when the event READY is triggered, which will be on bot start
