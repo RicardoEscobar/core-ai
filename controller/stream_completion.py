@@ -74,14 +74,13 @@ class StreamCompletion:
         self.prompt = prompt
         self.gpt_model = gpt_model
         self.token_threshold = token_threshold
+        self._token_count = 0
 
     @property
     def token_count(self):
         """Return the token count."""
-        if not hasattr(self, '_token_count'):
-            self._token_count = 0
         return self._token_count
-    
+
     @token_count.setter
     def token_count(self, value):
         """Set the token count."""
