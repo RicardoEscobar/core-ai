@@ -42,6 +42,20 @@ class TestStreamCompletion(unittest.TestCase):
         """Set up the StreamCompletion class unit test."""
         self.stream_completion = StreamCompletion()
 
+    def test_get_token_count(self):
+        # Create a test string and model name
+        test_string = "Hello, world!"
+        model_name = "gpt2"
+
+        # Call the get_token_count method
+        num_tokens = StreamCompletion.get_token_count(test_string, model_name)
+
+        # Verify that the number of tokens is correct
+        self.assertEqual(num_tokens, 4)
+
+        self.logger.debug("The string %s has %s tokens.", test_string, num_tokens)
+        self.logger.info("Tested the get_token_count method.")
+
 
 if __name__ == "__main__":
     unittest.main()
