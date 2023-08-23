@@ -48,7 +48,7 @@ class TestCeresFauna(unittest.TestCase):
 
     def test_repr(self):
         vtuber = CeresFauna(name="Ceres Fauna", age=18, gpt_model="gpt-4")
-        expected = "CeresFauna(name={}, age={}, gpt_model={}, language={}, personality={}, personality_type={}, voice={}, prompt={}, token_threshold={})".format(
+        expected = "CeresFauna(name={}, age={}, gpt_model={}, language={}, personality={}, personality_type={}, voice={})".format(
             repr("Ceres Fauna"),
             18,
             repr("gpt-4"),
@@ -56,14 +56,11 @@ class TestCeresFauna(unittest.TestCase):
             repr(CeresFauna.personality),
             repr(CeresFauna.personality_type),
             repr(CeresFauna.voice),
-            repr(CeresFauna.personality),
-            2000,
         )
         self.logger.debug("Expected: {}".format(expected))
 
         self.assertEqual(repr(vtuber), expected)
         self.logger.info("Tested the __repr__ method of the CeresFauna class.")
-
 
 if __name__ == "__main__":
     unittest.main()
