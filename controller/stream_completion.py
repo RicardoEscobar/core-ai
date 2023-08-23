@@ -18,6 +18,7 @@ from datetime import datetime
 import logging
 from typing import Tuple
 from deprecated import deprecated
+from pathlib import Path
 
 import openai
 from elevenlabs import generate, stream, save
@@ -26,7 +27,6 @@ import tiktoken
 
 from controller.load_openai import load_openai
 from controller.create_logger import create_logger
-from controller.waifuai.record_voice import save_wav_file
 
 load_openai()
 
@@ -48,7 +48,6 @@ class StreamCompletion:
         voice: Voice = None,
         prompt: str = "Habla como una vtuber chilena, hablas con muchos modismos chilenos, y eres una Tsundere obsesionada con su chat y das inicio al stream. (un parrafo)",
         gpt_model: str = "gpt-4",
-        token_threshold: int = 2000,  # 2000 tokens is half the max tokens allowed by GPT-3.5-Turbo model
     ):
         """Initialize the StreamCompletion class."""
         self.logger = module_logger
@@ -73,23 +72,6 @@ class StreamCompletion:
 
         self.prompt = prompt
         self.gpt_model = gpt_model
-        self.token_threshold = token_threshold
-        self._token_count = 0
-
-    @property
-    def token_count(self):
-        """Return the token count."""
-        return self._token_count
-
-    @token_count.setter
-    def token_count(self, value):
-        """Set the token count."""
-        self._token_count = value
-
-    @token_count.deleter
-    def token_count(self):
-        """Delete the token count."""
-        self._token_count = 0
 
     def generate_completion(
         self,
@@ -180,7 +162,7 @@ class StreamCompletion:
             collected_deltas.append(chunk_delta)  # save the delta content
             # if chunk_delta dict contains "role" key or is an emtpy dict, then is not a sentence
             if "role" in chunk_delta or not chunk_delta:
-                module_logger.debug(
+                self.logger.debug(
                     "Message received {:.2f} seconds after request: {}".format(
                         chunk_time, chunk_delta
                     )
@@ -203,19 +185,20 @@ class StreamCompletion:
                         print(response, end="", flush=True)
                         yield response + " "
 
-            module_logger.debug(
+            self.logger.debug(
                 "Message received {:.2f} seconds after request: {}".format(
                     chunk_time, chunk_delta
                 )
             )
 
         # Log the time delay and text received
-        module_logger.debug(
+        self.logger.debug(
             "Full response received {:.2f} seconds after request".format(chunk_time)
         )
         full_reply_content = "".join([m.get("content", "") for m in collected_deltas])
-        module_logger.debug("Full conversation received: %s", full_reply_content)
-        self.logger.debug("token count: %s", self.get_token_count(full_reply_content, gpt_model))
+
+        # Log the full conversation
+        self.logger.debug("Full conversation received: %s", full_reply_content)
 
     @staticmethod
     def get_mp3_filename(text: str) -> str:
@@ -245,22 +228,6 @@ class StreamCompletion:
         num_tokens = len(tokens)
 
         module_logger.debug("The string has %s tokens.", {num_tokens})
-
-    def get_token_count(self, text:str, gpt_model:str=None) -> int:
-        """Return the number of tokens given a text and a GPT model"""
-        if gpt_model is None:
-            gpt_model = self.gpt_model
-
-        # To get the tokeniser corresponding to a specific model in the OpenAI API:
-        encoding = tiktoken.encoding_for_model(gpt_model)
-
-        # Encode a string into tokens
-        tokens = encoding.encode(text)
-
-        # Count the number of tokens
-        num_tokens = len(tokens)
-
-        return num_tokens
 
 
 
