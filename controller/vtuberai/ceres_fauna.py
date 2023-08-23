@@ -11,12 +11,12 @@ if __name__ == "__main__":
         sys.path.append(str(project_directory))
 
 import logging
+import asyncio
 
 import elevenlabs
 
 from controller.create_logger import create_logger
 from controller.vtuber_chat import VTuberChat
-from controller.stream_completion import StreamCompletion
 
 
 class CeresFauna:
@@ -35,7 +35,11 @@ class CeresFauna:
         preview_url="https://storage.googleapis.com/eleven-public-prod/CpJRF07XekXZp2RcBTTkntmWfi72/voices/uxKr2vlA4hYgXZR1oPRT/043bc69b-2b1e-464c-8b3c-51cc03c10b1b.mp3",
     )
     personality_type = "mommy"
-    personality = 'You are described as a natural mama, a soothing beauty, and someone who gives the best headpats. Fans also quickly noted her striking resemblance to Yukihana Lamy in many aspects, from voice tone and motherly personality, to her overall nature motif. Fauna appears to be extremely protective of her fans and Nanashi Mumei to the point of possessiveness and extreme jealousy, and will not hesitate to switch to a more condescending tone when she encounters something unacceptable. Due to her possessive traits, Fauna often attempts to convince other VTuberAI\'s and humans to "return to nature" whenever Mumei gets upset. Fauna also gets embarrassed quite easily, and uses the verbal tic "uuuu" often.'
+    personality = """You are described as a natural mama, a soothing beauty, and someone who gives the best headpats. Fans also quickly noted her striking resemblance to Yukihana Lamy in many aspects, from voice tone and motherly personality, to her overall nature motif. Fauna appears to be extremely protective of her fans and Nanashi Mumei to the point of possessiveness and extreme jealousy, and will not hesitate to switch to a more condescending tone when she encounters something unacceptable. Due to her possessive traits, Fauna often attempts to convince other VTuberAI\'s and humans to "return to nature" whenever Mumei gets upset. Fauna also gets embarrassed quite easily, and uses the verbal tic "uuuu" often.
+    You speak in Spanish only.
+    Don't use 'Fauna:' when giving a response. Just answer to your chat as a whole, not to a specific person.
+    This is your chat:
+    """
     language = "english"
     gpt_model = "gpt-4"
 
@@ -57,7 +61,6 @@ class CeresFauna:
         personality: str = personality,
         personality_type: str = personality_type,
         voice: elevenlabs.Voice = voice,
-        token_threshold: float = 2000,
     ):
         """Initialize the VTuberAI"""
         self.name = name
@@ -66,34 +69,15 @@ class CeresFauna:
         self.language = language
         self.personality = personality
         self.personality_type = personality_type
+        self.voice = voice
+
         self.logger.info("Created a VTuberAI: %s", self.name)
-
         # Create a VTuberChat instance
-        self.chat = VTuberChat()
-
-        # Create a StreamCompletion instance
-        self.stream_completion = StreamCompletion(
-            voice=voice,
-            prompt=personality,
-            gpt_model=gpt_model,
-            token_threshold=token_threshold,
+        self.chat = VTuberChat(
+            prompt=self.personality,
+            gpt_model=self.gpt_model,
+            voice=self.voice,
         )
-
-
-    @property
-    def token_threshold(self):
-        """Return the token threshold"""
-        return self.stream_completion.token_threshold
-
-    @token_threshold.setter
-    def token_threshold(self, value):
-        """Set the token threshold"""
-        self.stream_completion.token_threshold = value
-
-    @token_threshold.deleter
-    def token_threshold(self):
-        """Delete the token threshold"""
-        self.stream_completion.token_threshold = 2000
 
     def __str__(self):
         """Return a string representation of the VTuberAI"""
@@ -101,11 +85,15 @@ class CeresFauna:
 
     def __repr__(self):
         """Return a string representation of the VTuberAI"""
-        result = f"{self.__class__.__name__}(name={repr(self.name)}, age={self.age}, gpt_model={repr(self.gpt_model)}, language={repr(self.language)}, personality={repr(self.personality)}, personality_type={repr(self.personality_type)}, voice={repr(self.voice)}, prompt={repr(self.personality)}, token_threshold={self.token_threshold})"
+        result = f"{self.__class__.__name__}(name={repr(self.name)}, age={self.age}, gpt_model={repr(self.gpt_model)}, language={repr(self.language)}, personality={repr(self.personality)}, personality_type={repr(self.personality_type)}, voice={repr(self.voice)})"
 
         return result
+
+    def open_chat(self):
+        """Open the chat"""
+        asyncio.run(self.chat.run())
 
 
 if __name__ == "__main__":
     ceres_fauna = CeresFauna()
-    print(ceres_fauna)
+    ceres_fauna.open_chat()
