@@ -77,7 +77,7 @@ class VTuberChat:
         self._chat_log = dict()
         self.gpt_model = gpt_model
         self._token_count = 0
-        self._token_threshold = 50
+        self._token_threshold = 2000
         self.voice = voice
         self.prompt = prompt
         self.initial_prompt = prompt
