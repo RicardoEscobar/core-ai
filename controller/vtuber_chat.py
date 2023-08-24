@@ -77,7 +77,7 @@ class VTuberChat:
         self._chat_log = dict()
         self.gpt_model = gpt_model
         self._token_count = 0
-        self._token_threshold = 2000
+        self._token_threshold = 200
         self.voice = voice
         self.prompt = prompt
         self.initial_prompt = prompt
@@ -95,6 +95,13 @@ class VTuberChat:
     def token_count(self, value):
         """Set the token count"""
         self._token_count = value
+        tokens_left = self.token_threshold - self._token_count
+        # Create a message to display the number of tokens left
+        message = f"Siguiente respuesta en: {tokens_left} tokens."
+        self.logger.info(message)
+        # Save the number of tokens left into a tokens_left.txt file
+        with open("tokens_left.txt", "w", encoding="utf-8") as tokens_left_file:
+            tokens_left_file.write(message)
         # When the token count exceeds the threshold, trigger a VTuber interaction with the chat
         if self._token_count > self._token_threshold:
             self.logger.info("Token count exceeded the threshold, saving the chat log.")
