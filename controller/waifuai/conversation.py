@@ -24,7 +24,7 @@ from elevenlabs.api import Voice, VoiceSettings
 import controller.waifuai.detect_audio as detect_audio
 import controller.waifuai.transcribe_audio as transcribe_audio
 from controller.waifuai.speech_synthesis import get_speech_synthesizer
-from controller.waifuai.speech_synthesis import speak_text
+from controller.waifuai.speech_synthesis import speak_text_into_file
 from controller.waifuai.completion_create import generate_message
 from controller.waifuai.completion_create import get_response
 from controller.llmchain import get_response_unfiltered
@@ -133,7 +133,7 @@ def translator(selected_voice: str = "Jenny", target_language: str = "English"):
         )
 
         # Speak the text
-        speak_text(speech_synthesizer, response)
+        speak_text_into_file(speech_synthesizer, response)
         play_audio(assistant_audio_file_path)
 
         # If the transcribed_prompt contains "bye." then break out of the loop
@@ -203,7 +203,7 @@ def conversation(
             )
 
             # Generate the audio file
-            speak_text(speech_synthesizer, response)
+            speak_text_into_file(speech_synthesizer, response)
 
         else:
             # Generates the audio file using the natural voice
@@ -261,7 +261,7 @@ def dubbing(selected_voice: str = "Juan"):
         speech_synthesizer = get_speech_synthesizer(selected_voice, audio_file_path)
 
         # Speak the text
-        speak_text(speech_synthesizer, transcribed_prompt)
+        speak_text_into_file(speech_synthesizer, transcribed_prompt)
         play_audio(audio_file_path)
 
         # If the transcribed_prompt contains "bye." then break out of the loop
