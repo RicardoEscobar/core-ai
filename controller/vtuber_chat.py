@@ -67,7 +67,8 @@ class VTuberChat:
         prompt: str,
         gpt_model: str,
         target_channels: Union[str, List[str]] = "RicardoEscobar",
-        voice: elevenlabs.Voice = voice,
+        voice: Union[elevenlabs.Voice, str] = "Larissa",
+        token_threshold: int = 2000,
     ):
         """Initialize the Twitch chat"""
 
@@ -77,7 +78,7 @@ class VTuberChat:
         self._chat_log = dict()
         self.gpt_model = gpt_model
         self._token_count = 0
-        self._token_threshold = 200
+        self._token_threshold = token_threshold
         self.voice = voice
         self.prompt = prompt
         self.initial_prompt = prompt
@@ -92,7 +93,7 @@ class VTuberChat:
         return self._token_count
 
     @token_count.setter
-    def token_count(self, value):
+    def token_count(self, value: int):
         """Set the token count"""
         self._token_count = value
         tokens_left = self.token_threshold - self._token_count
@@ -330,7 +331,7 @@ class VTuberChat:
         self,
         prompt: str = None,
         gpt_model: str = None,
-        voice: elevenlabs.Voice = None,
+        voice: Union[elevenlabs.Voice, str] = None,
         audio_dir_path: str = "./audio",
     ):
         """Trigger a VTuber interaction with the chat"""
@@ -347,18 +348,26 @@ class VTuberChat:
 
         self.logger.info("Triggering a VTuber interaction with the chat.")
         
-        self.stream_completion.generate_completion(
-            prompt=prompt,
-            gpt_model=gpt_model,
-            voice=voice,
-            audio_dir_path=audio_dir_path,
-        )
+        if isinstance(voice, elevenlabs.Voice):
+            self.stream_completion.generate_completion(
+                prompt=prompt,
+                gpt_model=gpt_model,
+                voice=voice,
+                audio_dir_path=audio_dir_path,
+            )
+        elif isinstance(voice, str):
+            self.stream_completion.generate_microsoft_ai_speech_completion(
+                prompt=prompt,
+                gpt_model=gpt_model,
+                selected_voice=voice,
+                audio_dir_path=audio_dir_path,
+            )
 
 
 ################### Test code ###################
 def main():
     # lets run our setup
-    vtuber_chat = VTuberChat("Eres una VTuber, alegre, sexy, y das la bienvenida al chat." ,"gpt-4")
+    vtuber_chat = VTuberChat(prompt="Hola", gpt_model="gpt-4")
     asyncio.run(vtuber_chat.run())
 
 
