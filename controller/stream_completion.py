@@ -16,7 +16,7 @@ import re
 import time
 from datetime import datetime
 import logging
-from typing import Tuple
+from typing import Tuple, Union
 from deprecated import deprecated
 from pathlib import Path
 
@@ -27,6 +27,8 @@ import tiktoken
 
 from controller.load_openai import load_openai
 from controller.create_logger import create_logger
+from controller.waifuai.speech_synthesis import get_speech_synthesizer, speak_text_into_file
+from controller.waifuai.play_audio import play_audio
 
 load_openai()
 
@@ -102,7 +104,7 @@ class StreamCompletion:
         audio_stream = stream(self.audio_stream)
 
         # Create the filename as a Path object
-        mp3_file_path = Path(audio_dir_path) / StreamCompletion.get_mp3_filename(prompt)
+        mp3_file_path = Path(audio_dir_path) / StreamCompletion.get_audio_filepath(prompt)
 
         # Create the folder if it does not exist
         mp3_file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -111,6 +113,54 @@ class StreamCompletion:
 
         # Save the audio stream to a file
         save(audio_stream, str(mp3_file_path.resolve()))
+
+    def generate_microsoft_ai_speech_completion(
+            self,
+            prompt: str = None,
+            gpt_model: str = "gpt-4",
+            selected_voice: str = "Larissa",
+            audio_dir_path: str = "./audio",
+            filename: str = None,
+    ) -> None:
+        """Generate a completion from the Microsoft AI Speech API.
+        args:
+            prompt (str, optional): The prompt to use. Defaults to None.
+            filename (str, optional): The filename to save the audio to. Defaults to None.
+        returns:
+            str: The generated audio file path.
+        """
+        if prompt is None:
+            prompt = self.prompt
+
+        if filename is None or filename == "":
+            filename = StreamCompletion.get_audio_filepath(prompt, file_extension="mp3")
+
+        # Add the directory path to the filename
+        filepath = Path(audio_dir_path) / filename
+        filename_str = str(filepath.resolve())
+
+        # Get the speech synthesizer
+        speech_synthesizer = get_speech_synthesizer(
+            filename=filename_str, selected_voice=selected_voice
+        )
+
+        # Create a variable to hold the completion
+        completion_finished = ""
+
+        # Query OpenAI for a completion
+        for completion in self.completion_generator(prompt, gpt_model=gpt_model):
+            # print(completion, end="", flush=True)
+            completion_finished += completion
+        
+        if completion_finished == "":
+            self.logger.error("No completion was generated.")
+            raise ValueError("No completion was generated.")
+        
+        # Speak the text into a file
+        speak_text_into_file(speech_synthesizer, completion_finished)
+    
+        # Play the audio file
+        play_audio(filename_str)
 
     def completion_generator(
         self,
@@ -134,7 +184,7 @@ class StreamCompletion:
         # record the time before the request is sent
         start_time = time.time()
 
-        # send a ChatCompletion request to count to 100
+        # send a ChatCompletion request
         response = openai.ChatCompletion.create(
             model=gpt_model,
             messages=[
@@ -178,11 +228,13 @@ class StreamCompletion:
                     response = sentence
                     sentence = ""
 
-                    if isinstance(response, str) and response.endswith((" ", ".", "?", "!")):
-                        print(response, end="", flush=True)
+                    if isinstance(response, str) and response.endswith(
+                        (" ", ".", "?", "!")
+                    ):
+                        # print(response, end="", flush=True)
                         yield response
                     elif isinstance(response, str):
-                        print(response, end="", flush=True)
+                        # print(response, end="", flush=True)
                         yield response + " "
 
             self.logger.debug(
@@ -201,17 +253,29 @@ class StreamCompletion:
         self.logger.debug("Full conversation received: %s", full_reply_content)
 
     @staticmethod
-    def get_mp3_filename(text: str) -> str:
-        """Return a filename for the mp3 file."""
-        filename = re.sub(r"[^\w\s-]", "", text[:100]).strip()
+    def get_audio_filepath(
+        text: str, filename_len: int = 100, file_extension: str = "mp3"
+    ) -> str:
+        """Return a filename for the mp3 file.
+        args:
+            text (str): The text to use to generate the filename.
+            filename_len (int, optional): The maximum length of the filename. Defaults to 100.
+        returns:
+            str: The filename.
+        """
+        filename = re.sub(r"[^\w\s-]", "", text[:filename_len]).strip()
         filename = re.sub(r"[-\s]+", "-", filename)
         filename = re.sub(r"[.,:;¿?¡!]", "", filename)
         # Add timestamp to filename
-        filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}.mp3"
+        filename = (
+            f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}.{file_extension}"
+        )
         return filename
-    
+
     @staticmethod
-    @deprecated(reason="This method is no longer needed and will be removed in a future version.")
+    @deprecated(
+        reason="This method is no longer needed and will be removed in a future version."
+    )
     def tiktoken_example():
         """TODO eliminate this method after refactor"""
         # Get the encoding object for the "cl100k_base" encoding
@@ -230,11 +294,27 @@ class StreamCompletion:
         module_logger.debug("The string has %s tokens.", {num_tokens})
 
 
-
 def main():
     """Run the main function."""
+    prompt = "Eres una VTuber Mexicana tipo 'mommy' y consuelas a tu chat. (una oracion)"
     stream_completion = StreamCompletion()
-    stream_completion.generate_completion(prompt="Eres una VTuber Mexicana tipo 'mommy' y consuelas a tu chat. (un parrafo)", gpt_model="gpt-4")
+    # stream_completion.generate_completion(
+    #     prompt=prompt,
+    #     gpt_model="gpt-4",
+    # )
+
+    while True:
+        try:
+            stream_completion.generate_microsoft_ai_speech_completion(
+                prompt=prompt,
+                gpt_model="gpt-4",
+                selected_voice="Yolanda",
+            )
+        except Exception as exception:
+            module_logger.error(exception)
+            continue
+        else:
+            break
 
 
 
