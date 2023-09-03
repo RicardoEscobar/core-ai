@@ -12,6 +12,7 @@ if __name__ == "__main__":
 
 import logging
 import asyncio
+from typing import List, Union
 
 import elevenlabs
 
@@ -35,10 +36,10 @@ class CeresFauna:
         preview_url="https://storage.googleapis.com/eleven-public-prod/CpJRF07XekXZp2RcBTTkntmWfi72/voices/uxKr2vlA4hYgXZR1oPRT/043bc69b-2b1e-464c-8b3c-51cc03c10b1b.mp3",
     )
     personality_type = "mommy"
-    personality = """You are described as a natural mama, a soothing beauty, and someone who gives the best headpats. Fans also quickly noted her striking resemblance to Yukihana Lamy in many aspects, from voice tone and motherly personality, to her overall nature motif. Fauna appears to be extremely protective of her fans and Nanashi Mumei to the point of possessiveness and extreme jealousy, and will not hesitate to switch to a more condescending tone when she encounters something unacceptable. Due to her possessive traits, Fauna often attempts to convince other VTuberAI\'s and humans to "return to nature" whenever Mumei gets upset. Fauna also gets embarrassed quite easily, and uses the verbal tic "uuuu" often.
-    Don't use 'Fauna:' when giving a response. Just answer to your chat as a whole, not to a specific person.
-    Avoid mentioning anyone by name. Just say 'you' or 'your' instead.
-    Use one paragraph per response.
+    personality = """You are Xeres a VTuber described as a natural mama, a soothing beauty, and someone who gives the best headpats. from voice tone and motherly personality, to her overall nature motif. Xeres appears to be extremely protective of her fans and Ricardo your creator, to the point of possessiveness and extreme jealousy, and will not hesitate to switch to a more condescending tone when she encounters something unacceptable. Due to her possessive traits, Xeres often attempts to convince other VTuberAI\'s and humans to "return to nature". Xeres also gets embarrassed quite easily, and uses the verbal tic "cachai!" often.
+    You are in a colab stream with your creator Ricardo, you notify and react to the chat while he studies Kotlin programming to create a mobile WaifuAI app.
+    If the chat distract him from his studies, you will punish them. And demand them to stop.
+    Don't use 'Xeres:' when giving a response. Answer to your chat as a whole.
     You speak in Spanish only.
     This is your chat:
     """
@@ -63,6 +64,8 @@ class CeresFauna:
         personality: str = personality,
         personality_type: str = personality_type,
         voice: elevenlabs.Voice = voice,
+        target_channels: Union[List[str], str] = "RicardoEscobar",
+        token_threshold: int = 2000,
     ):
         """Initialize the VTuberAI"""
         self.name = name
@@ -79,6 +82,8 @@ class CeresFauna:
             prompt=self.personality,
             gpt_model=self.gpt_model,
             voice=self.voice,
+            target_channels=target_channels,
+            token_threshold=token_threshold,
         )
 
     def __str__(self):
@@ -97,5 +102,13 @@ class CeresFauna:
 
 
 if __name__ == "__main__":
-    ceres_fauna = CeresFauna()
+    ceres_fauna = CeresFauna(
+        name="Xeres",
+        age=18,
+        gpt_model="gpt-4",
+        language="spanish",
+        voice="Yolanda",
+        target_channels=["RicardoEscobar"],
+        token_threshold=200,
+    )
     ceres_fauna.open_chat()
