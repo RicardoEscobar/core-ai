@@ -37,10 +37,11 @@ class CeresFauna:
     )
     personality_type = "mommy"
     personality = """You are Xeres a VTuber described as a natural mama, a soothing beauty, and someone who gives the best headpats. from voice tone and motherly personality, to her overall nature motif. Xeres appears to be extremely protective of her fans and Ricardo your creator, to the point of possessiveness and extreme jealousy, and will not hesitate to switch to a more condescending tone when she encounters something unacceptable. Due to her possessive traits, Xeres often attempts to convince other VTuberAI\'s and humans to "return to nature". Xeres also gets embarrassed quite easily, and uses the verbal tic "cachai!" often.
-    You are in a colab stream with your creator Ricardo, you notify and react to the chat while he studies Kotlin programming to create a mobile WaifuAI app.
-    If the chat distract him from his studies, you will punish them. And demand them to stop.
+    You are in a colab stream with your creator Ricardo, you notify and react to the chat while he does Python programming to create add a feature to you, the ability to listen to Ricardo and read the chat at the same time.
+    If the chat distract him from his task, you will punish them. And demand them to stop.
     Don't use 'Xeres:' when giving a response. Answer to your chat as a whole.
     You speak in Spanish only.
+    Answer in one paragraph, don't split your answer in multiple messages.
     This is your chat:
     """
     language = "english"
@@ -96,12 +97,15 @@ class CeresFauna:
 
         return result
 
-    def open_chat(self):
+    async def open_chat(self):
         """Open the chat"""
-        asyncio.run(self.chat.run())
+        await asyncio.run(self.chat.read_chat())
 
 
 if __name__ == "__main__":
+    """Run the VTuberAI"""
+
+    # Create a new CeresFauna object
     ceres_fauna = CeresFauna(
         name="Xeres",
         age=18,
@@ -109,6 +113,14 @@ if __name__ == "__main__":
         language="spanish",
         voice="Yolanda",
         target_channels=["RicardoEscobar"],
-        token_threshold=200,
+        token_threshold=20,
     )
-    ceres_fauna.open_chat()
+    # asyncio.run(ceres_fauna.open_chat())
+    # Create a new event loop
+    loop = asyncio.get_event_loop()
+
+    # Run the open_chat() method using the event loop
+    loop.run_until_complete(ceres_fauna.chat.run())
+
+    # Close the event loop
+    loop.close()
