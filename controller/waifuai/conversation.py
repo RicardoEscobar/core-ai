@@ -13,72 +13,22 @@ if __name__ == "__main__":
     sys.path.append(str(root_folder))
 
 from pathlib import Path
-from datetime import datetime
 from typing import Dict, List, Union
-import threading
-import pickle
 
-import openai
 from elevenlabs.api import Voice, VoiceSettings
 
-import controller.waifuai.detect_audio as detect_audio
-import controller.waifuai.transcribe_audio as transcribe_audio
-from controller.waifuai.speech_synthesis import get_speech_synthesizer
-from controller.waifuai.speech_synthesis import speak_text_into_file
-from controller.waifuai.completion_create import generate_message
-from controller.waifuai.completion_create import get_response
+from controller import detect_audio
+from controller import transcribe_audio
+from controller.speech_synthesis import get_speech_synthesizer, speak_text_into_file
+from controller.waifuai.completion_create import generate_message, get_response, save_conversation
 from controller.llmchain import get_response_unfiltered
-from controller.waifuai.completion_create import save_conversation
-from controller.waifuai.play_audio import play_audio
-from controller.waifuai.play_audio import get_wav_duration
+from controller.play_audio import play_audio, get_wav_duration
 from controller.waifuai.conversations.conversation_example import persona
 from controller.load_openai import load_openai
 from controller.natural_voice import generate_multilingual
-from controller.code_filter import CodeFilter
 from controller.vrchat import VRChat
-
-
-def create_folder(folder_path: str = ".") -> Path:
-    """Create a folder if it does not already exist.
-
-    Args:
-        folder_path (str): The path to the folder.
-
-    Returns:
-        Path: The path to the folder.
-    """
-    if folder_path == ".":
-        returned_folder_path = Path(__file__).parent / "conversations"
-    else:
-        returned_folder_path = Path(folder_path)
-
-    if not returned_folder_path.exists():
-        returned_folder_path.mkdir(parents=True, exist_ok=True)
-
-    return returned_folder_path
-
-
-def generate_audio_file_path(output_path: str = ".", name: str = "prompt") -> Path:
-    """Generate a file path for the audio file.
-
-    Parameters:
-        output_path (str): The output path for the audio file.
-        prefix (str): The prefix for the audio file.
-
-    Returns:
-        Path: The file path for the audio file.
-    """
-    # How to put the timestamp into a file name?
-    # https://stackoverflow.com/questions/415511/how-to-get-current-time-in-python
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-
-    # If the output_path is ".", then use the current directory
-    if output_path == ".":
-        audio_file_path = Path(__file__).parent / f"{timestamp}_{name}.wav"
-    else:
-        audio_file_path = Path(output_path) / f"{timestamp}_{name}.wav"
-
-    return audio_file_path
+from controller.create_folder import create_folder
+from controller.generate_audio_file_path import generate_audio_file_path
 
 
 def translator(selected_voice: str = "Jenny", target_language: str = "English"):

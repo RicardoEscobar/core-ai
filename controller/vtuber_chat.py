@@ -20,9 +20,15 @@ from twitchAPI.chat import Chat, EventData, ChatMessage, ChatSub, ChatCommand
 import tiktoken
 import elevenlabs
 
+from controller import detect_audio
+from controller import transcribe_audio
+from controller.generate_audio_file_path import generate_audio_file_path
 from controller.load_openai import load_openai
 from controller.create_logger import create_logger
+from controller.create_folder import create_folder
 from controller.stream_completion import StreamCompletion
+
+
 
 
 # Create a logger instance
@@ -321,9 +327,34 @@ class VTuberChat:
             chat.stop()
             await twitch.close()
 
-    async def listen_mic(self):
+    async def listen_mic(self, audio_dir: str = "./audio",):
+        # Create a task that runs the listen_mic_loop() method in the background
+        task = asyncio.create_task(self.listen_mic_loop(audio_dir))
+
+        # Wait for the task to complete
+        await task
+
+    async def listen_mic_loop(self, audio_dir: str = "./audio",):
         """Listen to the microphone"""
-        print("Listening to the microphone...")
+        # Load the OpenAI API key
+        load_openai()
+
+        # Create the output folder if it doesn't exist
+        audio_dir_path = create_folder(audio_dir)
+
+        # Preparation: Generate the file paths for the audio files.
+        human_audio_file_path = str(
+            generate_audio_file_path(audio_dir_path, "JorgeEscobar_human")
+        )
+
+        # Step 1: Record audio from the microphone and save it to a file.
+        print("Wait in silence to begin recording; wait in silence to terminate...\n")
+        detect_audio.record_to_file(human_audio_file_path)
+        print(f"done - result written to {human_audio_file_path}\n")
+
+        # Step 2: Convert the audio to text.
+        transcribed_prompt = transcribe_audio.transcribe(human_audio_file_path)
+        print(f"\033[31mUser:\033[0m \033[33m{transcribed_prompt}\033[0m\n")
 
     def get_token_count(self, text: str, gpt_model: str = None) -> int:
         """Return the number of tokens given a text and a GPT model"""

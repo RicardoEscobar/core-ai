@@ -27,8 +27,8 @@ import tiktoken
 
 from controller.load_openai import load_openai
 from controller.create_logger import create_logger
-from controller.waifuai.speech_synthesis import get_speech_synthesizer, speak_text_into_file
-from controller.waifuai.play_audio import play_audio
+from controller.speech_synthesis import get_speech_synthesizer, speak_text_into_file
+from controller.play_audio import play_audio
 
 load_openai()
 
