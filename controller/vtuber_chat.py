@@ -277,8 +277,18 @@ class VTuberChat:
             # Save the message to a dictionary for each channel
             self.save_chat_log(cmd)
 
-    # this is where we set up the bot
     async def run(self):
+        """Run the bot to listen mic and read chat at the same time... in concurrent mode really"""
+        # Create two tasks that run the main() function concurrently
+        read_chat_task = asyncio.create_task(self.read_chat())
+        listen_mic_task = asyncio.create_task(self.listen_mic())
+
+        # Wait for both tasks to complete
+        await asyncio.gather(read_chat_task, listen_mic_task)
+
+    # this is where we set up the bot
+    async def read_chat(self):
+        """Read the chat"""
         # set up twitch api instance and add user authentication with some scopes
         twitch = await Twitch(self.twitch_app_id, self.twitch_app_secret)
         auth = UserAuthenticator(twitch, self.user_scope)
@@ -310,6 +320,10 @@ class VTuberChat:
             # now we can close the chat bot and the twitch api client
             chat.stop()
             await twitch.close()
+
+    async def listen_mic(self):
+        """Listen to the microphone"""
+        print("Listening to the microphone...")
 
     def get_token_count(self, text: str, gpt_model: str = None) -> int:
         """Return the number of tokens given a text and a GPT model"""
@@ -368,7 +382,7 @@ class VTuberChat:
 def main():
     # lets run our setup
     vtuber_chat = VTuberChat(prompt="Hola", gpt_model="gpt-4")
-    asyncio.run(vtuber_chat.run())
+    asyncio.run(vtuber_chat.read_chat())
 
 
 if __name__ == "__main__":
