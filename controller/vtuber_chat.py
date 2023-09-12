@@ -29,8 +29,6 @@ from controller.create_folder import create_folder
 from controller.stream_completion import StreamCompletion
 
 
-
-
 # Create a logger instance
 module_logger = create_logger(
     logger_name="controller.vtuber_chat",
@@ -103,27 +101,34 @@ class VTuberChat:
         """Set the token count"""
         self._token_count = value
         tokens_left = self.token_threshold - self._token_count
+
         # Create a message to display the number of tokens left
         message = f"Siguiente respuesta en: {tokens_left} tokens."
         self.logger.info(message)
+
         # Save the number of tokens left into a tokens_left.txt file
         with open("tokens_left.txt", "w", encoding="utf-8") as tokens_left_file:
             tokens_left_file.write(message)
+
         # When the token count exceeds the threshold, trigger a VTuber interaction with the chat
         if self._token_count > self._token_threshold:
             self.logger.info("Token count exceeded the threshold, saving the chat log.")
-            self.trigger_vtuber_interaction(
-                prompt=self.prompt,
-                gpt_model=self.gpt_model,
-                voice=self.voice,
-                audio_dir_path="./audio",
-            )
+
+            try:
+                self.trigger_vtuber_interaction(
+                    prompt=self.prompt,
+                    gpt_model=self.gpt_model,
+                    voice=self.voice,
+                    audio_dir_path="./audio",
+                )
+            except TypeError as error:
+                self.logger.error(error)
+
             # Reset the token count
             self.token_count = 0
 
             # Reset prompt
             self.prompt = self.initial_prompt
-
 
     @token_count.deleter
     def token_count(self):
@@ -186,7 +191,9 @@ class VTuberChat:
             self.logger.debug("Saving message to chat log dictionary: %s", msg)
         else:
             raise TypeError(
-                "msg must be of type ChatMessage, ChatSub, or ChatCommand, not {}".format(type(msg))
+                "msg must be of type ChatMessage, ChatSub, or ChatCommand, not {}".format(
+                    type(msg)
+                )
             )
 
         try:
@@ -276,7 +283,7 @@ class VTuberChat:
             await cmd.reply("you did not tell me what to reply with")
         else:
             await cmd.reply(message)
-            
+
             # Save the message to a file for each channel, create the chat folder if it doesn't exist
             self.save_log(cmd)
 
@@ -285,12 +292,35 @@ class VTuberChat:
 
     async def run(self):
         """Run the bot to listen mic and read chat at the same time... in concurrent mode really"""
+
+        # Listen to the microphone and get the transcribed prompt
+        transcribed_prompt = await self.listen_mic()
+
+        # Add the creator's name to the prompt
+        transcribed_prompt = f"{transcribed_prompt}. This is your chat:"
+
+        # Count tokens,Add the transcribed prompt to the prompt
+        self.prompt += transcribed_prompt
+        self.initial_prompt += transcribed_prompt
+        self.logger.info("Transcribed prompt added to prompt: %s", self.prompt)
+
+        # VTuber interaction with the chat
+        try:
+            self.trigger_vtuber_interaction(
+                prompt=self.prompt,
+                gpt_model=self.gpt_model,
+                voice=self.voice,
+                audio_dir_path="./audio",
+            )
+        except TypeError as error:
+            self.logger.error(error)
+
         # Create two tasks that run the main() function concurrently
         read_chat_task = asyncio.create_task(self.read_chat())
-        listen_mic_task = asyncio.create_task(self.listen_mic())
 
-        # Wait for both tasks to complete
-        await asyncio.gather(read_chat_task, listen_mic_task)
+        # Wait for the read_chat_task to complete
+        await read_chat_task
+
 
     # this is where we set up the bot
     async def read_chat(self):
@@ -327,15 +357,28 @@ class VTuberChat:
             chat.stop()
             await twitch.close()
 
-    async def listen_mic(self, audio_dir: str = "./audio",):
+    async def listen_mic(
+        self,
+        audio_dir: str = "./audio",
+    ) -> str:
         # Create a task that runs the listen_mic_loop() method in the background
         task = asyncio.create_task(self.listen_mic_loop(audio_dir))
 
-        # Wait for the task to complete
-        await task
+        # Wait for the task to complete and return its result
+        transcribed_prompt = await asyncio.wait_for(task, timeout=None)
 
-    async def listen_mic_loop(self, audio_dir: str = "./audio",):
-        """Listen to the microphone"""
+        return transcribed_prompt
+
+    async def listen_mic_loop(
+        self,
+        audio_dir: str = "./audio",
+    ) -> str:
+        """Listen to the microphone, transcribe the audio, and return the text.
+        args:
+            audio_dir: The directory where the audio files will be saved.
+        returns:
+            The transcribed text.
+        """
         # Load the OpenAI API key
         load_openai()
 
@@ -355,6 +398,8 @@ class VTuberChat:
         # Step 2: Convert the audio to text.
         transcribed_prompt = transcribe_audio.transcribe(human_audio_file_path)
         print(f"\033[31mUser:\033[0m \033[33m{transcribed_prompt}\033[0m\n")
+
+        return transcribed_prompt
 
     def get_token_count(self, text: str, gpt_model: str = None) -> int:
         """Return the number of tokens given a text and a GPT model"""
@@ -379,7 +424,15 @@ class VTuberChat:
         voice: Union[elevenlabs.Voice, str] = None,
         audio_dir_path: str = "./audio",
     ):
-        """Trigger a VTuber interaction with the chat"""
+        """Trigger a VTuber interaction with the chat
+        args:
+            prompt: The prompt to use for the VTuber interaction.
+            gpt_model: The GPT model to use for the VTuber interaction.
+            voice: The voice to use for the VTuber interaction.
+            audio_dir_path: The directory where the audio files will be saved.
+        throws:
+            TypeError: If voice is not of type elevenlabs.Voice or str.
+        """
 
         # Set default values
         if prompt is None:
@@ -392,7 +445,7 @@ class VTuberChat:
             voice = self.voice
 
         self.logger.info("Triggering a VTuber interaction with the chat.")
-        
+
         if isinstance(voice, elevenlabs.Voice):
             self.stream_completion.generate_completion(
                 prompt=prompt,
@@ -406,6 +459,13 @@ class VTuberChat:
                 gpt_model=gpt_model,
                 selected_voice=voice,
                 audio_dir_path=audio_dir_path,
+            )
+        else:
+            self.logger.error(
+                "voice must be of type elevenlabs.Voice or str, not %s", type(voice)
+            )
+            raise TypeError(
+                f"voice must be of type elevenlabs.Voice or str, not {type(voice)}"
             )
 
 
