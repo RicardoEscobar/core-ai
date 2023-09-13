@@ -297,7 +297,7 @@ class VTuberChat:
         transcribed_prompt = await self.listen_mic()
 
         # Add the creator's name to the prompt
-        transcribed_prompt = f"{transcribed_prompt}. This is your chat:"
+        transcribed_prompt = f"{transcribed_prompt}\nThis is your chat:"
 
         # Count tokens,Add the transcribed prompt to the prompt
         self.prompt += transcribed_prompt
