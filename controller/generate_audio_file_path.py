@@ -14,7 +14,7 @@ def generate_audio_file_path(output_path: str = ".", name: str = "prompt") -> Pa
     """
     # How to put the timestamp into a file name?
     # https://stackoverflow.com/questions/415511/how-to-get-current-time-in-python
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     # If the output_path is ".", then use the current directory
     if output_path == ".":
