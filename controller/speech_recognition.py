@@ -14,12 +14,13 @@ import azure.cognitiveservices.speech as speechsdk
 import logging
 from typing import Union, List, Tuple
 import asyncio
-from threading import Thread
+import threading
 import pyaudio
 import numpy as np
 
 from controller.load_openai import load_openai
 from controller.create_logger import create_logger
+from controller.get_token_count import get_token_count
 
 # Create logger
 module_logger = create_logger(
@@ -36,7 +37,21 @@ load_openai()
 
 
 # Function to check for sound
-def check_for_sound():
+def listen_mic(
+    max_tokens: int = 150,
+    stop_str: str = None,
+    gpt_model: str = "gpt-4",
+    language: str = "es-ES",
+) -> str:
+    """This function is used to check for sound and then execute the listening_loop function."""
+
+    # Set the stop_str
+    if stop_str is None:
+        stop_str = ["bye", "adiós"]
+    elif isinstance(stop_str, str):
+        stop_str = [stop_str]
+
+    # Set the microphone parameters
     CHUNK = 1024
     FORMAT = pyaudio.paInt16
     CHANNELS = 1
@@ -45,11 +60,9 @@ def check_for_sound():
 
     p = pyaudio.PyAudio()
 
-    stream = p.open(format=FORMAT,
-                    channels=CHANNELS,
-                    rate=RATE,
-                    input=True,
-                    frames_per_buffer=CHUNK)
+    stream = p.open(
+        format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK
+    )
 
     print("Listening for sound...")
 
@@ -58,8 +71,16 @@ def check_for_sound():
         data = np.frombuffer(stream.read(CHUNK), dtype=np.int16)
         if np.max(data) > THRESHOLD:
             module_logger.info("Sound detected!")
-            result = listening_loop(language="es-ES")
-            module_logger.info("yield> %s",result)
+            result = get_transcript(
+                language=language,
+                stop_str=stop_str,
+                max_tokens=max_tokens,
+                gpt_model=gpt_model,
+            )
+            module_logger.info("> %s", result)
+
+            # Yield the last element of the result list
+            # yield result[-1]
 
 
 def recognize_from_microphone(
@@ -114,8 +135,11 @@ def recognize_from_microphone(
         )
 
 
-def listening_loop(
-    language: str = "en-US", stop_str: Union[str, Tuple[str]] = None
+def get_transcript(
+    language: str = "en-US",
+    stop_str: Union[str, Tuple[str]] = None,
+    max_tokens: int = 150,
+    gpt_model: str = "gpt-4",
 ) -> List[str]:
     """This function executes the recognize_from_microphone function inside a while loop. It stops until the word 'bye' is said."""
     if stop_str is None:
@@ -130,11 +154,20 @@ def listening_loop(
             transcription.append(recognize_from_microphone(language=language))
             module_logger.info(transcription[-1])
         except Exception as exception:
-            module_logger.critical("Exception: {}".format(exception))
+            module_logger.critical(
+                "Exception: {}\Traceback:{}".format(exception, exception.__traceback__)
+            )
             continue
 
+        # count tokens and break if max_tokens is reached
+        num_tokens = get_token_count(" ".join(transcription), gpt_model=gpt_model)
+        module_logger.info("tokens: %s", max_tokens - num_tokens)
+
         # If the last element of the transcription list contains the stop_str, then break the loop
-        if any([stop in transcription[-1].lower() for stop in stop_str]):
+        if (
+            any([stop in transcription[-1].lower() for stop in stop_str])
+            or num_tokens >= max_tokens
+        ):
             break
 
     return transcription
@@ -143,7 +176,7 @@ def listening_loop(
 def test_listening_loop():
     """This function is used to test the listening_loop function."""
     try:
-        transcription = listening_loop(language="es-ES")
+        transcription = get_transcript(language="es-ES")
         # transcription = listening_loop(language="en-US")
     except Exception as exception:
         module_logger.critical("Exception: {}".format(exception))
@@ -153,7 +186,20 @@ def test_listening_loop():
 
 def main():
     """Main function"""
-    check_for_sound()
+    # Create a thread to check for sound
+    text = ""
+    thread = threading.Thread(
+        target=listen_mic,
+        kwargs={
+            "max_tokens": 20,
+            "stop_str": "adiós",
+            "gpt_model": "gpt-4",
+            "language": "es-ES",
+        },
+        daemon=True,
+    )
+    thread.start()
+    thread.join()
 
 
 if __name__ == "__main__":
