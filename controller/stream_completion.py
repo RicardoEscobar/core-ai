@@ -16,7 +16,7 @@ import re
 import time
 from datetime import datetime
 import logging
-from typing import Tuple, Union
+from typing import Tuple, Union, List
 from deprecated import deprecated
 from pathlib import Path
 
@@ -50,6 +50,11 @@ class StreamCompletion:
         voice: Voice = None,
         prompt: str = "Habla como una vtuber chilena, hablas con muchos modismos chilenos, y eres una Tsundere obsesionada con su chat y das inicio al stream. (un parrafo)",
         gpt_model: str = "gpt-4",
+        temperature=0.9,
+        stream_mode=True,
+        max_tokens: int = 150,
+        stop: Union[str, List[str]] = None,
+        yield_characters: List[str] = None,
     ):
         """Initialize the StreamCompletion class."""
         self.logger = module_logger
@@ -71,9 +76,20 @@ class StreamCompletion:
                 design=None,
                 preview_url="https://storage.googleapis.com/eleven-public-prod/PyUBusauIUbpupKTM31Yp4fHtgd2/voices/OgTivnXy9Bsc96AcZaQz/44dc6d49-cd44-4aad-a453-73a12c215702.mp3",
             )
+        
+        if yield_characters is None:
+            yield_characters = (".", "?", "!", "\n", ":", ";")
+
+        if stop is None:
+            stop = ["\n"]
 
         self.prompt = prompt
         self.gpt_model = gpt_model
+        self.yield_characters = yield_characters
+        self.temperature = temperature
+        self.stream = stream_mode
+        self.max_tokens = max_tokens
+        self.stop = stop
 
     def generate_completion(
         self,
@@ -121,6 +137,11 @@ class StreamCompletion:
             selected_voice: str = "Larissa",
             audio_dir_path: str = "./audio",
             filename: str = None,
+            yield_characters: List[str] = None,
+            temperature=0.9,
+            stream_mode=True,
+            max_tokens: int = 150,
+            stop: Union[str, List[str]] = None,
     ) -> None:
         """Generate a completion from the Microsoft AI Speech API.
         args:
@@ -135,6 +156,9 @@ class StreamCompletion:
         if filename is None or filename == "":
             filename = StreamCompletion.get_audio_filepath(prompt, file_extension="mp3")
 
+        if yield_characters is None:
+            yield_characters = self.yield_characters
+
         # Add the directory path to the filename
         filepath = Path(audio_dir_path) / filename
         filename_str = str(filepath.resolve())
@@ -148,11 +172,18 @@ class StreamCompletion:
         completion_finished = ""
 
         # Query OpenAI for a completion
-        for completion in self.completion_generator(prompt, gpt_model=gpt_model):
-            # print(completion, end="", flush=True)
-            completion_finished += completion
+        for completion in self.completion_generator(
+            prompt,
+            temperature=temperature,
+            stream_mode=stream_mode,
+            gpt_model=gpt_model,
+            yield_characters=yield_characters,
+            max_tokens=max_tokens,
+            stop=stop,
+        ):
+            completion_finished = ''.join(completion)
         
-        if completion_finished == "":
+        if completion_finished == '':
             self.logger.error("No completion was generated.")
             raise ValueError("No completion was generated.")
         
@@ -166,9 +197,11 @@ class StreamCompletion:
         self,
         prompt: str = None,
         temperature=0.9,
-        stream=True,
+        stream_mode=True,
         gpt_model=None,
         yield_characters: Tuple[str] = None,
+        max_tokens: int = 150,
+        stop: Union[str, List[str]] = None,
     ) -> str:
         """This generator function yields the next completion from the OpenAI API from a stream mode openai completion. Each time a sentence is completed, the generator yields the sentence. To detect the end of a sentence, the generator looks for a period, question mark, or exclamation point at the end of the sentence. If the sentence is not complete, then the generator yields None. If the generator yields None, then the caller should call the generator again to get the next completion. If the generator yields a sentence, then the caller should call the generator again to get the next completion. The generator will yield None when the stream is complete."""
 
@@ -179,7 +212,10 @@ class StreamCompletion:
             gpt_model = self.gpt_model
 
         if yield_characters is None:
-            yield_characters = (".", "?", "!", "\n", ":", ";")
+            yield_characters = self.yield_characters
+
+        if stop is None:
+            stop = self.stop
 
         # record the time before the request is sent
         start_time = time.time()
@@ -194,7 +230,9 @@ class StreamCompletion:
                 }
             ],
             temperature=temperature,
-            stream=stream,  # again, we set stream=True
+            stream=stream_mode,  # again, we set stream=True
+            max_tokens=max_tokens,
+            stop=stop,
         )
 
         # create variables to collect the stream of chunks
