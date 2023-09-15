@@ -36,7 +36,7 @@ load_openai()
 
 
 # Function to check for sound
-async def check_for_sound(self):
+async def check_for_sound():
     CHUNK = 1024
     FORMAT = pyaudio.paInt16
     CHANNELS = 1
