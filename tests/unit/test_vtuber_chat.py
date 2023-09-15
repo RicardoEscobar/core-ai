@@ -32,7 +32,6 @@ module_logger = create_logger(
 
 
 class TestVTuberChat(unittest.TestCase):
-
     logger = module_logger
 
     def __init__(self, *args, **kwargs):
@@ -42,7 +41,7 @@ class TestVTuberChat(unittest.TestCase):
     def setUp(self):
         """Set up the VTuberChat class unit test."""
         self.logger.info("Setting up VTuberChat class unit test.")
-        self.chat = VTuberChat()
+        self.chat = VTuberChat("gpt-4")
         self.chat.user_scope = "testuser"
         self.chat.target_channels = ["testroom1", "testroom2"]
 
@@ -75,6 +74,47 @@ class TestVTuberChat(unittest.TestCase):
 
         # Delete the log file
         os.remove(log_file_path)
+
+    def test_save_chat_log(self):
+        """Test the save_chat method"""
+        self.logger.info("Testing save_chat method.")
+
+        # Assert that the chat_log throws an error if it's not a ChatMessage, ChatSub, or ChatCommand
+        with self.assertRaises(TypeError):
+            self.chat.save_chat_log(msg="Test message")
+
+        # Assert that the chat_log dictionary appends the message to the correct channel
+        mock_message = MagicMock(spec=ChatMessage)
+        mock_message.room.name = "testroom"
+        mock_message.text = "test text"
+        self.chat.save_chat_log(mock_message)
+        self.logger.info(f"Created a chat_log dict: {self.chat.chat_log}")
+
+        # Assert that the chat_log dictionary appends the message to the correct channel. Multiple channels and messages on this assertion.
+        mock_message2 = MagicMock(spec=ChatMessage)
+        mock_message2.room.name = "testroom2"
+        mock_message2.text = "test text2"
+        self.chat.save_chat_log(mock_message2)
+
+        mock_message3 = MagicMock(spec=ChatMessage)
+        mock_message3.room.name = "testroom"
+        mock_message3.text = "test text3"
+        self.chat.save_chat_log(mock_message3)
+
+        mock_message4 = MagicMock(spec=ChatMessage)
+        mock_message4.room.name = "testroom2"
+        mock_message4.text = "test text4"
+
+        self.chat.save_chat_log(mock_message4)
+        self.logger.info(
+            "Created a multiple message chat_log dict: %s", self.chat.chat_log
+        )
+
+    @unittest.skip("Not implemented yet.")
+    def test_trigger_vtuber_interaction(self):
+        # TODO: Trigger a VTuber interaction with the chat
+        pass
+
 
 
 if __name__ == "__main__":

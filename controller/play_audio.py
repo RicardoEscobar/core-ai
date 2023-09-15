@@ -37,7 +37,7 @@ def get_audio_devices() -> List[Dict[str, Any]]:
     # Return the device index
     return devices
 
-def play_audio(audio_file_path: str):
+def play_audio(audio_file_path: str, output_device_name: str = "VoiceMeeter Aux Input (VB-Audio"):
     # Open the WAV file
     with wave.open(audio_file_path, 'rb') as wave_file:
         # Validate wave_file is a valid WAV file
@@ -50,7 +50,7 @@ def play_audio(audio_file_path: str):
         # Create the PyAudio object
         audio = pyaudio.PyAudio()
 
-        output_device_index = get_audio_device_index("VoiceMeeter Aux Input (VB-Audio")
+        output_device_index = get_audio_device_index(output_device_name)
 
         # Open a PyAudio stream for playback
         stream = audio.open(format=audio_format,
