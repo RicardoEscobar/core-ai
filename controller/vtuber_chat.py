@@ -9,9 +9,10 @@ if __name__ == "__main__":
     sys.path.append(str(project_directory))
 
 import os
-from typing import Union, List
+from typing import Union, List, Tuple
 import logging
 import asyncio
+import threading
 
 from twitchAPI import Twitch
 from twitchAPI.oauth import UserAuthenticator
@@ -19,14 +20,16 @@ from twitchAPI.types import AuthScope, ChatEvent
 from twitchAPI.chat import Chat, EventData, ChatMessage, ChatSub, ChatCommand
 import tiktoken
 import elevenlabs
+import pyaudio
+import numpy as np
 
 from controller import detect_audio
 from controller import transcribe_audio
 from controller.generate_audio_file_path import generate_audio_file_path
 from controller.load_openai import load_openai
 from controller.create_logger import create_logger
-from controller.create_folder import create_folder
 from controller.stream_completion import StreamCompletion
+from controller.speech_recognition import recognize_from_microphone, listening_loop, test_listening_loop
 
 
 # Create a logger instance
@@ -73,6 +76,7 @@ class VTuberChat:
         target_channels: Union[str, List[str]] = "RicardoEscobar",
         voice: Union[elevenlabs.Voice, str] = "Larissa",
         token_threshold: int = 2000,
+        language: str = "es-ES",
     ):
         """Initialize the Twitch chat"""
 
@@ -86,6 +90,7 @@ class VTuberChat:
         self.voice = voice
         self.prompt = prompt
         self.initial_prompt = prompt
+        self.language = language
 
         self.stream_completion = StreamCompletion(
             self.voice, self.prompt, self.gpt_model
@@ -293,34 +298,11 @@ class VTuberChat:
     async def run(self):
         """Run the bot to listen mic and read chat at the same time... in concurrent mode really"""
 
-        # Listen to the microphone and get the transcribed prompt
-        transcribed_prompt = await self.listen_mic()
-
-        # Add the creator's name to the prompt
-        transcribed_prompt = f"{transcribed_prompt}\nThis is your chat:"
-
-        # Count tokens,Add the transcribed prompt to the prompt
-        self.prompt += transcribed_prompt
-        self.initial_prompt += transcribed_prompt
-        self.logger.info("Transcribed prompt added to prompt: %s", self.prompt)
-
-        # VTuber interaction with the chat
-        try:
-            self.trigger_vtuber_interaction(
-                prompt=self.prompt,
-                gpt_model=self.gpt_model,
-                voice=self.voice,
-                audio_dir_path="./audio",
-            )
-        except TypeError as error:
-            self.logger.error(error)
-
         # Create two tasks that run the main() function concurrently
         read_chat_task = asyncio.create_task(self.read_chat())
 
         # Wait for the read_chat_task to complete
         await read_chat_task
-
 
     # this is where we set up the bot
     async def read_chat(self):
@@ -349,57 +331,46 @@ class VTuberChat:
         # we are done with our setup, lets start this bot up!
         chat.start()
 
+        # Start a separate thread for sound detection
+        sound_thread = threading.Thread(target=self.check_for_sound)
+        sound_thread.daemon = True
+        sound_thread.start()
+
         # lets run till we press enter in the console
         try:
-            input("\npress ENTER to stop\n")
+            while True:
+                pass
+        except KeyboardInterrupt:
+            print("Stopped listening.")
         finally:
             # now we can close the chat bot and the twitch api client
             chat.stop()
             await twitch.close()
 
-    async def listen_mic(
-        self,
-        audio_dir: str = "./audio",
-    ) -> str:
-        # Create a task that runs the listen_mic_loop() method in the background
-        task = asyncio.create_task(self.listen_mic_loop(audio_dir))
+    # Function to check for sound
+    async def check_for_sound(self):
+        CHUNK = 1024
+        FORMAT = pyaudio.paInt16
+        CHANNELS = 1
+        RATE = 44100
+        THRESHOLD = 500  # Adjust this threshold to suit your environment
 
-        # Wait for the task to complete and return its result
-        transcribed_prompt = await asyncio.wait_for(task, timeout=None)
+        p = pyaudio.PyAudio()
 
-        return transcribed_prompt
+        stream = p.open(format=FORMAT,
+                        channels=CHANNELS,
+                        rate=RATE,
+                        input=True,
+                        frames_per_buffer=CHUNK)
 
-    async def listen_mic_loop(
-        self,
-        audio_dir: str = "./audio",
-    ) -> str:
-        """Listen to the microphone, transcribe the audio, and return the text.
-        args:
-            audio_dir: The directory where the audio files will be saved.
-        returns:
-            The transcribed text.
-        """
-        # Load the OpenAI API key
-        load_openai()
+        print("Listening for sound...")
 
-        # Create the output folder if it doesn't exist
-        audio_dir_path = create_folder(audio_dir)
+        while True:
+            data = np.frombuffer(stream.read(CHUNK), dtype=np.int16)
+            if np.max(data) > THRESHOLD:
+                listening_loop_task = asyncio.create_task(listening_loop(language=self.language))
+                await listening_loop_task
 
-        # Preparation: Generate the file paths for the audio files.
-        human_audio_file_path = str(
-            generate_audio_file_path(audio_dir_path, "JorgeEscobar_human")
-        )
-
-        # Step 1: Record audio from the microphone and save it to a file.
-        print("Wait in silence to begin recording; wait in silence to terminate...\n")
-        detect_audio.record_to_file(human_audio_file_path)
-        print(f"done - result written to {human_audio_file_path}\n")
-
-        # Step 2: Convert the audio to text.
-        transcribed_prompt = transcribe_audio.transcribe(human_audio_file_path)
-        print(f"\033[31mUser:\033[0m \033[33m{transcribed_prompt}\033[0m\n")
-
-        return transcribed_prompt
 
     def get_token_count(self, text: str, gpt_model: str = None) -> int:
         """Return the number of tokens given a text and a GPT model"""
