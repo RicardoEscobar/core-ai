@@ -13,11 +13,13 @@ if __name__ == "__main__":
 import logging
 import asyncio
 from typing import List, Union
+import threading
 
 import elevenlabs
 
 from controller.create_logger import create_logger
 from controller.vtuber_chat import VTuberChat
+from controller.speech_recognition import listen_mic
 
 
 class CeresFauna:
@@ -141,6 +143,13 @@ if __name__ == "__main__":
         target_channels=["RicardoEscobar"],
         token_threshold=100,
     )
+
+    # Create a thread to check for sound
+    thread = threading.Thread(
+        target=listen_mic,
+        kwargs={"max_tokens": 20, "stop_str": "adiós", "gpt_model": "gpt-4", "language": "en-US"},
+    )
+    thread.start()
 
     # Create a new event loop
     loop = asyncio.get_event_loop()
