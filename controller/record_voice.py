@@ -5,9 +5,6 @@ import wave
 import pyaudio
 from typing import List
 
-
-
-
 def record_voice() -> List[bytes]:
     """It uses the pyaudio library to access the audio device and record the audio. The stream object is created using pyaudio.open(), which takes in parameters such as the audio format, number of channels, sampling rate, and frames per buffer. In this case, it's set to record 16-bit integer audio samples at a sampling rate of 44.1kHz with a buffer size of 2048 frames.
     
