@@ -68,8 +68,26 @@ class CeresFauna:
         voice: elevenlabs.Voice = voice,
         target_channels: Union[List[str], str] = "RicardoEscobar",
         token_threshold: int = 2000,
+        temperature: float = 0.9,
+        stream_mode: bool = True,
+        max_tokens: int = 150,
+        stop: List[str] = None,
+        yield_characters: List[str] = None,
     ):
         """Initialize the VTuberAI"""
+
+        # If target_channels is a string, convert it to a list
+        if isinstance(target_channels, str):
+            target_channels = [target_channels]
+        
+        # Initialize the stop and yield_characters lists if they are None
+        if stop is None:
+            stop = ["\n"]
+        
+        if yield_characters is None:
+            yield_characters = ["\n"]
+
+        # Set the instance attributes
         self.name = name
         self.age = age
         self.gpt_model = gpt_model
@@ -77,6 +95,11 @@ class CeresFauna:
         self.personality = personality
         self.personality_type = personality_type
         self.voice = voice
+        self.temperature = temperature
+        self.stream_mode = stream_mode
+        self.max_tokens = max_tokens
+        self.stop = stop
+        self.yield_characters = yield_characters
 
         self.logger.info("Created a VTuberAI: %s", self.name)
         # Create a VTuberChat instance
@@ -87,6 +110,11 @@ class CeresFauna:
             target_channels=target_channels,
             token_threshold=token_threshold,
             language=self.language,
+            temperature=self.temperature,
+            stream_mode=self.stream_mode,
+            max_tokens=self.max_tokens,
+            stop=self.stop,
+            yield_characters=self.yield_characters,
         )
 
     def __str__(self):
