@@ -36,7 +36,7 @@ load_openai()
 
 
 # Function to check for sound
-async def check_for_sound():
+def check_for_sound():
     CHUNK = 1024
     FORMAT = pyaudio.paInt16
     CHANNELS = 1
@@ -56,11 +56,10 @@ async def check_for_sound():
     while True:
         data = np.frombuffer(stream.read(CHUNK), dtype=np.int16)
         if np.max(data) > THRESHOLD:
-            listening_loop_task = asyncio.create_task(listening_loop(language="es-ES"))
-            await listening_loop_task
+            listening_loop(language="es-ES")
 
 
-async def recognize_from_microphone(
+def recognize_from_microphone(
     language: str = "en-US", speech_key: str = None, speech_region: str = None
 ) -> str:
     """This function is used to recognize speech from the microphone using Microsoft Azure Speech to Text API."""
@@ -112,7 +111,7 @@ async def recognize_from_microphone(
         )
 
 
-async def listening_loop(
+def listening_loop(
     language: str = "en-US", stop_str: Union[str, Tuple[str]] = None
 ) -> List[str]:
     """This function executes the recognize_from_microphone function inside a while loop. It stops until the word 'bye' is said."""
@@ -125,7 +124,7 @@ async def listening_loop(
     module_logger.info("Speak into your microphone.")
     while True:
         try:
-            transcription.append(await recognize_from_microphone(language=language))
+            transcription.append(recognize_from_microphone(language=language))
             module_logger.info(transcription[-1])
         except Exception as exception:
             module_logger.critical("Exception: {}".format(exception))
@@ -141,7 +140,7 @@ async def listening_loop(
 def test_listening_loop():
     """This function is used to test the listening_loop function."""
     try:
-        transcription = asyncio.run(listening_loop(language="es-ES"))
+        transcription = listening_loop(language="es-ES")
         # transcription = listening_loop(language="en-US")
     except Exception as exception:
         module_logger.critical("Exception: {}".format(exception))
