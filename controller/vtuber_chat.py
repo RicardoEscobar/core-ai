@@ -85,6 +85,7 @@ class VTuberChat:
         if yield_characters is None:
             yield_characters = (".", "?", "!", "\n", ":", ";")
 
+        # Set attributes
         self.user_scope = [AuthScope.CHAT_READ, AuthScope.CHAT_EDIT]
         self.target_channels = target_channels
         self._chat_log = dict()
@@ -100,6 +101,7 @@ class VTuberChat:
         self.max_tokens = max_tokens
         self.stop = stop
         self.yield_characters = yield_characters
+        self.transcription = list()
 
         self.stream_completion = StreamCompletion(
             self.voice,
