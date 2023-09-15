@@ -79,11 +79,11 @@ class CeresFauna:
         # If target_channels is a string, convert it to a list
         if isinstance(target_channels, str):
             target_channels = [target_channels]
-        
+
         # Initialize the stop and yield_characters lists if they are None
         if stop is None:
             stop = ["\n"]
-        
+
         if yield_characters is None:
             yield_characters = ["\n"]
 
@@ -123,13 +123,9 @@ class CeresFauna:
 
     def __repr__(self):
         """Return a string representation of the VTuberAI"""
-        result = f"{self.__class__.__name__}(name={repr(self.name)}, age={self.age}, gpt_model={repr(self.gpt_model)}, language={repr(self.language)}, personality={repr(self.personality)}, personality_type={repr(self.personality_type)}, voice={repr(self.voice)})"
+        result = f"{self.__class__.__name__}(name={repr(self.name)}, age={self.age}, gpt_model={repr(self.gpt_model)}, language={repr(self.language)}, personality={repr(self.personality)}, personality_type={repr(self.personality_type)}, voice={repr(self.voice)}, target_channels={repr(self.chat.target_channels)}, token_threshold={self.chat.token_threshold}, temperature={self.temperature}, stream_mode={self.stream_mode}, max_tokens={self.max_tokens}, stop={repr(self.stop)}, yield_characters={repr(self.yield_characters)})"
 
         return result
-
-    async def open_chat(self):
-        """Open the chat"""
-        await asyncio.run(self.chat.read_chat())
 
 
 if __name__ == "__main__":
