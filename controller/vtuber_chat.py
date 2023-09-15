@@ -9,10 +9,9 @@ if __name__ == "__main__":
     sys.path.append(str(project_directory))
 
 import os
-from typing import Union, List
+from typing import Union, List, Tuple
 import logging
 import asyncio
-import threading
 
 from twitchAPI import Twitch
 from twitchAPI.oauth import UserAuthenticator
@@ -20,8 +19,6 @@ from twitchAPI.types import AuthScope, ChatEvent
 from twitchAPI.chat import Chat, EventData, ChatMessage, ChatSub, ChatCommand
 import tiktoken
 import elevenlabs
-import pyaudio
-import numpy as np
 
 from controller.load_openai import load_openai
 from controller.create_logger import create_logger
@@ -73,10 +70,21 @@ class VTuberChat:
         voice: Union[elevenlabs.Voice, str] = "Larissa",
         token_threshold: int = 2000,
         language: str = "es-ES",
+        temperature: float = 0.9,
+        stream_mode: bool = True,
+        max_tokens: int = 150,
+        stop: List[str] = None,
+        yield_characters: Tuple[str] = None,
     ):
         """Initialize the Twitch chat"""
 
         self.logger.info("Initializing VTuberChat class.")
+        if stop is None:
+            stop = ["\n"]
+
+        if yield_characters is None:
+            yield_characters = (".", "?", "!", "\n", ":", ";")
+
         self.user_scope = [AuthScope.CHAT_READ, AuthScope.CHAT_EDIT]
         self.target_channels = target_channels
         self._chat_log = dict()
@@ -87,9 +95,21 @@ class VTuberChat:
         self.prompt = prompt
         self.initial_prompt = prompt
         self.language = language
+        self.temperature = temperature
+        self.stream_mode = stream_mode
+        self.max_tokens = max_tokens
+        self.stop = stop
+        self.yield_characters = yield_characters
 
         self.stream_completion = StreamCompletion(
-            self.voice, self.prompt, self.gpt_model
+            self.voice,
+            self.prompt,
+            self.gpt_model,
+            temperature=temperature,
+            stream_mode=self.stream_mode,
+            max_tokens=self.max_tokens,
+            stop=self.stop,
+            yield_characters=self.yield_characters,
         )
 
     @property
