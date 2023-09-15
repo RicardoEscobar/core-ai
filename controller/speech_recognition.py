@@ -15,6 +15,8 @@ import logging
 from typing import Union, List, Tuple
 import asyncio
 from threading import Thread
+import pyaudio
+import numpy as np
 
 from controller.load_openai import load_openai
 from controller.create_logger import create_logger
@@ -31,6 +33,31 @@ module_logger = create_logger(
 
 # Load OpenAI API
 load_openai()
+
+
+# Function to check for sound
+async def check_for_sound(self):
+    CHUNK = 1024
+    FORMAT = pyaudio.paInt16
+    CHANNELS = 1
+    RATE = 44100
+    THRESHOLD = 500  # Adjust this threshold to suit your environment
+
+    p = pyaudio.PyAudio()
+
+    stream = p.open(format=FORMAT,
+                    channels=CHANNELS,
+                    rate=RATE,
+                    input=True,
+                    frames_per_buffer=CHUNK)
+
+    print("Listening for sound...")
+
+    while True:
+        data = np.frombuffer(stream.read(CHUNK), dtype=np.int16)
+        if np.max(data) > THRESHOLD:
+            listening_loop_task = asyncio.create_task(listening_loop(language="es-ES"))
+            await listening_loop_task
 
 
 async def recognize_from_microphone(
@@ -60,9 +87,8 @@ async def recognize_from_microphone(
         return speech_recognition_result.text
     elif speech_recognition_result.reason == speechsdk.ResultReason.NoMatch:
         module_logger.error(
-            "No speech could be recognized: {}".format(
-                speech_recognition_result.no_match_details
-            )
+            "No speech could be recognized: %s",
+            speech_recognition_result.no_match_details,
         )
         raise Exception(
             "No speech could be recognized: {}".format(

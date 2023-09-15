@@ -9,7 +9,7 @@ if __name__ == "__main__":
     sys.path.append(str(project_directory))
 
 import os
-from typing import Union, List, Tuple
+from typing import Union, List
 import logging
 import asyncio
 import threading
@@ -23,9 +23,6 @@ import elevenlabs
 import pyaudio
 import numpy as np
 
-from controller import detect_audio
-from controller import transcribe_audio
-from controller.generate_audio_file_path import generate_audio_file_path
 from controller.load_openai import load_openai
 from controller.create_logger import create_logger
 from controller.stream_completion import StreamCompletion
@@ -331,46 +328,15 @@ class VTuberChat:
         # we are done with our setup, lets start this bot up!
         chat.start()
 
-        # Start a separate thread for sound detection
-        sound_thread = threading.Thread(target=self.check_for_sound)
-        sound_thread.daemon = True
-        sound_thread.start()
-
         # lets run till we press enter in the console
         try:
-            while True:
-                pass
+           input("Press enter to stop the bot...\n")
         except KeyboardInterrupt:
             print("Stopped listening.")
         finally:
             # now we can close the chat bot and the twitch api client
             chat.stop()
             await twitch.close()
-
-    # Function to check for sound
-    async def check_for_sound(self):
-        CHUNK = 1024
-        FORMAT = pyaudio.paInt16
-        CHANNELS = 1
-        RATE = 44100
-        THRESHOLD = 500  # Adjust this threshold to suit your environment
-
-        p = pyaudio.PyAudio()
-
-        stream = p.open(format=FORMAT,
-                        channels=CHANNELS,
-                        rate=RATE,
-                        input=True,
-                        frames_per_buffer=CHUNK)
-
-        print("Listening for sound...")
-
-        while True:
-            data = np.frombuffer(stream.read(CHUNK), dtype=np.int16)
-            if np.max(data) > THRESHOLD:
-                listening_loop_task = asyncio.create_task(listening_loop(language=self.language))
-                await listening_loop_task
-
 
     def get_token_count(self, text: str, gpt_model: str = None) -> int:
         """Return the number of tokens given a text and a GPT model"""
