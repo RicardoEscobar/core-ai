@@ -53,10 +53,13 @@ def check_for_sound():
 
     print("Listening for sound...")
 
+    result = list()
     while True:
         data = np.frombuffer(stream.read(CHUNK), dtype=np.int16)
         if np.max(data) > THRESHOLD:
-            listening_loop(language="es-ES")
+            module_logger.info("Sound detected!")
+            result = listening_loop(language="es-ES")
+            module_logger.info("yield> %s",result)
 
 
 def recognize_from_microphone(
@@ -150,7 +153,7 @@ def test_listening_loop():
 
 def main():
     """Main function"""
-    test_listening_loop()
+    check_for_sound()
 
 
 if __name__ == "__main__":
