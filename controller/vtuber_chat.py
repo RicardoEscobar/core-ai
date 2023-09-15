@@ -26,7 +26,6 @@ import numpy as np
 from controller.load_openai import load_openai
 from controller.create_logger import create_logger
 from controller.stream_completion import StreamCompletion
-from controller.speech_recognition import recognize_from_microphone, listening_loop, test_listening_loop
 
 
 # Create a logger instance
