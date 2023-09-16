@@ -17,10 +17,12 @@ import asyncio
 import threading
 import pyaudio
 import numpy as np
+from pathlib import Path
 
 from controller.load_openai import load_openai
 from controller.create_logger import create_logger
 from controller.get_token_count import get_token_count
+from controller.custom_thread import CustomThread
 
 # Create logger
 module_logger = create_logger(
@@ -77,10 +79,11 @@ def listen_mic(
                 max_tokens=max_tokens,
                 gpt_model=gpt_model,
             )
+            save_transcript(result, filename="transcript.txt")
             module_logger.info("> %s", result)
 
             # Yield the last element of the result list
-            # yield result[-1]
+            # yield result[-1] # Can't make this work at this time
 
 
 def recognize_from_microphone(
@@ -153,8 +156,11 @@ def get_transcript(
         try:
             transcription.append(recognize_from_microphone(language=language))
             module_logger.info(transcription[-1])
+        except KeyboardInterrupt as exception:
+            module_logger.error("Exception: {}".format(exception))
+            break
         except Exception as exception:
-            module_logger.critical(
+            module_logger.warning(
                 "Exception: {}\Traceback:{}".format(exception, exception.__traceback__)
             )
             continue
@@ -177,29 +183,42 @@ def test_listening_loop():
     """This function is used to test the listening_loop function."""
     try:
         transcription = get_transcript(language="es-ES")
+        save_transcript(transcription, filename="transcript.txt")
         # transcription = listening_loop(language="en-US")
     except Exception as exception:
         module_logger.critical("Exception: {}".format(exception))
     else:
         module_logger.info(transcription)
 
+def save_transcript(transcription: List[str], filename: str = "transcript.txt"):
+    """This function is used to save the transcript to a file."""
+    filepath = Path(filename)
+    with open(filepath, "w", encoding="utf-8") as file:
+        file.write("\n".join(transcription))
+
+def read_transcript(filename: str = "transcript.txt") -> List[str]:
+    """This function is used to read the transcript from a file."""
+    filepath = Path(filename)
+    with open(filepath, "r", encoding="utf-8") as file:
+        return file.readlines()
 
 def main():
     """Main function"""
     # Create a thread to check for sound
     text = ""
-    thread = threading.Thread(
+    thread = CustomThread(
         target=listen_mic,
         kwargs={
             "max_tokens": 20,
-            "stop_str": "adiós",
+            "stop_str": ["adiós", "bye"],
             "gpt_model": "gpt-4",
             "language": "es-ES",
         },
-        daemon=True,
+        daemon=False,
     )
     thread.start()
-    thread.join()
+    # text = thread.join()
+    # print(f"text: {text}")
 
 
 if __name__ == "__main__":

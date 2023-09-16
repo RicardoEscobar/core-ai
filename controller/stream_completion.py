@@ -54,7 +54,7 @@ class StreamCompletion:
         stream_mode=True,
         max_tokens: int = 150,
         stop: Union[str, List[str]] = None,
-        yield_characters: List[str] = None,
+        yield_characters: Tuple[str] = None,
     ):
         """Initialize the StreamCompletion class."""
         self.logger = module_logger

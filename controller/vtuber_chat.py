@@ -101,7 +101,8 @@ class VTuberChat:
         self.max_tokens = max_tokens
         self.stop = stop
         self.yield_characters = yield_characters
-        self.transcription = list()
+        self._transcription = list()
+        self.microphone_username = "RicardoEscobar"
 
         self.stream_completion = StreamCompletion(
             self.voice,
@@ -113,6 +114,27 @@ class VTuberChat:
             stop=self.stop,
             yield_characters=self.yield_characters,
         )
+
+    @property
+    def transcription(self):
+        """Return the transcription list"""
+        return self._transcription
+    
+    @transcription.setter
+    def transcription(self, value):
+        """Set the transcription list"""
+        self._transcription = value
+
+        # Append all elements of the transcription list to the prompt, as a message from the self.microphone_username
+        chat_message = "\n" + self.microphone_username + ": " + " ".join(self._transcription)
+        
+        # Don't allow duplicates: if chat_message does not already exist in self.prompt already, add it to the prompt.
+        # if chat_message not in self.prompt:
+        # print(f"chat_message={chat_message}")
+        self.prompt += chat_message
+
+        # Count the number of tokens, and add it to the token count
+        self.token_count += self.get_token_count(chat_message, self.gpt_model)
 
     @property
     def token_count(self):
@@ -134,24 +156,31 @@ class VTuberChat:
             tokens_left_file.write(message)
 
         # When the token count exceeds the threshold, trigger a VTuber interaction with the chat
-        if self._token_count > self._token_threshold:
+        if self._token_count >= self._token_threshold:
             self.logger.info("Token count exceeded the threshold, saving the chat log.")
 
             try:
+                # print(f"token_count={self.token_count}:trigger_vtuber_interaction:\n{self.prompt}")
+                self.is_vtube_interaction_running = True
+                # Trigger a VTuber interaction with the chat
                 self.trigger_vtuber_interaction(
                     prompt=self.prompt,
                     gpt_model=self.gpt_model,
                     voice=self.voice,
                     audio_dir_path="./audio",
                 )
+                self.is_vtube_interaction_running = False
             except TypeError as error:
                 self.logger.error(error)
 
-            # Reset the token count
-            self.token_count = 0
-
             # Reset prompt
             self.prompt = self.initial_prompt
+
+            # Reset the token count
+            self._token_count = 0
+
+            # Reset the transcription list
+            self.transcription = list()
 
     @token_count.deleter
     def token_count(self):
@@ -222,12 +251,13 @@ class VTuberChat:
         try:
             # Save the message to the chat log dictionary
             self.chat_log[msg.room.name].append(msg)
-            text = "{}: {}".format(msg.user.name, msg.text)
+            text = "\n{}: {}".format(msg.user.name, msg.text)
 
             # Add text to the prompt
             self.prompt += text
 
             # Count the number of tokens, and add it to the token count
+            print(f">265:text={repr(text)}>token_count={self.token_count}")
             self.token_count += self.get_token_count(text, self.gpt_model)
         except KeyError:
             # Create a new chat log list for the channel
