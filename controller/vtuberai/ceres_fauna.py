@@ -141,14 +141,17 @@ if __name__ == "__main__":
         language="spanish",
         voice="Yolanda",
         target_channels=["RicardoEscobar"],
-        token_threshold=100,
+        token_threshold=10,
     )
 
-    # Create a new event loop
-    loop = asyncio.get_event_loop()
+    # Run the VTuberAI in async mode
+    asyncio.run(ceres_fauna.chat.run())
 
-    # Run the open_chat() method using the event loop
-    loop.run_until_complete(ceres_fauna.chat.run())
+    # # Create a new event loop
+    # loop = asyncio.get_event_loop()
 
-    # Close the event loop
-    loop.close()
+    # # Run the open_chat() method using the event loop
+    # loop.run_until_complete(ceres_fauna.chat.run())
+
+    # # Close the event loop
+    # loop.close()

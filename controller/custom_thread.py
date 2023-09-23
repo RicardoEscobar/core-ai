@@ -1,4 +1,5 @@
-""""Custom Thread class to return value from thread"""
+""""Custom Thread class to return value from thread.
+Visit https://youtu.be/DPBm87pTByo?si=vmxQty6tCqsxEstE for more info."""
 
 from threading import Thread
 

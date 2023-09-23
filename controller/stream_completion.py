@@ -19,6 +19,7 @@ import logging
 from typing import Tuple, Union, List
 from deprecated import deprecated
 from pathlib import Path
+from controller.custom_thread import CustomThread
 
 import openai
 from elevenlabs import generate, stream, save
@@ -220,20 +221,45 @@ class StreamCompletion:
         # record the time before the request is sent
         start_time = time.time()
 
+        # Create a thread to send the request
+        # https://youtu.be/DPBm87pTByo?si=vmxQty6tCqsxEstE
+        chat_completion_thread = CustomThread(
+            target=openai.ChatCompletion.create,
+            kwargs={
+                "model": gpt_model,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+                "temperature": temperature,
+                "stream": stream_mode,  # again, we set stream=True
+                "max_tokens": max_tokens,
+                "stop": stop,
+            })
+        
+        # Start the thread
+        chat_completion_thread.start()
+
+        # Wait for the thread to finish
+        response = chat_completion_thread.join()
+        # TODO: Why is this join not waiting for the thread to finish?
+
         # send a ChatCompletion request
-        response = openai.ChatCompletion.create(
-            model=gpt_model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
-            temperature=temperature,
-            stream=stream_mode,  # again, we set stream=True
-            max_tokens=max_tokens,
-            stop=stop,
-        )
+        # response = openai.ChatCompletion.create(
+        #     model=gpt_model,
+        #     messages=[
+        #         {
+        #             "role": "user",
+        #             "content": prompt,
+        #         }
+        #     ],
+        #     temperature=temperature,
+        #     stream=stream_mode,  # again, we set stream=True
+        #     max_tokens=max_tokens,
+        #     stop=stop,
+        # )
 
         # create variables to collect the stream of chunks
         collected_chunks = []

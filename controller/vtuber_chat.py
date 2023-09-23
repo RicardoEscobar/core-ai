@@ -442,12 +442,21 @@ class VTuberChat:
                 audio_dir_path=audio_dir_path,
             )
         elif isinstance(voice, str):
-            self.stream_completion.generate_microsoft_ai_speech_completion(
-                prompt=prompt,
-                gpt_model=gpt_model,
-                selected_voice=voice,
-                audio_dir_path=audio_dir_path,
-            )
+            self.logger.info("Generating Microsoft AI Speech completion.")
+            self.logger.info("prompt: %s", prompt)
+            while True:
+                try:
+                    self.stream_completion.generate_microsoft_ai_speech_completion(
+                        prompt=prompt,
+                        gpt_model=gpt_model,
+                        selected_voice=voice,
+                        audio_dir_path=audio_dir_path,
+                    )
+                except Exception as exception:
+                    module_logger.error(exception)
+                    continue
+                else:
+                    break
         else:
             self.logger.error(
                 "voice must be of type elevenlabs.Voice or str, not %s", type(voice)
