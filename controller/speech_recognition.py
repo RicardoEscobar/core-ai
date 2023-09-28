@@ -14,12 +14,15 @@ import azure.cognitiveservices.speech as speechsdk
 import logging
 from typing import Union, List, Tuple
 import asyncio
-from threading import Thread
+import threading
 import pyaudio
 import numpy as np
+from pathlib import Path
 
 from controller.load_openai import load_openai
 from controller.create_logger import create_logger
+from controller.get_token_count import get_token_count
+from controller.custom_thread import CustomThread
 
 # Create logger
 module_logger = create_logger(
@@ -36,7 +39,21 @@ load_openai()
 
 
 # Function to check for sound
-async def check_for_sound():
+def listen_mic(
+    max_tokens: int = 150,
+    stop_str: str = None,
+    gpt_model: str = "gpt-4",
+    language: str = "es-ES",
+) -> str:
+    """This function is used to check for sound and then execute the listening_loop function."""
+
+    # Set the stop_str
+    if stop_str is None:
+        stop_str = ["bye", "adiós"]
+    elif isinstance(stop_str, str):
+        stop_str = [stop_str]
+
+    # Set the microphone parameters
     CHUNK = 1024
     FORMAT = pyaudio.paInt16
     CHANNELS = 1
@@ -45,22 +62,31 @@ async def check_for_sound():
 
     p = pyaudio.PyAudio()
 
-    stream = p.open(format=FORMAT,
-                    channels=CHANNELS,
-                    rate=RATE,
-                    input=True,
-                    frames_per_buffer=CHUNK)
+    stream = p.open(
+        format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK
+    )
 
     print("Listening for sound...")
 
+    result = list()
     while True:
         data = np.frombuffer(stream.read(CHUNK), dtype=np.int16)
         if np.max(data) > THRESHOLD:
-            listening_loop_task = asyncio.create_task(listening_loop(language="es-ES"))
-            await listening_loop_task
+            module_logger.info("Sound detected!")
+            result = get_transcript(
+                language=language,
+                stop_str=stop_str,
+                max_tokens=max_tokens,
+                gpt_model=gpt_model,
+            )
+            save_transcript(result, filename="transcript.txt")
+            module_logger.info("> %s", result)
+
+            # Yield the last element of the result list
+            # yield result[-1] # Can't make this work at this time
 
 
-async def recognize_from_microphone(
+def recognize_from_microphone(
     language: str = "en-US", speech_key: str = None, speech_region: str = None
 ) -> str:
     """This function is used to recognize speech from the microphone using Microsoft Azure Speech to Text API."""
@@ -112,8 +138,11 @@ async def recognize_from_microphone(
         )
 
 
-async def listening_loop(
-    language: str = "en-US", stop_str: Union[str, Tuple[str]] = None
+def get_transcript(
+    language: str = "en-US",
+    stop_str: Union[str, Tuple[str]] = None,
+    max_tokens: int = 150,
+    gpt_model: str = "gpt-4",
 ) -> List[str]:
     """This function executes the recognize_from_microphone function inside a while loop. It stops until the word 'bye' is said."""
     if stop_str is None:
@@ -125,14 +154,26 @@ async def listening_loop(
     module_logger.info("Speak into your microphone.")
     while True:
         try:
-            transcription.append(await recognize_from_microphone(language=language))
+            transcription.append(recognize_from_microphone(language=language))
             module_logger.info(transcription[-1])
+        except KeyboardInterrupt as exception:
+            module_logger.error("Exception: {}".format(exception))
+            break
         except Exception as exception:
-            module_logger.critical("Exception: {}".format(exception))
+            module_logger.warning(
+                "Exception: {}\Traceback:{}".format(exception, exception.__traceback__)
+            )
             continue
 
+        # count tokens and break if max_tokens is reached
+        num_tokens = get_token_count(" ".join(transcription), gpt_model=gpt_model)
+        module_logger.info("tokens: %s", max_tokens - num_tokens)
+
         # If the last element of the transcription list contains the stop_str, then break the loop
-        if any([stop in transcription[-1].lower() for stop in stop_str]):
+        if (
+            any([stop in transcription[-1].lower() for stop in stop_str])
+            or num_tokens >= max_tokens
+        ):
             break
 
     return transcription
@@ -141,17 +182,43 @@ async def listening_loop(
 def test_listening_loop():
     """This function is used to test the listening_loop function."""
     try:
-        transcription = asyncio.run(listening_loop(language="es-ES"))
+        transcription = get_transcript(language="es-ES")
+        save_transcript(transcription, filename="transcript.txt")
         # transcription = listening_loop(language="en-US")
     except Exception as exception:
         module_logger.critical("Exception: {}".format(exception))
     else:
         module_logger.info(transcription)
 
+def save_transcript(transcription: List[str], filename: str = "transcript.txt"):
+    """This function is used to save the transcript to a file."""
+    filepath = Path(filename)
+    with open(filepath, "w", encoding="utf-8") as file:
+        file.write("\n".join(transcription))
+
+def read_transcript(filename: str = "transcript.txt") -> List[str]:
+    """This function is used to read the transcript from a file."""
+    filepath = Path(filename)
+    with open(filepath, "r", encoding="utf-8") as file:
+        return file.readlines()
 
 def main():
     """Main function"""
-    test_listening_loop()
+    # Create a thread to check for sound
+    text = ""
+    thread = CustomThread(
+        target=listen_mic,
+        kwargs={
+            "max_tokens": 20,
+            "stop_str": ["adiós", "bye"],
+            "gpt_model": "gpt-4",
+            "language": "es-ES",
+        },
+        daemon=False,
+    )
+    thread.start()
+    # text = thread.join()
+    # print(f"text: {text}")
 
 
 if __name__ == "__main__":

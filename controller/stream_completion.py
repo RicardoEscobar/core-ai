@@ -7,6 +7,7 @@ if __name__ == "__main__":
     sys.path.append(str(root_folder))
 
 
+import asyncio
 import os
 
 # This is needed to load the path where the mpv player is located.
@@ -19,6 +20,7 @@ import logging
 from typing import Tuple, Union, List
 from deprecated import deprecated
 from pathlib import Path
+from controller.custom_thread import CustomThread
 
 import openai
 from elevenlabs import generate, stream, save
@@ -54,7 +56,7 @@ class StreamCompletion:
         stream_mode=True,
         max_tokens: int = 150,
         stop: Union[str, List[str]] = None,
-        yield_characters: List[str] = None,
+        yield_characters: Tuple[str] = None,
     ):
         """Initialize the StreamCompletion class."""
         self.logger = module_logger
@@ -130,7 +132,7 @@ class StreamCompletion:
         # Save the audio stream to a file
         save(audio_stream, str(mp3_file_path.resolve()))
 
-    def generate_microsoft_ai_speech_completion(
+    async def generate_microsoft_ai_speech_completion(
             self,
             prompt: str = None,
             gpt_model: str = "gpt-4",
@@ -181,6 +183,7 @@ class StreamCompletion:
             max_tokens=max_tokens,
             stop=stop,
         ):
+            # Wait for the next chunk
             completion_finished = ''.join(completion)
         
         if completion_finished == '':
@@ -332,7 +335,7 @@ class StreamCompletion:
         module_logger.debug("The string has %s tokens.", {num_tokens})
 
 
-def main():
+async def main():
     """Run the main function."""
     prompt = "Eres una VTuber Mexicana tipo 'mommy' y consuelas a tu chat. (una oracion)"
     stream_completion = StreamCompletion()
@@ -343,10 +346,11 @@ def main():
 
     while True:
         try:
-            stream_completion.generate_microsoft_ai_speech_completion(
+            await stream_completion.generate_microsoft_ai_speech_completion(
                 prompt=prompt,
                 gpt_model="gpt-4",
                 selected_voice="Yolanda",
+                stream_mode=True,
             )
         except Exception as exception:
             module_logger.error(exception)
@@ -357,4 +361,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

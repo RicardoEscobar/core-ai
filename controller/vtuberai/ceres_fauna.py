@@ -12,12 +12,14 @@ if __name__ == "__main__":
 
 import logging
 import asyncio
-from typing import List, Union
+from typing import List, Union, Tuple
 
 import elevenlabs
 
 from controller.create_logger import create_logger
 from controller.vtuber_chat import VTuberChat
+from controller.speech_recognition import listen_mic, save_transcript, read_transcript
+from controller.transcript_watchdog import Watcher, MyHandler
 
 
 class CeresFauna:
@@ -44,6 +46,7 @@ class CeresFauna:
     Be sarcastic if someone is being rude to Ricardo or you.
     Make your responses as if you were a real person, not a robot.
     Respond using one paragraph.
+    This is your chat:
     """
     language = "english"
     gpt_model = "gpt-4"
@@ -72,20 +75,20 @@ class CeresFauna:
         stream_mode: bool = True,
         max_tokens: int = 150,
         stop: List[str] = None,
-        yield_characters: List[str] = None,
+        yield_characters: Tuple[str] = None,
     ):
         """Initialize the VTuberAI"""
 
         # If target_channels is a string, convert it to a list
         if isinstance(target_channels, str):
             target_channels = [target_channels]
-        
+
         # Initialize the stop and yield_characters lists if they are None
         if stop is None:
             stop = ["\n"]
-        
+
         if yield_characters is None:
-            yield_characters = ["\n"]
+            yield_characters = ("\n")
 
         # Set the instance attributes
         self.name = name
@@ -123,13 +126,9 @@ class CeresFauna:
 
     def __repr__(self):
         """Return a string representation of the VTuberAI"""
-        result = f"{self.__class__.__name__}(name={repr(self.name)}, age={self.age}, gpt_model={repr(self.gpt_model)}, language={repr(self.language)}, personality={repr(self.personality)}, personality_type={repr(self.personality_type)}, voice={repr(self.voice)})"
+        result = f"{self.__class__.__name__}(name={repr(self.name)}, age={self.age}, gpt_model={repr(self.gpt_model)}, language={repr(self.language)}, personality={repr(self.personality)}, personality_type={repr(self.personality_type)}, voice={repr(self.voice)}, target_channels={repr(self.chat.target_channels)}, token_threshold={self.chat.token_threshold}, temperature={self.temperature}, stream_mode={self.stream_mode}, max_tokens={self.max_tokens}, stop={repr(self.stop)}, yield_characters={repr(self.yield_characters)})"
 
         return result
-
-    async def open_chat(self):
-        """Open the chat"""
-        await asyncio.run(self.chat.read_chat())
 
 
 if __name__ == "__main__":
@@ -143,14 +142,18 @@ if __name__ == "__main__":
         language="spanish",
         voice="Yolanda",
         target_channels=["RicardoEscobar"],
-        token_threshold=100,
+        token_threshold=1,
+        personality="Eres una VTuber Mexicana tipo 'mommy' y consuelas a tu chat. (una oracion). Este es tu chat:",
     )
 
-    # Create a new event loop
-    loop = asyncio.get_event_loop()
+    # Run the VTuberAI in async mode
+    asyncio.run(ceres_fauna.chat.run())
 
-    # Run the open_chat() method using the event loop
-    loop.run_until_complete(ceres_fauna.chat.run())
+    # # Create a new event loop
+    # loop = asyncio.get_event_loop()
 
-    # Close the event loop
-    loop.close()
+    # # Run the open_chat() method using the event loop
+    # loop.run_until_complete(ceres_fauna.chat.run())
+
+    # # Close the event loop
+    # loop.close()
