@@ -119,15 +119,17 @@ class VTuberChat:
     def transcription(self):
         """Return the transcription list"""
         return self._transcription
-    
+
     @transcription.setter
     def transcription(self, value):
         """Set the transcription list"""
         self._transcription = value
 
         # Append all elements of the transcription list to the prompt, as a message from the self.microphone_username
-        chat_message = "\n" + self.microphone_username + ": " + " ".join(self._transcription)
-        
+        chat_message = (
+            "\n" + self.microphone_username + ": " + " ".join(self._transcription)
+        )
+
         # Don't allow duplicates: if chat_message does not already exist in self.prompt already, add it to the prompt.
         # if chat_message not in self.prompt:
         # print(f"chat_message={chat_message}")
@@ -145,6 +147,9 @@ class VTuberChat:
     def token_count(self, value: int):
         """Set the token count"""
         self._token_count = value
+    
+    async def run_trigger_vtuber_interaction(self):
+        """Run the trigger_vtuber_interaction method"""
         tokens_left = self.token_threshold - self._token_count
 
         # Create a message to display the number of tokens left
@@ -159,25 +164,27 @@ class VTuberChat:
         if self._token_count >= self._token_threshold:
             self.logger.info("Token count exceeded the threshold, saving the chat log.")
 
-            try:
-                # Trigger a VTuber interaction with the chat
-                self.trigger_vtuber_interaction(
+        # Trigger a VTuber interaction with the chat, using a coroutine task
+        try:
+            # Wait for the task to complete
+            task = asyncio.create_task(self.trigger_vtuber_interaction(
                     prompt=self.prompt,
                     gpt_model=self.gpt_model,
                     voice=self.voice,
                     audio_dir_path="./audio",
-                )
-            except TypeError as error:
-                self.logger.error(error)
+                ))
+            await task
+        except TypeError as error:
+            self.logger.error(error)
 
-            # Reset prompt
-            self.prompt = self.initial_prompt
+        # Reset prompt
+        self.prompt = self.initial_prompt
 
-            # Reset the token count
-            self._token_count = 0
+        # Reset the token count
+        self._token_count = 0
 
-            # Reset the transcription list
-            self.transcription = list()
+        # Reset the transcription list
+        self.transcription = list()
 
     @token_count.deleter
     def token_count(self):
@@ -232,7 +239,7 @@ class VTuberChat:
         with open(f"chat/{msg.room.name}.md", "a", encoding="utf-8") as chat_log_file:
             chat_log_file.write(f"{message}\n\n")
 
-    def save_chat_log(self, msg: Union[ChatMessage, ChatSub, ChatCommand]) -> None:
+    async def save_chat_log(self, msg: Union[ChatMessage, ChatSub, ChatCommand]) -> None:
         """Save the message to a dictionary for each channel"""
 
         # Check if the message is a ChatMessage, ChatSub, or ChatCommand
@@ -257,7 +264,13 @@ class VTuberChat:
 
             # Add text to the prompt
             self.prompt += text
+
+            # Assign a new value to the token_count property and await for the setter to finish
             self.token_count += self.get_token_count(text, self.gpt_model)
+
+            # Trigger a VTuber interaction with the chat if the token count exceeds the threshold
+            await self.run_trigger_vtuber_interaction()
+
 
     # this will be called when the event READY is triggered, which will be on bot start
     async def on_ready(self, ready_event: EventData):
@@ -289,7 +302,7 @@ class VTuberChat:
         self.save_log(msg)
 
         # Save the message to a dictionary for each channel
-        self.save_chat_log(msg)
+        await self.save_chat_log(msg)
 
     # this will be called whenever someone subscribes to a channel
     async def on_sub(self, sub: ChatSub):
@@ -310,7 +323,7 @@ class VTuberChat:
         self.save_log(sub)
 
         # Save the message to a dictionary for each channel
-        self.save_chat_log(sub)
+        await self.save_chat_log(sub)
 
     # this will be called whenever the !reply command is issued
     async def test_command(self, cmd: ChatCommand):
@@ -336,7 +349,7 @@ class VTuberChat:
             self.save_log(cmd)
 
             # Save the message to a dictionary for each channel
-            self.save_chat_log(cmd)
+            await self.save_chat_log(cmd)
 
     async def run(self):
         """Run the bot to listen mic and read chat at the same time... in concurrent mode really"""
@@ -376,7 +389,7 @@ class VTuberChat:
 
         # lets run till we press enter in the console
         try:
-           input("Press enter to stop the bot...\n")
+            input("Press enter to stop the bot...\n")
         except KeyboardInterrupt:
             print("Stopped listening.")
         finally:
@@ -400,7 +413,7 @@ class VTuberChat:
 
         return num_tokens
 
-    def trigger_vtuber_interaction(
+    async def trigger_vtuber_interaction(
         self,
         prompt: str = None,
         gpt_model: str = None,
@@ -441,7 +454,7 @@ class VTuberChat:
             self.logger.info("prompt: %s", prompt)
             while True:
                 try:
-                    self.stream_completion.generate_microsoft_ai_speech_completion(
+                    await self.stream_completion.generate_microsoft_ai_speech_completion(
                         prompt=prompt,
                         gpt_model=gpt_model,
                         selected_voice=voice,

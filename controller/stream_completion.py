@@ -183,6 +183,7 @@ class StreamCompletion:
             max_tokens=max_tokens,
             stop=stop,
         ):
+            # Wait for the next chunk
             completion_finished = ''.join(completion)
         
         if completion_finished == '':
@@ -222,45 +223,20 @@ class StreamCompletion:
         # record the time before the request is sent
         start_time = time.time()
 
-        # Create a thread to send the request
-        # https://youtu.be/DPBm87pTByo?si=vmxQty6tCqsxEstE
-        chat_completion_thread = CustomThread(
-            target=openai.ChatCompletion.create,
-            kwargs={
-                "model": gpt_model,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
-                ],
-                "temperature": temperature,
-                "stream": stream_mode,  # again, we set stream=True
-                "max_tokens": max_tokens,
-                "stop": stop,
-            })
-        
-        # Start the thread
-        chat_completion_thread.start()
-
-        # Wait for the thread to finish
-        response = chat_completion_thread.join()
-        # TODO: Why is this join not waiting for the thread to finish?
-
         # send a ChatCompletion request
-        # response = openai.ChatCompletion.create(
-        #     model=gpt_model,
-        #     messages=[
-        #         {
-        #             "role": "user",
-        #             "content": prompt,
-        #         }
-        #     ],
-        #     temperature=temperature,
-        #     stream=stream_mode,  # again, we set stream=True
-        #     max_tokens=max_tokens,
-        #     stop=stop,
-        # )
+        response = openai.ChatCompletion.create(
+            model=gpt_model,
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            temperature=temperature,
+            stream=stream_mode,  # again, we set stream=True
+            max_tokens=max_tokens,
+            stop=stop,
+        )
 
         # create variables to collect the stream of chunks
         collected_chunks = []
@@ -374,6 +350,7 @@ async def main():
                 prompt=prompt,
                 gpt_model="gpt-4",
                 selected_voice="Yolanda",
+                stream_mode=True,
             )
         except Exception as exception:
             module_logger.error(exception)

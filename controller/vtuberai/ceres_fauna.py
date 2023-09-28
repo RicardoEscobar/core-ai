@@ -46,6 +46,7 @@ class CeresFauna:
     Be sarcastic if someone is being rude to Ricardo or you.
     Make your responses as if you were a real person, not a robot.
     Respond using one paragraph.
+    This is your chat:
     """
     language = "english"
     gpt_model = "gpt-4"
@@ -142,6 +143,7 @@ if __name__ == "__main__":
         voice="Yolanda",
         target_channels=["RicardoEscobar"],
         token_threshold=1,
+        personality="Eres una VTuber Mexicana tipo 'mommy' y consuelas a tu chat. (una oracion). Este es tu chat:",
     )
 
     # Run the VTuberAI in async mode
