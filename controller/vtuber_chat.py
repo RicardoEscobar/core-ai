@@ -251,18 +251,16 @@ class VTuberChat:
         try:
             # Save the message to the chat log dictionary
             self.chat_log[msg.room.name].append(msg)
-            text = "\n{}: {}".format(msg.user.name, msg.text)
-
-            # Add text to the prompt
-            self.prompt += text
-
-            # Count the number of tokens, and add it to the token count
-            print(f">265:text={repr(text)}>token_count={self.token_count}")
-            self.token_count += self.get_token_count(text, self.gpt_model)
         except KeyError:
             # Create a new chat log list for the channel
             self.chat_log[msg.room.name] = [msg]
             self.logger.error("KeyError: %s, a new key was created.", msg.room.name)
+        finally:
+            text = "\n{}: {}".format(msg.user.name, msg.text)
+
+            # Add text to the prompt
+            self.prompt += text
+            self.token_count += self.get_token_count(text, self.gpt_model)
 
     # this will be called when the event READY is triggered, which will be on bot start
     async def on_ready(self, ready_event: EventData):
