@@ -141,7 +141,7 @@ if __name__ == "__main__":
         language="spanish",
         voice="Yolanda",
         target_channels=["RicardoEscobar"],
-        token_threshold=10,
+        token_threshold=1,
     )
 
     # Run the VTuberAI in async mode
