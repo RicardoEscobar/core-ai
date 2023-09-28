@@ -160,8 +160,6 @@ class VTuberChat:
             self.logger.info("Token count exceeded the threshold, saving the chat log.")
 
             try:
-                # print(f"token_count={self.token_count}:trigger_vtuber_interaction:\n{self.prompt}")
-                self.is_vtube_interaction_running = True
                 # Trigger a VTuber interaction with the chat
                 self.trigger_vtuber_interaction(
                     prompt=self.prompt,
@@ -169,7 +167,6 @@ class VTuberChat:
                     voice=self.voice,
                     audio_dir_path="./audio",
                 )
-                self.is_vtube_interaction_running = False
             except TypeError as error:
                 self.logger.error(error)
 
