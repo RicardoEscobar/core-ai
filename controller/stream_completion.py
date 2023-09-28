@@ -7,6 +7,7 @@ if __name__ == "__main__":
     sys.path.append(str(root_folder))
 
 
+import asyncio
 import os
 
 # This is needed to load the path where the mpv player is located.
@@ -131,7 +132,7 @@ class StreamCompletion:
         # Save the audio stream to a file
         save(audio_stream, str(mp3_file_path.resolve()))
 
-    def generate_microsoft_ai_speech_completion(
+    async def generate_microsoft_ai_speech_completion(
             self,
             prompt: str = None,
             gpt_model: str = "gpt-4",
@@ -358,7 +359,7 @@ class StreamCompletion:
         module_logger.debug("The string has %s tokens.", {num_tokens})
 
 
-def main():
+async def main():
     """Run the main function."""
     prompt = "Eres una VTuber Mexicana tipo 'mommy' y consuelas a tu chat. (una oracion)"
     stream_completion = StreamCompletion()
@@ -369,7 +370,7 @@ def main():
 
     while True:
         try:
-            stream_completion.generate_microsoft_ai_speech_completion(
+            await stream_completion.generate_microsoft_ai_speech_completion(
                 prompt=prompt,
                 gpt_model="gpt-4",
                 selected_voice="Yolanda",
@@ -383,4 +384,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
