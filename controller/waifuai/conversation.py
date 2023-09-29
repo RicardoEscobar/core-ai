@@ -159,9 +159,6 @@ def conversation(
             # Generates the audio file using the natural voice
             generate_multilingual(response, natural_voice, assistant_audio_file_path)
 
-        # Speak the text
-        print(assistant_audio_file_path)
-
         # Calculate the duration of the audio file
         duration = get_wav_duration(assistant_audio_file_path)
 
@@ -176,7 +173,9 @@ def conversation(
         play_audio(assistant_audio_file_path)
 
         # If the transcribed_prompt contains "bye." then break out of the loop
-        if transcribed_prompt.lower().find("bye") != -1:
+        goodbye_words = ["bye", "goodbye", "adíos"]
+
+        if any(word in transcribed_prompt.lower() for word in goodbye_words):
             break
 
 
