@@ -23,12 +23,13 @@ from controller.speech_synthesis import get_speech_synthesizer, speak_text_into_
 from controller.waifuai.completion_create import generate_message, get_response, save_conversation
 from controller.llmchain import get_response_unfiltered
 from controller.play_audio import play_audio, get_wav_duration
-from controller.waifuai.conversations.conversation_example import persona
+from controller.waifuai.conversations.conversation_alicia import persona
 from controller.load_openai import load_openai
 from controller.natural_voice import generate_multilingual
 from controller.vrchat import VRChat
 from controller.create_folder import create_folder
 from controller.generate_audio_file_path import generate_audio_file_path
+from controller.conversation_handler import truncate_conversation
 
 
 def translator(selected_voice: str = "Jenny", target_language: str = "English"):
@@ -87,19 +88,24 @@ def translator(selected_voice: str = "Jenny", target_language: str = "English"):
         play_audio(assistant_audio_file_path)
 
         # If the transcribed_prompt contains "bye." then break out of the loop
-        if transcribed_prompt.lower().find("bye.") != -1:
+        goodbye_words = ["bye", "goodbye", "adíos"]
+
+        if any(word in transcribed_prompt.lower() for word in goodbye_words):
             break
 
 
 def conversation(
+    persona: Dict = persona,
     selected_voice: str = persona["selected_voice"],
     is_filtered: bool = True,
     natural_voice: Union[Voice, str] = None,
 ):
+    TOKEN_THRESHOLD = 4096 # Half of the max token length for GTP-4 (8192 tokens)
     # Load the OpenAI API key
     load_openai()
 
     # Create the output folder if it doesn't exist
+    print(f"persona = {persona['audio_output_path']}")
     output_folder = create_folder(persona["audio_output_path"])
 
     # Loop until the user says "bye"
@@ -125,7 +131,17 @@ def conversation(
         # if is_filtered is True, then filter the response
         if is_filtered:
             # Save the filtered response to the persona["messages"] list
-            response = get_response(persona["messages"])
+            while True:
+                try:
+                    response = get_response(persona["messages"])
+                except Exception as error:
+                    print(error)
+                    print("The conversation is too long.")
+                    # Truncate the conversation
+                    persona = truncate_conversation(persona, TOKEN_THRESHOLD)
+                    continue
+                else:
+                    break
         else:
             # Save the unfiltered response to the persona["messages"] list
             response = get_response_unfiltered(human_input=transcribed_prompt)
@@ -214,7 +230,9 @@ def dubbing(selected_voice: str = "Juan"):
         play_audio(audio_file_path)
 
         # If the transcribed_prompt contains "bye." then break out of the loop
-        if transcribed_prompt.lower().find("bye.") != -1:
+        goodbye_words = ["bye", "goodbye", "adíos"]
+
+        if any(word in transcribed_prompt.lower() for word in goodbye_words):
             break
 
 
@@ -263,6 +281,7 @@ def main():
 
     # Run the conversation
     conversation(
+        persona,
         persona["selected_voice"],  # The default voice is used
         is_filtered=True,  # Set to False to enable NSFW content
         natural_voice=None,  # Set to None to use the default voice
