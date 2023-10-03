@@ -7,7 +7,7 @@ def generate_audio_file_path(output_path: str = ".", name: str = "prompt") -> Pa
 
     Parameters:
         output_path (str): The output path for the audio file.
-        prefix (str): The prefix for the audio file.
+        name (str): The name of the audio file.
 
     Returns:
         Path: The file path for the audio file.
