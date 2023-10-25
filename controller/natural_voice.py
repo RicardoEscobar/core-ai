@@ -97,8 +97,8 @@ def main():
     )
 
     # Save the list of voices to a file.
-    with open("voices.json", "w") as file:
-        file.write(voices().json())
+    with open("voices.json", "w", encoding="utf-8") as file:
+        file.write(voices().model_dump_json())
     
     # get_voice_info()
 
