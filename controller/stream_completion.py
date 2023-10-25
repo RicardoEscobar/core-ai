@@ -1,3 +1,5 @@
+"""This module handles the stream completion from the OpenAI API."""
+
 # If this file is running alone, then add the root folder to the Python path
 if __name__ == "__main__":
     import sys
@@ -7,7 +9,6 @@ if __name__ == "__main__":
     sys.path.append(str(root_folder))
 
 
-import asyncio
 import os
 
 # This is needed to load the path where the mpv player is located.
@@ -50,6 +51,7 @@ class StreamCompletion:
     def __init__(
         self,
         voice: Voice = None,
+        voice_model: str = "eleven_multilingual_v2",
         prompt: str = "Habla como una vtuber chilena, hablas con muchos modismos chilenos, y eres una Tsundere obsesionada con su chat y das inicio al stream. (un parrafo)",
         gpt_model: str = "gpt-4",
         temperature=0.9,
@@ -62,7 +64,7 @@ class StreamCompletion:
         self.logger = module_logger
 
         if voice is None:
-            self.vtuber_voice = Voice(
+            self.voice = Voice(
                 voice_id="chQ8GR2cY20KeFjeSaXI",
                 name="[ElevenVoices] Hailey - American Female Teen",
                 category="generated",
@@ -74,7 +76,8 @@ class StreamCompletion:
                     "gender": "female",
                 },
                 samples=None,
-                settings=VoiceSettings(stability=0.5, similarity_boost=0.75),
+                design=None,
+                settings=None,
                 design=None,
                 preview_url="https://storage.googleapis.com/eleven-public-prod/PyUBusauIUbpupKTM31Yp4fHtgd2/voices/OgTivnXy9Bsc96AcZaQz/44dc6d49-cd44-4aad-a453-73a12c215702.mp3",
             )
@@ -85,6 +88,8 @@ class StreamCompletion:
         if stop is None:
             stop = ["\n"]
 
+        self.voice = voice
+        self.voice_model = voice_model
         self.prompt = prompt
         self.gpt_model = gpt_model
         self.yield_characters = yield_characters
@@ -109,17 +114,17 @@ class StreamCompletion:
             gpt_model = self.gpt_model
 
         if voice is None:
-            voice = self.vtuber_voice
+            voice = self.voice
 
         self.audio_stream = generate(
             text=self.completion_generator(prompt, gpt_model=gpt_model),
             voice=voice,
-            model="eleven_multilingual_v1",
+            model=self.voice,
             stream=True,
         )
 
         # Play the audio stream
-        audio_stream = stream(self.audio_stream)
+        play_audio_stream = stream(self.audio_stream)
 
         # Create the filename as a Path object
         mp3_file_path = Path(audio_dir_path) / StreamCompletion.get_audio_filepath(
@@ -132,9 +137,9 @@ class StreamCompletion:
         self.logger.debug("Saving audio to %s", {mp3_file_path.resolve()})
 
         # Save the audio stream to a file
-        save(audio_stream, str(mp3_file_path.resolve()))
+        save(play_audio_stream, str(mp3_file_path.resolve()))
 
-    async def generate_microsoft_ai_speech_completion(
+    def generate_microsoft_ai_speech_completion(
         self,
         prompt: str = None,
         gpt_model: str = "gpt-4",
@@ -207,7 +212,7 @@ class StreamCompletion:
         yield_characters: Tuple[str] = None,
         max_tokens: int = 150,
         stop: Union[str, List[str]] = None,
-    ) -> str:
+    ):
         """This generator function yields the next completion from the OpenAI API from a stream mode openai completion. Each time a sentence is completed, the generator yields the sentence. To detect the end of a sentence, the generator looks for a period, question mark, or exclamation point at the end of the sentence. If the sentence is not complete, then the generator yields None. If the generator yields None, then the caller should call the generator again to get the next completion. If the generator yields a sentence, then the caller should call the generator again to get the next completion. The generator will yield None when the stream is complete."""
 
         if prompt is None:
@@ -337,31 +342,22 @@ class StreamCompletion:
         module_logger.debug("The string has %s tokens.", {num_tokens})
 
 
-async def main():
-    """Run the main function."""
-    prompt = (
-        "Eres una VTuber Mexicana tipo 'mommy' y consuelas a tu chat. (una oracion)"
-    )
+def test_stream_completion():
+    """Test the StreamCompletion class."""
+    # Create a StreamCompletion object
     stream_completion = StreamCompletion()
-    # stream_completion.generate_completion(
-    #     prompt=prompt,
-    #     gpt_model="gpt-4",
-    # )
 
-    while True:
-        try:
-            await stream_completion.generate_microsoft_ai_speech_completion(
-                prompt=prompt,
-                gpt_model="gpt-4",
-                selected_voice="Yolanda",
-                stream_mode=True,
-            )
-        except Exception as exception:
-            module_logger.error(exception)
-            continue
-        else:
-            break
+    # Generate a completion
+    stream_completion.generate_completion()
+
+    # Generate a completion using the Microsoft AI Speech API
+    stream_completion.generate_microsoft_ai_speech_completion()
+
+
+def main():
+    """Run the main function."""
+    test_stream_completion()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
