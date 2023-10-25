@@ -23,7 +23,7 @@ from controller.speech_synthesis import get_speech_synthesizer, speak_text_into_
 from controller.waifuai.completion_create import generate_message, get_response, save_conversation
 from controller.llmchain import get_response_unfiltered
 from controller.play_audio import play_audio, get_wav_duration
-from controller.waifuai.conversations.conversation_alicia import persona
+from controller.waifuai.conversations.azure_conversation import persona
 from controller.load_openai import load_openai
 from controller.natural_voice import generate_multilingual
 from controller.vrchat import VRChat
@@ -238,6 +238,7 @@ def dubbing(selected_voice: str = "Juan"):
 
 def main():
     # dubbing(persona["selected_voice"])
+    # TODO: Remake this Voice object withn the new version of the Eleven Labs API
     female_natural_voice = Voice(
         voice_id="chQ8GR2cY20KeFjeSaXI",
         name="[ElevenVoices] Hailey - American Female Teen",
@@ -284,7 +285,7 @@ def main():
         persona,
         persona["selected_voice"],  # The default voice is used
         is_filtered=True,  # Set to False to enable NSFW content
-        natural_voice=None,  # Set to None to use the default voice
+        natural_voice=female_natural_voice,  # Set to None to use the default voice
     )
 
 
