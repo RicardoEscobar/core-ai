@@ -239,7 +239,8 @@ def dubbing(selected_voice: str = "Juan"):
 def main():
     # dubbing(persona["selected_voice"])
     # TODO: Remake this Voice object withn the new version of the Eleven Labs API
-    female_natural_voice = Voice(
+
+    hailey_natural_voice = Voice(
         voice_id="chQ8GR2cY20KeFjeSaXI",
         name="[ElevenVoices] Hailey - American Female Teen",
         category="generated",
@@ -251,7 +252,8 @@ def main():
             "gender": "female",
         },
         samples=None,
-        settings=VoiceSettings(stability=0.5, similarity_boost=0.75),
+        design=None,
+        settings=None,
         design=None,
         preview_url="https://storage.googleapis.com/eleven-public-prod/PyUBusauIUbpupKTM31Yp4fHtgd2/voices/OgTivnXy9Bsc96AcZaQz/44dc6d49-cd44-4aad-a453-73a12c215702.mp3",
     )
@@ -285,7 +287,7 @@ def main():
         persona,
         persona["selected_voice"],  # The default voice is used
         is_filtered=True,  # Set to False to enable NSFW content
-        natural_voice=female_natural_voice,  # Set to None to use the default voice
+        natural_voice=hailey_natural_voice,  # Set to None to use the default voice
     )
 
 
