@@ -254,7 +254,6 @@ def main():
         samples=None,
         design=None,
         settings=None,
-        design=None,
         preview_url="https://storage.googleapis.com/eleven-public-prod/PyUBusauIUbpupKTM31Yp4fHtgd2/voices/OgTivnXy9Bsc96AcZaQz/44dc6d49-cd44-4aad-a453-73a12c215702.mp3",
     )
 
