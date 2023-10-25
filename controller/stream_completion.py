@@ -78,7 +78,7 @@ class StreamCompletion:
                 design=None,
                 preview_url="https://storage.googleapis.com/eleven-public-prod/PyUBusauIUbpupKTM31Yp4fHtgd2/voices/OgTivnXy9Bsc96AcZaQz/44dc6d49-cd44-4aad-a453-73a12c215702.mp3",
             )
-        
+
         if yield_characters is None:
             yield_characters = (".", "?", "!", "\n", ":", ";")
 
@@ -122,7 +122,9 @@ class StreamCompletion:
         audio_stream = stream(self.audio_stream)
 
         # Create the filename as a Path object
-        mp3_file_path = Path(audio_dir_path) / StreamCompletion.get_audio_filepath(prompt)
+        mp3_file_path = Path(audio_dir_path) / StreamCompletion.get_audio_filepath(
+            prompt
+        )
 
         # Create the folder if it does not exist
         mp3_file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -133,17 +135,17 @@ class StreamCompletion:
         save(audio_stream, str(mp3_file_path.resolve()))
 
     async def generate_microsoft_ai_speech_completion(
-            self,
-            prompt: str = None,
-            gpt_model: str = "gpt-4",
-            selected_voice: str = "Larissa",
-            audio_dir_path: str = "./audio",
-            filename: str = None,
-            yield_characters: List[str] = None,
-            temperature=0.9,
-            stream_mode=True,
-            max_tokens: int = 150,
-            stop: Union[str, List[str]] = None,
+        self,
+        prompt: str = None,
+        gpt_model: str = "gpt-4",
+        selected_voice: str = "Larissa",
+        audio_dir_path: str = "./audio",
+        filename: str = None,
+        yield_characters: List[str] = None,
+        temperature=0.9,
+        stream_mode=True,
+        max_tokens: int = 150,
+        stop: Union[str, List[str]] = None,
     ) -> None:
         """Generate a completion from the Microsoft AI Speech API.
         args:
@@ -184,15 +186,15 @@ class StreamCompletion:
             stop=stop,
         ):
             # Wait for the next chunk
-            completion_finished = ''.join(completion)
-        
-        if completion_finished == '':
+            completion_finished = "".join(completion)
+
+        if completion_finished == "":
             self.logger.error("No completion was generated.")
             raise ValueError("No completion was generated.")
-        
+
         # Speak the text into a file
         speak_text_into_file(speech_synthesizer, completion_finished)
-    
+
         # Play the audio file
         play_audio(filename_str)
 
@@ -337,7 +339,9 @@ class StreamCompletion:
 
 async def main():
     """Run the main function."""
-    prompt = "Eres una VTuber Mexicana tipo 'mommy' y consuelas a tu chat. (una oracion)"
+    prompt = (
+        "Eres una VTuber Mexicana tipo 'mommy' y consuelas a tu chat. (una oracion)"
+    )
     stream_completion = StreamCompletion()
     # stream_completion.generate_completion(
     #     prompt=prompt,
@@ -357,7 +361,6 @@ async def main():
             continue
         else:
             break
-
 
 
 if __name__ == "__main__":
