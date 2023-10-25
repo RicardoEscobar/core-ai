@@ -72,7 +72,10 @@ if __name__ == "__main__":
                                  {"role": "user", "content": "Hi"},
                                  {"role": "assistant", "content": "How are you?"},
                                  {"role": "user", "content": "I'm fine"},
-                                 {"role": "assistant", "content": "Goodbye"}]}
+                                 {"role": "assistant", "content": "Goodbye"},
+                                 {"role": "system", "content": "Goodbye"},
+    ]}
     print(f"Conversation:\n{get_conversation_text(conversation)}\n")
-    conversation = truncate_conversation(conversation, 2000)
-    print(f"Conversation:\n{get_conversation_text(conversation)}\n")
+    conversation = truncate_conversation(conversation, 25)
+    print(f"Truncated conversation:\n{get_conversation_text(conversation)}\n")
+    print(f"Old messages:\n{conversation['old_messages']}\n")
