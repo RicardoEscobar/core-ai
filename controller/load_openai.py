@@ -3,6 +3,7 @@ import openai
 from dotenv import load_dotenv
 from elevenlabs import set_api_key
 
+
 def load_openai():
     # Load environment variables from .env file
     load_dotenv()
