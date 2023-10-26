@@ -20,7 +20,11 @@ from elevenlabs.api import Voice, VoiceSettings
 from controller import detect_audio
 from controller import transcribe_audio
 from controller.speech_synthesis import get_speech_synthesizer, speak_text_into_file
-from controller.waifuai.completion_create import generate_message, get_response, save_conversation
+from controller.waifuai.completion_create import (
+    generate_message,
+    get_response,
+    save_conversation,
+)
 from controller.llmchain import get_response_unfiltered
 from controller.play_audio import play_audio, get_wav_duration
 from controller.waifuai.conversations.azure_conversation import persona
@@ -100,7 +104,7 @@ def conversation(
     is_filtered: bool = True,
     natural_voice: Union[Voice, str] = None,
 ):
-    TOKEN_THRESHOLD = 4096 # Half of the max token length for GTP-4 (8192 tokens)
+    TOKEN_THRESHOLD = 4096  # Half of the max token length for GTP-4 (8192 tokens)
     # Load the OpenAI API key
     load_openai()
 
@@ -237,9 +241,6 @@ def dubbing(selected_voice: str = "Juan"):
 
 
 def main():
-    # dubbing(persona["selected_voice"])
-    # TODO: Remake this Voice object withn the new version of the Eleven Labs API
-
     hailey_natural_voice = Voice(
         voice_id="chQ8GR2cY20KeFjeSaXI",
         name="[ElevenVoices] Hailey - American Female Teen",
@@ -252,9 +253,9 @@ def main():
             "gender": "female",
         },
         samples=None,
+        settings=VoiceSettings(stability=0.5, similarity_boost=0.75),
         design=None,
-        settings=None,
-        preview_url="https://storage.googleapis.com/eleven-public-prod/PyUBusauIUbpupKTM31Yp4fHtgd2/voices/OgTivnXy9Bsc96AcZaQz/44dc6d49-cd44-4aad-a453-73a12c215702.mp3",
+        preview_url="https://storage.googleapis.com/eleven-public-prod/U1Rx6ByQzXTKXc5wPxu4fXvSRqO2/voices/chQ8GR2cY20KeFjeSaXI/293c3953-463e-42d3-8a92-ccedad1b9280.mp3",
     )
 
     male_natural_voice = Voice(
