@@ -19,12 +19,11 @@ import time
 from datetime import datetime
 import logging
 from typing import Tuple, Union, List
-from deprecated import deprecated
 from pathlib import Path
 from controller.custom_thread import CustomThread
 
 import openai
-from elevenlabs import generate, stream, save
+from elevenlabs import generate, stream, save, voices
 from elevenlabs.api import Voice, VoiceSettings
 import tiktoken
 
@@ -32,6 +31,8 @@ from controller.load_openai import load_openai
 from controller.create_logger import create_logger
 from controller.speech_synthesis import get_speech_synthesizer, speak_text_into_file
 from controller.play_audio import play_audio
+from controller.time_it import time_it
+
 
 load_openai()
 
@@ -64,7 +65,7 @@ class StreamCompletion:
         self.logger = module_logger
 
         if voice is None:
-            self.voice = Voice(
+            voice = Voice(
                 voice_id="chQ8GR2cY20KeFjeSaXI",
                 name="[ElevenVoices] Hailey - American Female Teen",
                 category="generated",
@@ -76,10 +77,9 @@ class StreamCompletion:
                     "gender": "female",
                 },
                 samples=None,
+                settings=VoiceSettings(stability=0.5, similarity_boost=0.75),
                 design=None,
-                settings=None,
-                design=None,
-                preview_url="https://storage.googleapis.com/eleven-public-prod/PyUBusauIUbpupKTM31Yp4fHtgd2/voices/OgTivnXy9Bsc96AcZaQz/44dc6d49-cd44-4aad-a453-73a12c215702.mp3",
+                preview_url="https://storage.googleapis.com/eleven-public-prod/U1Rx6ByQzXTKXc5wPxu4fXvSRqO2/voices/chQ8GR2cY20KeFjeSaXI/293c3953-463e-42d3-8a92-ccedad1b9280.mp3",
             )
 
         if yield_characters is None:
@@ -94,33 +94,60 @@ class StreamCompletion:
         self.gpt_model = gpt_model
         self.yield_characters = yield_characters
         self.temperature = temperature
-        self.stream = stream_mode
+        self.stream_mode = stream_mode
         self.max_tokens = max_tokens
         self.stop = stop
 
     def generate_completion(
         self,
         prompt: str = None,
+        temperature=0.9,
+        stream_mode=True,
         gpt_model: str = None,
+        yield_characters: Tuple[str] = None,
+        max_tokens: int = 150,
+        stop: Union[str, List[str]] = None,
         voice: Voice = None,
         audio_dir_path: str = "./audio",
+        voice_model: str = "eleven_multilingual_v2",
     ):
         """Generate a completion from the OpenAI API."""
 
+        # Initialize the variables
         if prompt is None:
             prompt = self.prompt
 
         if gpt_model is None:
             gpt_model = self.gpt_model
 
+        if yield_characters is None:
+            yield_characters = self.yield_characters
+
+        if stop is None:
+            stop = self.stop
+
+        if stop is None:
+            stop = self.stop
+
         if voice is None:
             voice = self.voice
 
+        # Create a text generator
+        phrase_generator = self.completion_generator(
+            prompt=prompt,
+            temperature=temperature,
+            stream_mode=stream_mode,
+            gpt_model=gpt_model,
+            yield_characters=yield_characters,
+            max_tokens=max_tokens,
+            stop=self.stop,
+        )
+
         self.audio_stream = generate(
-            text=self.completion_generator(prompt, gpt_model=gpt_model),
+            text=phrase_generator,
             voice=voice,
-            model=self.voice,
-            stream=True,
+            model=voice_model,
+            stream=stream_mode,
         )
 
         # Play the audio stream
@@ -320,43 +347,51 @@ class StreamCompletion:
         )
         return filename
 
-    @staticmethod
-    @deprecated(
-        reason="This method is no longer needed and will be removed in a future version."
-    )
-    def tiktoken_example():
-        """TODO eliminate this method after refactor"""
-        # Get the encoding object for the "cl100k_base" encoding
-        enc = tiktoken.get_encoding("cl100k_base")
-        assert enc.decode(enc.encode("hello world")) == "hello world"
 
-        # To get the tokeniser corresponding to a specific model in the OpenAI API:
-        enc = tiktoken.encoding_for_model("gpt-4")
-
-        # Encode a string into tokens
-        tokens = enc.encode("Hello, world!")
-
-        # Count the number of tokens
-        num_tokens = len(tokens)
-
-        module_logger.debug("The string has %s tokens.", {num_tokens})
-
-
-def test_stream_completion():
-    """Test the StreamCompletion class."""
-    # Create a StreamCompletion object
+@time_it
+def test_generate_completion():
+    """Test the generate_completion method."""
     stream_completion = StreamCompletion()
-
-    # Generate a completion
     stream_completion.generate_completion()
 
-    # Generate a completion using the Microsoft AI Speech API
-    stream_completion.generate_microsoft_ai_speech_completion()
+
+@time_it
+def test_get_voices():
+    """Test the get_voices method."""
+
+    # Create specific voice
+    voice = Voice(
+        voice_id="chQ8GR2cY20KeFjeSaXI",
+        name="[ElevenVoices] Hailey - American Female Teen",
+        category="generated",
+        description="",
+        labels={
+            "accent": "american",
+            "age": "young",
+            "voicefrom": "ElevenVoices",
+            "gender": "female",
+        },
+        samples=None,
+        settings=VoiceSettings(stability=0.5, similarity_boost=0.75),
+        design=None,
+        preview_url="https://storage.googleapis.com/eleven-public-prod/U1Rx6ByQzXTKXc5wPxu4fXvSRqO2/voices/chQ8GR2cY20KeFjeSaXI/293c3953-463e-42d3-8a92-ccedad1b9280.mp3",
+    )
+
+    print(repr(voice))
+    print(type(voice))
+    audio_stream = generate(
+        text="No se porque se tarda tanto en generar el audio, tal vez es porque el servicio esta saturado.",
+        stream=True,
+        voice=voice,
+        model="eleven_multilingual_v2",
+    )
+    stream(audio_stream)
 
 
+@time_it
 def main():
     """Run the main function."""
-    test_stream_completion()
+    test_generate_completion()
 
 
 if __name__ == "__main__":
