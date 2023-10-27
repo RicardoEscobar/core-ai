@@ -23,7 +23,7 @@ from controller.get_token_count import get_token_count
 from controller.load_openai import load_openai
 from controller.speech_synthesis import get_speech_synthesizer, speak_text_into_file
 from controller.play_audio import play_audio
-from controller.generate_audio_file_path import generate_audio_file_path
+from controller.get_audio_filepath import get_audio_filepath
 
 
 # Load the OpenAI API key
@@ -277,7 +277,7 @@ def main():
     # filepath = output_path / filename
 
     # Generate the file path for the audio file, removing spaces from the persona["name"].
-    audio_file = str(generate_audio_file_path(DIRECTORY, filename))
+    audio_file = get_audio_filepath(output_dir=DIRECTORY, text=filename)
 
     # Get a speech synthesizer
     speech_synthesizer = get_speech_synthesizer(SELECTED_VOICE, audio_file)

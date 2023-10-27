@@ -18,20 +18,21 @@ import re
 import time
 from datetime import datetime
 import logging
-from typing import Tuple, Union, List
+from typing import Tuple, Union, List, Dict
 from pathlib import Path
 from controller.custom_thread import CustomThread
+from pathlib import Path
 
 import openai
 from elevenlabs import generate, stream, save, voices
 from elevenlabs.api import Voice, VoiceSettings
-import tiktoken
 
 from controller.load_openai import load_openai
 from controller.create_logger import create_logger
 from controller.speech_synthesis import get_speech_synthesizer, speak_text_into_file
 from controller.play_audio import play_audio
 from controller.time_it import time_it
+from controller.get_audio_filepath import get_audio_filepath
 
 
 load_openai()
@@ -98,6 +99,9 @@ class StreamCompletion:
         self.max_tokens = max_tokens
         self.stop = stop
 
+        # Saves the last completion generated.
+        self.last_completion = ""
+
     def generate_completion(
         self,
         prompt: str = None,
@@ -110,7 +114,9 @@ class StreamCompletion:
         voice: Voice = None,
         audio_dir_path: str = "./audio",
         voice_model: str = "eleven_multilingual_v2",
-    ) -> str:
+        filename_length: int = 100,
+        output_dir: str = ".",
+    ) -> Dict[str, str]:
         """Generate a completion from the OpenAI API.
         args:
             prompt (str, optional): The prompt to use. Defaults to None.
@@ -125,7 +131,8 @@ class StreamCompletion:
             voice_model (str, optional): The voice model to use. Defaults to "eleven_multilingual_v2".
 
         returns:
-            str: The generated audio file path."""
+            Dict[str, str]: Generated response from the OpenAI API and the filepath of the audio file e. g. {"last_completion": "Hello world!", "filepath": "./audio/20210901_123456_Hello_world.mp3"}
+        """
 
         # Initialize the variables
         if prompt is None:
@@ -168,19 +175,32 @@ class StreamCompletion:
         play_audio_stream = stream(self.audio_stream)
 
         # Create the filename as a Path object
-        mp3_file_path = Path(audio_dir_path) / StreamCompletion.get_audio_filepath(
-            prompt
+        if self.last_completion == "":
+            filename = get_audio_filepath(
+                prompt, filename_length, output_dir=output_dir
+            )
+        else:
+            filename = self.last_completion[:filename_length]
+
+        mp3_filepath = Path(
+            get_audio_filepath(
+                filename,
+                file_extension="mp3",
+                filename_length=filename_length,
+                output_dir=output_dir,
+            )
         )
 
         # Create the folder if it does not exist
-        mp3_file_path.parent.mkdir(parents=True, exist_ok=True)
+        mp3_filepath.parent.mkdir(parents=True, exist_ok=True)
 
-        self.logger.debug("Saving audio to %s", {mp3_file_path.resolve()})
+        self.logger.debug("Saving audio to %s", {mp3_filepath.resolve()})
 
         # Save the audio stream to a file
-        save(play_audio_stream, str(mp3_file_path.resolve()))
+        mp3_file = str(mp3_filepath.resolve())
+        save(play_audio_stream, mp3_file)
 
-        return str(mp3_file_path.resolve())
+        return {"last_completion": self.last_completion, "filepath": mp3_file}
 
     def generate_microsoft_ai_speech_completion(
         self,
@@ -206,7 +226,7 @@ class StreamCompletion:
             prompt = self.prompt
 
         if filename is None or filename == "":
-            filename = StreamCompletion.get_audio_filepath(prompt, file_extension="mp3")
+            filename = get_audio_filepath(prompt, file_extension="mp3")
 
         if yield_characters is None:
             yield_characters = self.yield_characters
@@ -248,7 +268,7 @@ class StreamCompletion:
 
     def completion_generator(
         self,
-        prompt: str = None,
+        prompt: Union[str, Dict] = None,
         temperature=0.9,
         stream_mode=True,
         gpt_model=None,
@@ -268,6 +288,9 @@ class StreamCompletion:
         yields:
             str: The next completion."""
 
+        # Reset the last completion
+        self.last_completion = ""
+
         if prompt is None:
             prompt = self.prompt
 
@@ -280,18 +303,25 @@ class StreamCompletion:
         if stop is None:
             stop = self.stop
 
+        if isinstance(prompt, str):
+            messages = [
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ]
+        elif isinstance(prompt, dict):
+            messages = prompt["messages"]
+        else:
+            raise ValueError("prompt must be a str or a dict.")
+
         # record the time before the request is sent
         start_time = time.time()
 
         # send a ChatCompletion request
         response = openai.ChatCompletion.create(
             model=gpt_model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
+            messages=messages,
             temperature=temperature,
             stream=stream_mode,  # again, we set stream=True
             max_tokens=max_tokens,
@@ -345,33 +375,16 @@ class StreamCompletion:
             )
 
         # Log the time delay and text received
-        self.logger.debug(
+        self.logger.info(
             "Full response received {:.2f} seconds after request".format(chunk_time)
         )
         full_reply_content = "".join([m.get("content", "") for m in collected_deltas])
 
-        # Log the full conversation
-        self.logger.debug("Full conversation received: %s", full_reply_content)
+        # Log the last completion
+        self.logger.info("Last completion: %s", full_reply_content)
 
-    @staticmethod
-    def get_audio_filepath(
-        text: str, filename_len: int = 100, file_extension: str = "mp3"
-    ) -> str:
-        """Return a filename for the mp3 file.
-        args:
-            text (str): The text to use to generate the filename.
-            filename_len (int, optional): The maximum length of the filename. Defaults to 100.
-        returns:
-            str: The filename.
-        """
-        filename = re.sub(r"[^\w\s-]", "", text[:filename_len]).strip()
-        filename = re.sub(r"[-\s]+", "-", filename)
-        filename = re.sub(r"[.,:;¿?¡!]", "", filename)
-        # Add timestamp to filename
-        filename = (
-            f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}.{file_extension}"
-        )
-        return filename
+        # Save last completion
+        self.last_completion = full_reply_content
 
 
 @time_it
