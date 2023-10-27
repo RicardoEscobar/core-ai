@@ -110,8 +110,22 @@ class StreamCompletion:
         voice: Voice = None,
         audio_dir_path: str = "./audio",
         voice_model: str = "eleven_multilingual_v2",
-    ):
-        """Generate a completion from the OpenAI API."""
+    ) -> str:
+        """Generate a completion from the OpenAI API.
+        args:
+            prompt (str, optional): The prompt to use. Defaults to None.
+            temperature (float, optional): The temperature to use. Defaults to 0.9.
+            stream_mode (bool, optional): Whether to use stream mode. Defaults to True.
+            gpt_model (str, optional): The GPT model to use. Defaults to None.
+            yield_characters (Tuple[str], optional): The characters to yield. Defaults to None.
+            max_tokens (int, optional): The maximum number of tokens to use. Defaults to 150.
+            stop (Union[str, List[str]], optional): The stop characters to use. Defaults to None.
+            voice (Voice, optional): The voice to use. Defaults to None.
+            audio_dir_path (str, optional): The directory path to save the audio to. Defaults to "./audio".
+            voice_model (str, optional): The voice model to use. Defaults to "eleven_multilingual_v2".
+            
+        returns:
+            str: The generated audio file path."""
 
         # Initialize the variables
         if prompt is None:
@@ -165,6 +179,8 @@ class StreamCompletion:
 
         # Save the audio stream to a file
         save(play_audio_stream, str(mp3_file_path.resolve()))
+
+        return str(mp3_file_path.resolve())
 
     def generate_microsoft_ai_speech_completion(
         self,
