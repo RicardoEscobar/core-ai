@@ -123,7 +123,7 @@ class StreamCompletion:
             voice (Voice, optional): The voice to use. Defaults to None.
             audio_dir_path (str, optional): The directory path to save the audio to. Defaults to "./audio".
             voice_model (str, optional): The voice model to use. Defaults to "eleven_multilingual_v2".
-            
+
         returns:
             str: The generated audio file path."""
 
@@ -256,7 +256,17 @@ class StreamCompletion:
         max_tokens: int = 150,
         stop: Union[str, List[str]] = None,
     ):
-        """This generator function yields the next completion from the OpenAI API from a stream mode openai completion. Each time a sentence is completed, the generator yields the sentence. To detect the end of a sentence, the generator looks for a period, question mark, or exclamation point at the end of the sentence. If the sentence is not complete, then the generator yields None. If the generator yields None, then the caller should call the generator again to get the next completion. If the generator yields a sentence, then the caller should call the generator again to get the next completion. The generator will yield None when the stream is complete."""
+        """This generator function yields the next completion from the OpenAI API from a stream mode openai completion. Each time a sentence is completed, the generator yields the sentence. To detect the end of a sentence, the generator looks for a period, question mark, or exclamation point at the end of the sentence. If the sentence is not complete, then the generator yields None. If the generator yields None, then the caller should call the generator again to get the next completion. If the generator yields a sentence, then the caller should call the generator again to get the next completion. The generator will yield None when the stream is complete.
+        args:
+            prompt (str, optional): The prompt to use. Defaults to None.
+            temperature (float, optional): The temperature to use. Defaults to 0.9.
+            stream_mode (bool, optional): Whether to use stream mode. Defaults to True.
+            gpt_model (str, optional): The GPT model to use. Defaults to None.
+            yield_characters (Tuple[str], optional): The characters to yield. Defaults to None.
+            max_tokens (int, optional): The maximum number of tokens to use. Defaults to 150.
+            stop (Union[str, List[str]], optional): The stop characters to use. Defaults to None.
+        yields:
+            str: The next completion."""
 
         if prompt is None:
             prompt = self.prompt
