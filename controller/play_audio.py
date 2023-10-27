@@ -1,7 +1,9 @@
+import os
 import wave
-import pyaudio
 from typing import Any, Dict, List
 
+from mutagen.mp3 import MP3
+import pyaudio
 
 def get_audio_device_index(device_name: str) -> int:
     """Get the audio device index from the device name."""
@@ -71,24 +73,33 @@ def play_audio(audio_file_path: str, output_device_name: str = "VoiceMeeter Aux 
         stream.close()
         audio.terminate()
 
-def get_wav_duration(audio_file_path: str) -> float:
-    """Get the duration of a WAV file in seconds."""
-    with wave.open(audio_file_path, 'rb') as wave_file:
-        # Get the frame rate
-        frame_rate = wave_file.getframerate()
+def get_audio_duration(audio_file_path: str) -> float:
+    """Get the duration of an audio file (WAV, MP3) in seconds."""
+    # Get the file extension
+    file_extension = os.path.splitext(audio_file_path)[1]
 
-        # Get the number of frames
-        num_frames = wave_file.getnframes()
+    if file_extension == '.wav':
+        with wave.open(audio_file_path, 'rb') as wave_file:
+            # Get the frame rate
+            frame_rate = wave_file.getframerate()
 
-        # Calculate the duration
-        duration = num_frames / frame_rate
+            # Get the number of frames
+            num_frames = wave_file.getnframes()
 
-        # Return the duration
-        return duration
+            # Calculate the duration
+            duration = num_frames / frame_rate
+
+            # Return the duration
+            return duration
+    elif file_extension == '.mp3':
+        audio = MP3(audio_file_path)
+        return audio.info.length
+    else:
+        raise ValueError(f"Unsupported file extension: {file_extension}. This function supports only WAV and MP3 files.")
 
 if __name__ == "__main__":
     from pathlib import Path
 
     filepath = Path(r'D:\conversation-ai\005-Loona-V4\2023-07-23_03-18-58_Loona.wav')
     #play_audio('example.wav')
-    print(f'duration = {get_wav_duration(str(filepath))} seconds it should be 37 seconds')
+    print(f'duration = {get_audio_duration(str(filepath))} seconds it should be 37 seconds')

@@ -1,3 +1,5 @@
+"""This module handles the stream completion from the OpenAI API."""
+
 # If this file is running alone, then add the root folder to the Python path
 if __name__ == "__main__":
     import sys
@@ -7,7 +9,6 @@ if __name__ == "__main__":
     sys.path.append(str(root_folder))
 
 
-import asyncio
 import os
 
 # This is needed to load the path where the mpv player is located.
@@ -17,20 +18,22 @@ import re
 import time
 from datetime import datetime
 import logging
-from typing import Tuple, Union, List
-from deprecated import deprecated
+from typing import Tuple, Union, List, Dict
 from pathlib import Path
 from controller.custom_thread import CustomThread
+from pathlib import Path
 
 import openai
-from elevenlabs import generate, stream, save
+from elevenlabs import generate, stream, save, voices
 from elevenlabs.api import Voice, VoiceSettings
-import tiktoken
 
 from controller.load_openai import load_openai
 from controller.create_logger import create_logger
 from controller.speech_synthesis import get_speech_synthesizer, speak_text_into_file
 from controller.play_audio import play_audio
+from controller.time_it import time_it
+from controller.get_audio_filepath import get_audio_filepath
+
 
 load_openai()
 
@@ -50,6 +53,7 @@ class StreamCompletion:
     def __init__(
         self,
         voice: Voice = None,
+        voice_model: str = "eleven_multilingual_v2",
         prompt: str = "Habla como una vtuber chilena, hablas con muchos modismos chilenos, y eres una Tsundere obsesionada con su chat y das inicio al stream. (un parrafo)",
         gpt_model: str = "gpt-4",
         temperature=0.9,
@@ -62,7 +66,7 @@ class StreamCompletion:
         self.logger = module_logger
 
         if voice is None:
-            self.vtuber_voice = Voice(
+            voice = Voice(
                 voice_id="chQ8GR2cY20KeFjeSaXI",
                 name="[ElevenVoices] Hailey - American Female Teen",
                 category="generated",
@@ -76,74 +80,140 @@ class StreamCompletion:
                 samples=None,
                 settings=VoiceSettings(stability=0.5, similarity_boost=0.75),
                 design=None,
-                preview_url="https://storage.googleapis.com/eleven-public-prod/PyUBusauIUbpupKTM31Yp4fHtgd2/voices/OgTivnXy9Bsc96AcZaQz/44dc6d49-cd44-4aad-a453-73a12c215702.mp3",
+                preview_url="https://storage.googleapis.com/eleven-public-prod/U1Rx6ByQzXTKXc5wPxu4fXvSRqO2/voices/chQ8GR2cY20KeFjeSaXI/293c3953-463e-42d3-8a92-ccedad1b9280.mp3",
             )
-        
+
         if yield_characters is None:
             yield_characters = (".", "?", "!", "\n", ":", ";")
 
         if stop is None:
             stop = ["\n"]
 
+        self.voice = voice
+        self.voice_model = voice_model
         self.prompt = prompt
         self.gpt_model = gpt_model
         self.yield_characters = yield_characters
         self.temperature = temperature
-        self.stream = stream_mode
+        self.stream_mode = stream_mode
         self.max_tokens = max_tokens
         self.stop = stop
+
+        # Saves the last completion generated.
+        self.last_completion = ""
 
     def generate_completion(
         self,
         prompt: str = None,
+        temperature=0.9,
+        stream_mode=True,
         gpt_model: str = None,
+        yield_characters: Tuple[str] = None,
+        max_tokens: int = 150,
+        stop: Union[str, List[str]] = None,
         voice: Voice = None,
         audio_dir_path: str = "./audio",
-    ):
-        """Generate a completion from the OpenAI API."""
+        voice_model: str = "eleven_multilingual_v2",
+        filename_length: int = 100,
+        output_dir: str = ".",
+    ) -> Dict[str, str]:
+        """Generate a completion from the OpenAI API.
+        args:
+            prompt (str, optional): The prompt to use. Defaults to None.
+            temperature (float, optional): The temperature to use. Defaults to 0.9.
+            stream_mode (bool, optional): Whether to use stream mode. Defaults to True.
+            gpt_model (str, optional): The GPT model to use. Defaults to None.
+            yield_characters (Tuple[str], optional): The characters to yield. Defaults to None.
+            max_tokens (int, optional): The maximum number of tokens to use. Defaults to 150.
+            stop (Union[str, List[str]], optional): The stop characters to use. Defaults to None.
+            voice (Voice, optional): The voice to use. Defaults to None.
+            audio_dir_path (str, optional): The directory path to save the audio to. Defaults to "./audio".
+            voice_model (str, optional): The voice model to use. Defaults to "eleven_multilingual_v2".
 
+        returns:
+            Dict[str, str]: Generated response from the OpenAI API and the filepath of the audio file e. g. {"last_completion": "Hello world!", "filepath": "./audio/20210901_123456_Hello_world.mp3"}
+        """
+
+        # Initialize the variables
         if prompt is None:
             prompt = self.prompt
 
         if gpt_model is None:
             gpt_model = self.gpt_model
 
+        if yield_characters is None:
+            yield_characters = self.yield_characters
+
+        if stop is None:
+            stop = self.stop
+
+        if stop is None:
+            stop = self.stop
+
         if voice is None:
-            voice = self.vtuber_voice
+            voice = self.voice
+
+        # Create a text generator
+        phrase_generator = self.completion_generator(
+            prompt=prompt,
+            temperature=temperature,
+            stream_mode=stream_mode,
+            gpt_model=gpt_model,
+            yield_characters=yield_characters,
+            max_tokens=max_tokens,
+            stop=self.stop,
+        )
 
         self.audio_stream = generate(
-            text=self.completion_generator(prompt, gpt_model=gpt_model),
+            text=phrase_generator,
             voice=voice,
-            model="eleven_multilingual_v1",
-            stream=True,
+            model=voice_model,
+            stream=stream_mode,
         )
 
         # Play the audio stream
-        audio_stream = stream(self.audio_stream)
+        play_audio_stream = stream(self.audio_stream)
 
         # Create the filename as a Path object
-        mp3_file_path = Path(audio_dir_path) / StreamCompletion.get_audio_filepath(prompt)
+        if self.last_completion == "":
+            filename = get_audio_filepath(
+                prompt, filename_length, output_dir=output_dir
+            )
+        else:
+            filename = self.last_completion[:filename_length]
+
+        mp3_filepath = Path(
+            get_audio_filepath(
+                filename,
+                file_extension="mp3",
+                filename_length=filename_length,
+                output_dir=output_dir,
+            )
+        )
 
         # Create the folder if it does not exist
-        mp3_file_path.parent.mkdir(parents=True, exist_ok=True)
+        mp3_filepath.parent.mkdir(parents=True, exist_ok=True)
 
-        self.logger.debug("Saving audio to %s", {mp3_file_path.resolve()})
+        self.logger.debug("Saving audio to %s", {mp3_filepath.resolve()})
 
         # Save the audio stream to a file
-        save(audio_stream, str(mp3_file_path.resolve()))
+        mp3_file = str(mp3_filepath.resolve())
+        save(play_audio_stream, mp3_file)
 
-    async def generate_microsoft_ai_speech_completion(
-            self,
-            prompt: str = None,
-            gpt_model: str = "gpt-4",
-            selected_voice: str = "Larissa",
-            audio_dir_path: str = "./audio",
-            filename: str = None,
-            yield_characters: List[str] = None,
-            temperature=0.9,
-            stream_mode=True,
-            max_tokens: int = 150,
-            stop: Union[str, List[str]] = None,
+        return {"last_completion": self.last_completion, "filepath": mp3_file}
+
+    def generate_microsoft_ai_speech_completion(
+        self,
+        prompt: str = None,
+        gpt_model: str = "gpt-4",
+        selected_voice: str = "Larissa",
+        audio_dir_path: str = "./audio",
+        filename: str = None,
+        yield_characters: List[str] = None,
+        temperature=0.9,
+        stream_mode=True,
+        max_tokens: int = 150,
+        stop: Union[str, List[str]] = None,
     ) -> None:
         """Generate a completion from the Microsoft AI Speech API.
         args:
@@ -156,7 +226,7 @@ class StreamCompletion:
             prompt = self.prompt
 
         if filename is None or filename == "":
-            filename = StreamCompletion.get_audio_filepath(prompt, file_extension="mp3")
+            filename = get_audio_filepath(prompt, file_extension="mp3")
 
         if yield_characters is None:
             yield_characters = self.yield_characters
@@ -184,29 +254,42 @@ class StreamCompletion:
             stop=stop,
         ):
             # Wait for the next chunk
-            completion_finished = ''.join(completion)
-        
-        if completion_finished == '':
+            completion_finished = "".join(completion)
+
+        if completion_finished == "":
             self.logger.error("No completion was generated.")
             raise ValueError("No completion was generated.")
-        
+
         # Speak the text into a file
         speak_text_into_file(speech_synthesizer, completion_finished)
-    
+
         # Play the audio file
         play_audio(filename_str)
 
     def completion_generator(
         self,
-        prompt: str = None,
+        prompt: Union[str, Dict] = None,
         temperature=0.9,
         stream_mode=True,
         gpt_model=None,
         yield_characters: Tuple[str] = None,
         max_tokens: int = 150,
         stop: Union[str, List[str]] = None,
-    ) -> str:
-        """This generator function yields the next completion from the OpenAI API from a stream mode openai completion. Each time a sentence is completed, the generator yields the sentence. To detect the end of a sentence, the generator looks for a period, question mark, or exclamation point at the end of the sentence. If the sentence is not complete, then the generator yields None. If the generator yields None, then the caller should call the generator again to get the next completion. If the generator yields a sentence, then the caller should call the generator again to get the next completion. The generator will yield None when the stream is complete."""
+    ):
+        """This generator function yields the next completion from the OpenAI API from a stream mode openai completion. Each time a sentence is completed, the generator yields the sentence. To detect the end of a sentence, the generator looks for a period, question mark, or exclamation point at the end of the sentence. If the sentence is not complete, then the generator yields None. If the generator yields None, then the caller should call the generator again to get the next completion. If the generator yields a sentence, then the caller should call the generator again to get the next completion. The generator will yield None when the stream is complete.
+        args:
+            prompt (str, optional): The prompt to use. Defaults to None.
+            temperature (float, optional): The temperature to use. Defaults to 0.9.
+            stream_mode (bool, optional): Whether to use stream mode. Defaults to True.
+            gpt_model (str, optional): The GPT model to use. Defaults to None.
+            yield_characters (Tuple[str], optional): The characters to yield. Defaults to None.
+            max_tokens (int, optional): The maximum number of tokens to use. Defaults to 150.
+            stop (Union[str, List[str]], optional): The stop characters to use. Defaults to None.
+        yields:
+            str: The next completion."""
+
+        # Reset the last completion
+        self.last_completion = ""
 
         if prompt is None:
             prompt = self.prompt
@@ -220,18 +303,25 @@ class StreamCompletion:
         if stop is None:
             stop = self.stop
 
+        if isinstance(prompt, str):
+            messages = [
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ]
+        elif isinstance(prompt, dict):
+            messages = prompt["messages"]
+        else:
+            raise ValueError("prompt must be a str or a dict.")
+
         # record the time before the request is sent
         start_time = time.time()
 
         # send a ChatCompletion request
         response = openai.ChatCompletion.create(
             model=gpt_model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
+            messages=messages,
             temperature=temperature,
             stream=stream_mode,  # again, we set stream=True
             max_tokens=max_tokens,
@@ -285,80 +375,63 @@ class StreamCompletion:
             )
 
         # Log the time delay and text received
-        self.logger.debug(
+        self.logger.info(
             "Full response received {:.2f} seconds after request".format(chunk_time)
         )
         full_reply_content = "".join([m.get("content", "") for m in collected_deltas])
 
-        # Log the full conversation
-        self.logger.debug("Full conversation received: %s", full_reply_content)
+        # Log the last completion
+        self.logger.info("Last completion: %s", full_reply_content)
 
-    @staticmethod
-    def get_audio_filepath(
-        text: str, filename_len: int = 100, file_extension: str = "mp3"
-    ) -> str:
-        """Return a filename for the mp3 file.
-        args:
-            text (str): The text to use to generate the filename.
-            filename_len (int, optional): The maximum length of the filename. Defaults to 100.
-        returns:
-            str: The filename.
-        """
-        filename = re.sub(r"[^\w\s-]", "", text[:filename_len]).strip()
-        filename = re.sub(r"[-\s]+", "-", filename)
-        filename = re.sub(r"[.,:;¿?¡!]", "", filename)
-        # Add timestamp to filename
-        filename = (
-            f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}.{file_extension}"
-        )
-        return filename
-
-    @staticmethod
-    @deprecated(
-        reason="This method is no longer needed and will be removed in a future version."
-    )
-    def tiktoken_example():
-        """TODO eliminate this method after refactor"""
-        # Get the encoding object for the "cl100k_base" encoding
-        enc = tiktoken.get_encoding("cl100k_base")
-        assert enc.decode(enc.encode("hello world")) == "hello world"
-
-        # To get the tokeniser corresponding to a specific model in the OpenAI API:
-        enc = tiktoken.encoding_for_model("gpt-4")
-
-        # Encode a string into tokens
-        tokens = enc.encode("Hello, world!")
-
-        # Count the number of tokens
-        num_tokens = len(tokens)
-
-        module_logger.debug("The string has %s tokens.", {num_tokens})
+        # Save last completion
+        self.last_completion = full_reply_content
 
 
-async def main():
-    """Run the main function."""
-    prompt = "Eres una VTuber Mexicana tipo 'mommy' y consuelas a tu chat. (una oracion)"
+@time_it
+def test_generate_completion():
+    """Test the generate_completion method."""
     stream_completion = StreamCompletion()
-    # stream_completion.generate_completion(
-    #     prompt=prompt,
-    #     gpt_model="gpt-4",
-    # )
+    stream_completion.generate_completion()
 
-    while True:
-        try:
-            await stream_completion.generate_microsoft_ai_speech_completion(
-                prompt=prompt,
-                gpt_model="gpt-4",
-                selected_voice="Yolanda",
-                stream_mode=True,
-            )
-        except Exception as exception:
-            module_logger.error(exception)
-            continue
-        else:
-            break
 
+@time_it
+def test_get_voices():
+    """Test the get_voices method."""
+
+    # Create specific voice
+    voice = Voice(
+        voice_id="chQ8GR2cY20KeFjeSaXI",
+        name="[ElevenVoices] Hailey - American Female Teen",
+        category="generated",
+        description="",
+        labels={
+            "accent": "american",
+            "age": "young",
+            "voicefrom": "ElevenVoices",
+            "gender": "female",
+        },
+        samples=None,
+        settings=VoiceSettings(stability=0.5, similarity_boost=0.75),
+        design=None,
+        preview_url="https://storage.googleapis.com/eleven-public-prod/U1Rx6ByQzXTKXc5wPxu4fXvSRqO2/voices/chQ8GR2cY20KeFjeSaXI/293c3953-463e-42d3-8a92-ccedad1b9280.mp3",
+    )
+
+    print(repr(voice))
+    print(type(voice))
+    audio_stream = generate(
+        text="No se porque se tarda tanto en generar el audio, tal vez es porque el servicio esta saturado.",
+        stream=True,
+        voice=voice,
+        model="eleven_multilingual_v2",
+    )
+    stream(audio_stream)
+
+
+@time_it
+def main():
+    """Run the main function."""
+    test_generate_completion()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

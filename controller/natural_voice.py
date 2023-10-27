@@ -36,13 +36,13 @@ def generate_multilingual(
     voice: Union[str, Voice] = "Arnold",
     audio_file: str = "multilingual.mp3",
 ):
-    """The eleven_multilingual_v1 model supports multiple languages, including
+    """The eleven_multilingual_v2 model supports multiple languages, including
     English, German, Polish, Spanish, Italian, French, Portuguese, and Hindi."""
     # Set logging level
     logging.basicConfig(level=logging.ERROR)
 
     # Generate the audio.
-    audio = generate(text=text, voice=voice, model="eleven_multilingual_v1")
+    audio = generate(text=text, voice=voice, model="eleven_multilingual_v2")
 
     # Save the audio to a file.
     audio_file_path = Path(audio_file)
@@ -97,8 +97,8 @@ def main():
     )
 
     # Save the list of voices to a file.
-    with open("voices.json", "w") as file:
-        file.write(voices().json())
+    with open("voices.json", "w", encoding="utf-8") as file:
+        file.write(voices().model_dump_json())
     
     # get_voice_info()
 
