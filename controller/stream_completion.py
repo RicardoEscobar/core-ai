@@ -11,8 +11,8 @@ if __name__ == "__main__":
 
 import os
 
-# This is needed to load the path where the mpv player is located.
-os.environ["PATH"] += os.pathsep + "E:\\downloads"
+# This is needed to load the path where the mpv player is located."C:\Users\Ricardo\Downloads\mpv.exe"
+os.environ["PATH"] += os.pathsep + r"C:\Users\Ricardo\Downloads"
 
 import re
 import time
@@ -153,6 +153,7 @@ class StreamCompletion:
         if voice is None:
             voice = self.voice
 
+        self.logger.debug("Creating a text generator with: '%s'", prompt)
         # Create a text generator
         phrase_generator = self.completion_generator(
             prompt=prompt,
@@ -163,6 +164,7 @@ class StreamCompletion:
             max_tokens=max_tokens,
             stop=self.stop,
         )
+        self.logger.debug("phrase_generator created: %s", phrase_generator)
 
         self.audio_stream = generate(
             text=phrase_generator,
@@ -170,9 +172,11 @@ class StreamCompletion:
             model=voice_model,
             stream=stream_mode,
         )
+        self.logger.debug("audio_stream created: %s", self.audio_stream)
 
         # Play the audio stream
         play_audio_stream = stream(self.audio_stream)
+        self.logger.debug("play_audio_stream created: %s", play_audio_stream)
 
         # Create the filename as a Path object
         if self.last_completion == "":
@@ -182,6 +186,8 @@ class StreamCompletion:
         else:
             filename = self.last_completion[:filename_length]
 
+        self.logger.debug("filename created: %s", filename)
+
         mp3_filepath = Path(
             get_audio_filepath(
                 filename,
@@ -190,6 +196,7 @@ class StreamCompletion:
                 output_dir=output_dir,
             )
         )
+        self.logger.debug("mp3_filepath created: %s", mp3_filepath)
 
         # Create the folder if it does not exist
         mp3_filepath.parent.mkdir(parents=True, exist_ok=True)
@@ -313,20 +320,28 @@ class StreamCompletion:
         elif isinstance(prompt, dict):
             messages = prompt["messages"]
         else:
+            self.logger.error("prompt must be a str or a dict.")
             raise ValueError("prompt must be a str or a dict.")
 
         # record the time before the request is sent
         start_time = time.time()
 
         # send a ChatCompletion request
-        response = openai.ChatCompletion.create(
-            model=gpt_model,
-            messages=messages,
-            temperature=temperature,
-            stream=stream_mode,  # again, we set stream=True
-            max_tokens=max_tokens,
-            stop=stop,
-        )
+        try:
+            response = openai.ChatCompletion.create(
+                model=gpt_model,
+                messages=messages,
+                temperature=temperature,
+                stream=stream_mode,  # again, we set stream=True
+                max_tokens=max_tokens,
+                stop=stop,
+            )
+        except openai.error.OpenAIError as error:
+            self.logger.error("OpenAIError: %s", error)
+            raise error
+        except Exception as error:
+            self.logger.error("From OpenAIError as Exception: %s", error)
+            raise error
 
         # create variables to collect the stream of chunks
         collected_chunks = []
