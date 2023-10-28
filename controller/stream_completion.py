@@ -12,6 +12,8 @@ if __name__ == "__main__":
 import os
 
 # This is needed to load the path where the mpv player is located."C:\Users\Ricardo\Downloads\mpv.exe"
+# E:\\downloads (PC)
+# C:\\Users\\Ricardo\\Downloads (Laptop)
 os.environ["PATH"] += os.pathsep + r"C:\Users\Ricardo\Downloads"
 
 import re
