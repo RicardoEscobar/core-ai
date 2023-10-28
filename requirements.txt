@@ -35,6 +35,7 @@ marshmallow-enum==1.5.1
 matplotlib-inline==0.1.6
 mccabe==0.7.0
 multidict==6.0.4
+mutagen==1.47.0
 mypy-extensions==1.0.0
 numexpr==2.8.5
 numpy==1.25.2
