@@ -14,6 +14,7 @@ if __name__ == "__main__":
 
 from pathlib import Path
 from typing import Dict, List, Union
+import logging
 
 from elevenlabs.api import Voice, VoiceSettings
 
@@ -35,6 +36,16 @@ from controller.create_folder import create_folder
 from controller.get_audio_filepath import get_audio_filepath
 from controller.conversation_handler import truncate_conversation
 from controller.stream_completion import StreamCompletion
+from controller.create_logger import create_logger
+
+
+# Create a logger
+logger = create_logger(
+    logger_name="controller.waifuai.conversation",
+    logger_filename="conversation.log",
+    console_logging=True,
+    console_log_level=logging.INFO,
+)
 
 
 def translator(selected_voice: str = "Jenny", target_language: str = "English"):
@@ -129,17 +140,19 @@ def conversation(
         # Step 2: Convert the audio to text.
         transcribed_prompt = transcribe_audio.transcribe(human_audio_file_path)
         print(f"\033[31mUser:\033[0m \033[33m{transcribed_prompt}\033[0m\n")
+        logger.debug("transcribed_prompt = %s", transcribed_prompt)
 
         # Step 3: Prompt OpenAI's GPT-3.5-Turbo API to generate a response.
         # Save the user input to the persona["messages"] list
         persona["messages"].append(generate_message("user", transcribed_prompt))
+        logger.info("persona['messages'] = %s", persona["messages"])
 
         # if is_filtered is True, then filter the response
         if is_filtered:
             # Save the filtered response to the persona["messages"] list
             while True:
                 try:
-                    response = get_response(persona["messages"])
+                    response = get_response(persona["messages"], model="gpt-4")
                 except Exception as error:
                     print(error)
                     print("The conversation is too long.")
@@ -207,6 +220,7 @@ def stream_conversation(
     natural_voice: Union[Voice, str] = None,
     is_filtered: bool = True,
     output_dir: str = ".",
+    max_tokens: int = 50,
 ):
     """This version of conversation method uses the StreamCompletion class. So it's faster than the conversation method."""
 
@@ -219,16 +233,16 @@ def stream_conversation(
         voice=natural_voice,
         voice_model="eleven_multilingual_v2",
         prompt=persona["system"],
-        gpt_model="gpt-4",
+        gpt_model="gpt-3.5",
         temperature=0.9,
         stream_mode=True,
-        max_tokens=50,
+        max_tokens=max_tokens,
         stop=["\n"],
         yield_characters=(".", "?", "!", "\n", ":", ";"),
     )
 
     # Create the output folder if it doesn't exist
-    print(f"audio_output_path: {persona['audio_output_path']}")
+    logger.debug(f"audio_output_path: {persona['audio_output_path']}")
     output_dir = create_folder(persona["audio_output_path"])
 
     # Loop until the user says "bye"
@@ -239,13 +253,13 @@ def stream_conversation(
         )
 
         # Step 1: Record audio from the microphone and save it to a file.
-        print("Wait in silence to begin recording; wait in silence to terminate...\n")
+        logger.info("Wait in silence to begin recording; wait in silence to terminate...\n")
         detect_audio.record_to_file(human_audio_filepath)
-        print(f"done - result written to {human_audio_filepath}\n")
+        logger.debug(f"done - result written to {human_audio_filepath}\n")
 
         # Step 2: Convert the audio to text.
         transcribed_prompt = transcribe_audio.transcribe(human_audio_filepath)
-        print(f"\033[31mUser:\033[0m \033[33m{transcribed_prompt}\033[0m\n")
+        logger.info(f"\033[31mUser:\033[0m \033[33m{transcribed_prompt}\033[0m\n")
 
         # Step 3: Prompt OpenAI's API to generate a response.
         # Save the user input to the persona["messages"] list
@@ -270,9 +284,9 @@ def stream_conversation(
                         output_dir=output_dir,
                     )
                 except Exception as error:
-                    print(error)
+                    logger.error("Error: %s", str(error))
                     # Truncate the conversation
-                    persona = truncate_conversation(persona, TOKEN_THRESHOLD)
+                    # persona = truncate_conversation(persona, TOKEN_THRESHOLD)
                     continue
                 else:
                     break
@@ -281,20 +295,24 @@ def stream_conversation(
             response = get_response_unfiltered(human_input=transcribed_prompt)
 
         # Save the response to the persona["messages"] list
-        persona["messages"].append(generate_message("assistant", response))
+        generated_message = generate_message("assistant", response["last_completion"])
+        persona["messages"].append(generated_message)
+        logger.debug(f"\nAssistant: {generated_message}")
 
-        # If selected_voice is None, then use the default voice
         save_conversation(persona)
+        logger.debug(f"Saved persona['messages'] = {persona['messages']}")
 
         # Step 4: Convert the response to audio and play it back to the user.
         # Generate the file path for the audio file, removing spaces from the persona["name"].
         assistant_audio_filepath = response["filepath"]
+        logger.debug(f"assistant_audio_filepath = {assistant_audio_filepath}")
 
         # Clean the response from code blocks before synthesizing the audio.
         # response = CodeFilter(text=response).filtered_str # TODO replace, refactor, or remove this line.
 
         # If natural_voice is None, then use the default voice, else use the natural voice.
         if natural_voice is None:
+            logger.info("natural_voice is None, Microsoft voice is used instead.")
             # Get a speech synthesizer
             speech_synthesizer = get_speech_synthesizer(
                 selected_voice, assistant_audio_filepath
@@ -302,24 +320,29 @@ def stream_conversation(
 
             # Generate the audio file
             speak_text_into_file(speech_synthesizer, response["last_completion"])
+            logger.info("Audio file generated. Content: %s", response["last_completion"])
 
         # Calculate the duration of the audio file
         duration = get_audio_duration(assistant_audio_filepath)
+        logger.debug(f"Audio file: {repr(assistant_audio_filepath)}; duration = {duration}")
 
         # Create a VRChat instance
         vrchat = VRChat()
 
         # Split the response into chunks of 144 characters
         response_chunks = vrchat.split_string(response["last_completion"])
+        logger.debug(f"VRChat response_chunks = {response_chunks}")
 
         # Send the response to VRChat
         vrchat.send_text_list(response_chunks, duration)
+        logger.info("VRChat response_chunks sent.")
         # play_audio(assistant_audio_file_path)
 
         # If the transcribed_prompt contains "bye." then break out of the loop
         goodbye_words = ["bye", "goodbye", "adíos"]
 
         if any(word in transcribed_prompt.lower() for word in goodbye_words):
+            logger.info("Goodbye words detected. Breaking out of the loop.")
             break
 
 
@@ -339,7 +362,9 @@ def dubbing(selected_voice: str = "Juan"):
 
         # Step 1: Record audio from the microphone and save it to a file.
         print("Wait in silence to begin recording; wait in silence to terminate")
-        audio_file_path = get_audio_filepath(output_dir=output_folder, text="JorgeEscobar_human")
+        audio_file_path = get_audio_filepath(
+            output_dir=output_folder, text="JorgeEscobar_human"
+        )
 
         detect_audio.record_to_file(audio_file_path)
         print(f"done - result written to {audio_file_path}")
@@ -412,6 +437,7 @@ def main():
         natural_voice=hailey_natural_voice,  # Set to None to use the default voice
         is_filtered=True,  # Set to False to enable NSFW content
         output_dir=persona["audio_output_path"],
+        max_tokens=100,
     )
 
 
