@@ -9,14 +9,6 @@ if __name__ == "__main__":
     sys.path.append(str(root_folder))
 
 
-import os
-
-# This is needed to load the path where the mpv player is located."C:\Users\Ricardo\Downloads\mpv.exe"
-# E:\\downloads (PC)
-# C:\\Users\\Ricardo\\Downloads (Laptop)
-os.environ["PATH"] += os.pathsep + r"C:\Users\Ricardo\Downloads"
-
-import re
 import time
 from datetime import datetime
 import logging
@@ -24,6 +16,7 @@ from typing import Tuple, Union, List, Dict
 from pathlib import Path
 from controller.custom_thread import CustomThread
 from pathlib import Path
+import traceback
 
 import openai
 from elevenlabs import generate, stream, save, voices
@@ -35,8 +28,9 @@ from controller.speech_synthesis import get_speech_synthesizer, speak_text_into_
 from controller.play_audio import play_audio
 from controller.time_it import time_it
 from controller.get_audio_filepath import get_audio_filepath
+from controller.conversation_handler import truncate_conversation
 
-
+# Load the OpenAI API key, elevenlabs API key
 load_openai()
 
 # Create a logger instance
@@ -106,7 +100,8 @@ class StreamCompletion:
 
     def generate_completion(
         self,
-        prompt: str = None,
+        prompt: Union[str, Dict, List] = None,
+        role: str = "user",
         temperature=0.9,
         stream_mode=True,
         gpt_model: str = None,
@@ -114,14 +109,14 @@ class StreamCompletion:
         max_tokens: int = 150,
         stop: Union[str, List[str]] = None,
         voice: Voice = None,
-        audio_dir_path: str = "./audio",
         voice_model: str = "eleven_multilingual_v2",
         filename_length: int = 100,
-        output_dir: str = ".",
+        audio_output_dir: str = ".",
     ) -> Dict[str, str]:
         """Generate a completion from the OpenAI API.
         args:
             prompt (str, optional): The prompt to use. Defaults to None.
+            role (str, optional): The role to use. Defaults to "user", Values should be: "assistant", "system", "function" or "user".
             temperature (float, optional): The temperature to use. Defaults to 0.9.
             stream_mode (bool, optional): Whether to use stream mode. Defaults to True.
             gpt_model (str, optional): The GPT model to use. Defaults to None.
@@ -129,7 +124,7 @@ class StreamCompletion:
             max_tokens (int, optional): The maximum number of tokens to use. Defaults to 150.
             stop (Union[str, List[str]], optional): The stop characters to use. Defaults to None.
             voice (Voice, optional): The voice to use. Defaults to None.
-            audio_dir_path (str, optional): The directory path to save the audio to. Defaults to "./audio".
+            audio_output_dir (str, optional): The directory path to save the audio to. Defaults to "./audio".
             voice_model (str, optional): The voice model to use. Defaults to "eleven_multilingual_v2".
 
         returns:
@@ -155,10 +150,25 @@ class StreamCompletion:
         if voice is None:
             voice = self.voice
 
-        self.logger.debug("Creating a text generator with: '%s'", prompt)
+        if isinstance(prompt, str):
+            messages = [
+                {
+                    "role": role,
+                    "content": prompt,
+                }
+            ]
+        elif isinstance(prompt, dict):
+            messages = prompt["messages"]
+        elif isinstance(prompt, list):
+            messages = prompt
+        else:
+            self.logger.error("prompt must be a str, list or a dict.")
+            raise ValueError("prompt must be a str, list or a dict.")
+
+        self.logger.debug("Creating a text generator with: %s", repr(prompt))
         # Create a text generator
         phrase_generator = self.completion_generator(
-            prompt=prompt,
+            prompt=messages,
             temperature=temperature,
             stream_mode=stream_mode,
             gpt_model=gpt_model,
@@ -183,7 +193,7 @@ class StreamCompletion:
         # Create the filename as a Path object
         if self.last_completion == "":
             filename = get_audio_filepath(
-                prompt, filename_length, output_dir=output_dir
+                prompt, filename_length, output_dir=audio_output_dir
             )
         else:
             filename = self.last_completion[:filename_length]
@@ -195,7 +205,7 @@ class StreamCompletion:
                 filename,
                 file_extension="mp3",
                 filename_length=filename_length,
-                output_dir=output_dir,
+                output_dir=audio_output_dir,
             )
         )
         self.logger.debug("mp3_filepath created: %s", mp3_filepath)
@@ -216,7 +226,7 @@ class StreamCompletion:
         prompt: str = None,
         gpt_model: str = "gpt-4",
         selected_voice: str = "Larissa",
-        audio_dir_path: str = "./audio",
+        audio_output_dir: str = "./audio",
         filename: str = None,
         yield_characters: List[str] = None,
         temperature=0.9,
@@ -241,7 +251,7 @@ class StreamCompletion:
             yield_characters = self.yield_characters
 
         # Add the directory path to the filename
-        filepath = Path(audio_dir_path) / filename
+        filepath = Path(audio_output_dir) / filename
         filename_str = str(filepath.resolve())
 
         # Get the speech synthesizer
@@ -277,7 +287,8 @@ class StreamCompletion:
 
     def completion_generator(
         self,
-        prompt: Union[str, Dict] = None,
+        prompt: Union[str, Dict, List] = None,
+        role: str = "user",
         temperature=0.9,
         stream_mode=True,
         gpt_model=None,
@@ -288,6 +299,7 @@ class StreamCompletion:
         """This generator function yields the next completion from the OpenAI API from a stream mode openai completion. Each time a sentence is completed, the generator yields the sentence. To detect the end of a sentence, the generator looks for a period, question mark, or exclamation point at the end of the sentence. If the sentence is not complete, then the generator yields None. If the generator yields None, then the caller should call the generator again to get the next completion. If the generator yields a sentence, then the caller should call the generator again to get the next completion. The generator will yield None when the stream is complete.
         args:
             prompt (str, optional): The prompt to use. Defaults to None.
+            role (str, optional): The role to use. Defaults to "user", Values should be: "assistant", "system", "function" or "user".
             temperature (float, optional): The temperature to use. Defaults to 0.9.
             stream_mode (bool, optional): Whether to use stream mode. Defaults to True.
             gpt_model (str, optional): The GPT model to use. Defaults to None.
@@ -296,6 +308,8 @@ class StreamCompletion:
             stop (Union[str, List[str]], optional): The stop characters to use. Defaults to None.
         yields:
             str: The next completion."""
+
+        GPT4_TOKEN_LIMIT = 4097
 
         # Reset the last completion
         self.last_completion = ""
@@ -315,35 +329,80 @@ class StreamCompletion:
         if isinstance(prompt, str):
             messages = [
                 {
-                    "role": "user",
+                    "role": role,
                     "content": prompt,
                 }
             ]
         elif isinstance(prompt, dict):
             messages = prompt["messages"]
+        elif isinstance(prompt, list):
+            messages = prompt
         else:
-            self.logger.error("prompt must be a str or a dict.")
-            raise ValueError("prompt must be a str or a dict.")
+            self.logger.error("prompt must be a str, list or a dict.")
+            raise ValueError("prompt must be a str, list or a dict.")
 
         # record the time before the request is sent
         start_time = time.time()
 
-        # send a ChatCompletion request
-        try:
-            response = openai.ChatCompletion.create(
-                model=gpt_model,
-                messages=messages,
-                temperature=temperature,
-                stream=stream_mode,  # again, we set stream=True
-                max_tokens=max_tokens,
-                stop=stop,
-            )
-        except openai.error.OpenAIError as error:
-            self.logger.error("OpenAIError: %s", error)
-            raise error
-        except Exception as error:
-            self.logger.error("From OpenAIError as Exception: %s", error)
-            raise error
+        while True:
+            # send a ChatCompletion request
+            try:
+                response = openai.ChatCompletion.create(
+                    model=gpt_model,
+                    messages=messages,
+                    temperature=temperature,
+                    stream=stream_mode,  # again, we set stream=True
+                    max_tokens=max_tokens,
+                    stop=stop,
+                )
+            except openai.error.Timeout as error:
+                # Handle timeout error, e.g. retry or log
+                module_logger.critical(
+                    f"openai.error.Timeout:\nOpenAI API request timed out: {error}\nFull traceback:\n{traceback.format_exc()}"
+                )
+                return error
+            except openai.error.APIError as error:
+                # Handle API error, e.g. retry or log
+                module_logger.critical(
+                    f"openai.error.APIError:\nOpenAI API returned an API Error: {error}"
+                )
+                return error
+            except openai.error.APIConnectionError as error:
+                # Handle connection error, e.g. check network or log
+                module_logger.critical(
+                    f"openai.error.APIConnectionError:\nOpenAI API request failed to connect: {error}\nFull traceback:\n{traceback.format_exc()}"
+                )
+                return error
+            except openai.error.InvalidRequestError as error:
+                module_logger.critical(
+                    f"openai.error.InvalidRequestError:\n{error}\nFull traceback:\n{traceback.format_exc()}"
+                )
+                # Token limit exceeded (e.g. 4097 tokens for GPT-4)
+                messages = truncate_conversation(
+                    messages, token_threshold=GPT4_TOKEN_LIMIT - max_tokens
+                )
+                break
+            except openai.error.AuthenticationError as error:
+                # Handle authentication error, e.g. check credentials or log
+                module_logger.critical(
+                    f"openai.error.AuthenticationError:\nOpenAI API request was not authorized: {error}\nFull traceback:\n{traceback.format_exc()}"
+                )
+                return error
+            except openai.error.PermissionError as error:
+                # Handle permission error, e.g. check scope or log
+                module_logger.critical(
+                    f"openai.error.PermissionError:\nOpenAI API request was not permitted: {error}\nFull traceback:\n{traceback.format_exc()}"
+                )
+                return error
+            except openai.error.RateLimitError as error:
+                # Handle rate limit error, e.g. wait or log
+                module_logger.critical(
+                    f"openai.error.RateLimitError:\nOpenAI API request exceeded rate limit: {error}\nFull traceback:\n{traceback.format_exc()}"
+                )
+                return error
+            else:
+                # No error, break the loop
+                break
 
         # create variables to collect the stream of chunks
         collected_chunks = []
@@ -398,7 +457,7 @@ class StreamCompletion:
         full_reply_content = "".join([m.get("content", "") for m in collected_deltas])
 
         # Log the last completion
-        self.logger.info("Last completion: %s", full_reply_content)
+        self.logger.info("\033[92mAssistant:\033[0m \033[33m%s\033[0m\n", full_reply_content)
 
         # Save last completion
         self.last_completion = full_reply_content

@@ -271,7 +271,7 @@ def stream_conversation(
             while True:
                 try:
                     response = stream_completion.generate_completion(
-                        prompt=transcribed_prompt,
+                        prompt=persona["messages"], # Contains the conversation data
                         temperature=0.9,
                         stream_mode=True,
                         gpt_model="gpt-4",
@@ -279,9 +279,8 @@ def stream_conversation(
                         max_tokens=50,
                         stop=["\n"],
                         voice=natural_voice,
-                        audio_dir_path=output_dir,
                         voice_model="eleven_multilingual_v2",
-                        output_dir=output_dir,
+                        audio_output_dir=output_dir,
                     )
                 except Exception as error:
                     logger.error("Error: %s", str(error))
@@ -432,12 +431,12 @@ def main():
 
     # Run the conversation
     stream_conversation(
-        persona=persona,
+        persona=persona, # Contains the conversation data
         selected_voice=persona["selected_voice"],  # The default voice is used
         natural_voice=hailey_natural_voice,  # Set to None to use the default voice
         is_filtered=True,  # Set to False to enable NSFW content
-        output_dir=persona["audio_output_path"],
-        max_tokens=100,
+        output_dir=persona["audio_output_path"], # The output folder for audio files
+        max_tokens=100, # The max tokens for the response
     )
 
 
