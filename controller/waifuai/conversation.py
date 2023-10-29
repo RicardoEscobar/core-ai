@@ -216,13 +216,18 @@ def conversation(
 
 def stream_conversation(
     persona: Dict = persona,
+    gpt_model: str = "gpt-4",
     selected_voice: str = persona["selected_voice"],
     natural_voice: Union[Voice, str] = None,
     is_filtered: bool = True,
     output_dir: str = ".",
     max_tokens: int = 50,
+    stop: Union[str, List[str]] = None,
 ):
     """This version of conversation method uses the StreamCompletion class. So it's faster than the conversation method."""
+
+    if stop is None:
+        stop = ["Jorge:"]
 
     TOKEN_THRESHOLD = 4096  # Half of the max token length for GTP-4 (8192 tokens)
     # Load the OpenAI API key
@@ -233,11 +238,11 @@ def stream_conversation(
         voice=natural_voice,
         voice_model="eleven_multilingual_v2",
         prompt=persona["system"],
-        gpt_model="gpt-3.5",
+        gpt_model=gpt_model,
         temperature=0.9,
         stream_mode=True,
         max_tokens=max_tokens,
-        stop=["\n"],
+        stop=stop,
         yield_characters=(".", "?", "!", "\n", ":", ";"),
     )
 
@@ -274,10 +279,10 @@ def stream_conversation(
                         prompt=persona["messages"], # Contains the conversation data
                         temperature=0.9,
                         stream_mode=True,
-                        gpt_model="gpt-4",
+                        gpt_model=gpt_model,
                         yield_characters=(".", "?", "!", "\n", ":", ";"),
-                        max_tokens=50,
-                        stop=["\n"],
+                        max_tokens=max_tokens,
+                        stop=stop,
                         voice=natural_voice,
                         voice_model="eleven_multilingual_v2",
                         audio_output_dir=output_dir,
@@ -432,11 +437,12 @@ def main():
     # Run the conversation
     stream_conversation(
         persona=persona, # Contains the conversation data
+        gpt_model="gpt-4", # The GPT model to be used
         selected_voice=persona["selected_voice"],  # The default voice is used
         natural_voice=hailey_natural_voice,  # Set to None to use the default voice
         is_filtered=True,  # Set to False to enable NSFW content
         output_dir=persona["audio_output_path"], # The output folder for audio files
-        max_tokens=100, # The max tokens for the response
+        max_tokens=2000, # The max tokens for the response
     )
 
 
