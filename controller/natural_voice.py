@@ -13,7 +13,7 @@ import logging
 from elevenlabs import generate, play, voices, save
 from elevenlabs.api import Voices, Voice, VoiceSettings
 
-from controller.conversation.load_openai import load_openai
+from controller.load_openai import load_openai
 
 
 # Load environment variables from .env file
@@ -36,13 +36,13 @@ def generate_multilingual(
     voice: Union[str, Voice] = "Arnold",
     audio_file: str = "multilingual.mp3",
 ):
-    """The eleven_multilingual_v1 model supports multiple languages, including
+    """The eleven_multilingual_v2 model supports multiple languages, including
     English, German, Polish, Spanish, Italian, French, Portuguese, and Hindi."""
     # Set logging level
     logging.basicConfig(level=logging.ERROR)
 
     # Generate the audio.
-    audio = generate(text=text, voice=voice, model="eleven_multilingual_v1")
+    audio = generate(text=text, voice=voice, model="eleven_multilingual_v2")
 
     # Save the audio to a file.
     audio_file_path = Path(audio_file)
@@ -96,8 +96,10 @@ def main():
         preview_url="https://storage.googleapis.com/eleven-public-prod/PyUBusauIUbpupKTM31Yp4fHtgd2/voices/OgTivnXy9Bsc96AcZaQz/44dc6d49-cd44-4aad-a453-73a12c215702.mp3",
     )
 
-    #generate_multilingual(text="¡Hola! Mi nombre es Lumina, encantada de conocerte.", voice=lumine_voice)
-    get_voices()
+    # Save the list of voices to a file.
+    with open("voices.json", "w", encoding="utf-8") as file:
+        file.write(voices().model_dump_json())
+    
     # get_voice_info()
 
 

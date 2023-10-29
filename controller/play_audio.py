@@ -1,6 +1,9 @@
+import os
 import wave
-import pyaudio
+from typing import Any, Dict, List
 
+from mutagen.mp3 import MP3
+import pyaudio
 
 def get_audio_device_index(device_name: str) -> int:
     """Get the audio device index from the device name."""
@@ -22,7 +25,21 @@ def get_audio_device_index(device_name: str) -> int:
     # Return the device index
     return device_index
 
-def play_audio(audio_file_path: str):
+def get_audio_devices() -> List[Dict[str, Any]]:
+    """Get the audio devices."""
+    # Create the PyAudio object
+    audio = pyaudio.PyAudio()
+
+    # Get the device index
+    devices = []
+    for i in range(audio.get_device_count()):
+        device = audio.get_device_info_by_index(i)
+        devices.append(device)
+
+    # Return the device index
+    return devices
+
+def play_audio(audio_file_path: str, output_device_name: str = "VoiceMeeter Aux Input (VB-Audio"):
     # Open the WAV file
     with wave.open(audio_file_path, 'rb') as wave_file:
         # Validate wave_file is a valid WAV file
@@ -35,14 +52,7 @@ def play_audio(audio_file_path: str):
         # Create the PyAudio object
         audio = pyaudio.PyAudio()
 
-        # # Print out the list of output devices ID for playback audio
-        # print("List of output devices ID for playback audio:")
-        # for i in range(audio.get_device_count()):
-        #     device = audio.get_device_info_by_index(i)
-        #     if device['maxOutputChannels'] > 0:
-        #         print(f"    {device['index']}: {device['name']}")
-
-        output_device_index = get_audio_device_index("VoiceMeeter Aux Input (VB-Audio")
+        output_device_index = get_audio_device_index(output_device_name)
 
         # Open a PyAudio stream for playback
         stream = audio.open(format=audio_format,
@@ -63,24 +73,33 @@ def play_audio(audio_file_path: str):
         stream.close()
         audio.terminate()
 
-def get_wav_duration(audio_file_path: str) -> float:
-    """Get the duration of a WAV file in seconds."""
-    with wave.open(audio_file_path, 'rb') as wave_file:
-        # Get the frame rate
-        frame_rate = wave_file.getframerate()
+def get_audio_duration(audio_file_path: str) -> float:
+    """Get the duration of an audio file (WAV, MP3) in seconds."""
+    # Get the file extension
+    file_extension = os.path.splitext(audio_file_path)[1]
 
-        # Get the number of frames
-        num_frames = wave_file.getnframes()
+    if file_extension == '.wav':
+        with wave.open(audio_file_path, 'rb') as wave_file:
+            # Get the frame rate
+            frame_rate = wave_file.getframerate()
 
-        # Calculate the duration
-        duration = num_frames / frame_rate
+            # Get the number of frames
+            num_frames = wave_file.getnframes()
 
-        # Return the duration
-        return duration
+            # Calculate the duration
+            duration = num_frames / frame_rate
+
+            # Return the duration
+            return duration
+    elif file_extension == '.mp3':
+        audio = MP3(audio_file_path)
+        return audio.info.length
+    else:
+        raise ValueError(f"Unsupported file extension: {file_extension}. This function supports only WAV and MP3 files.")
 
 if __name__ == "__main__":
     from pathlib import Path
 
     filepath = Path(r'D:\conversation-ai\005-Loona-V4\2023-07-23_03-18-58_Loona.wav')
     #play_audio('example.wav')
-    print(f'duration = {get_wav_duration(str(filepath))} seconds it should be 37 seconds')
+    print(f'duration = {get_audio_duration(str(filepath))} seconds it should be 37 seconds')
