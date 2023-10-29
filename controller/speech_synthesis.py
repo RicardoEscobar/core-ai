@@ -40,6 +40,7 @@ def get_speech_synthesizer(
         'Isabella' : 'it-IT-IsabellaNeural',
         'Valentina' : 'es-UY-ValentinaNeural',
         'Lia': 'es-ES-LiaNeural',
+        'Yolanda': 'es-NI-YolandaNeural',
     }
 
     # This example requires environment variables named "SPEECH_KEY" and "SPEECH_REGION"
@@ -52,9 +53,8 @@ def get_speech_synthesizer(
 
     return speech_synthesizer
 
-def speak_text(speech_synthesizer: speechsdk.SpeechSynthesizer, text: str):
+def speak_text_into_file(speech_synthesizer: speechsdk.SpeechSynthesizer, text: str):
     """Speak the text.
-    
     Args:
         speech_synthesizer (speechsdk.SpeechSynthesizer): A speech synthesizer.
         text (str): The text to speak.
@@ -85,7 +85,7 @@ def main():
     speech_synthesizer = get_speech_synthesizer(SELECTED_VOICE)
 
     # Speak the text
-    speak_text(speech_synthesizer, text)
+    speak_text_into_file(speech_synthesizer, text)
 
 
 if __name__ == '__main__':

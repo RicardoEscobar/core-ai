@@ -5,22 +5,21 @@ import wave
 import pyaudio
 from typing import List
 
-
-
-
 def record_voice() -> List[bytes]:
-    """It uses the pyaudio library to access the audio device and record the audio. The stream object is created using pyaudio.open(), which takes in parameters such as the audio format, number of channels, sampling rate, and frames per buffer. In this case, it's set to record 16-bit integer audio samples at a sampling rate of 44.1kHz with a buffer size of 1024 frames.
+    """It uses the pyaudio library to access the audio device and record the audio. The stream object is created using pyaudio.open(), which takes in parameters such as the audio format, number of channels, sampling rate, and frames per buffer. In this case, it's set to record 16-bit integer audio samples at a sampling rate of 44.1kHz with a buffer size of 2048 frames.
     
     returns:
         frames: List[bytes]
     """
+    RATE = 44100
+    FRAMES = 2048
 
     audio = pyaudio.PyAudio()
     stream = audio.open(
         format=pyaudio.paInt16,
-        channels=1, rate=44100,
+        channels=1, rate=RATE,
         input=True,
-        frames_per_buffer=1024
+        frames_per_buffer=FRAMES
     )
 
     frames = []
@@ -28,7 +27,7 @@ def record_voice() -> List[bytes]:
     # The script then enters a loop that reads the audio data from the input stream in chunks of 1024 frames and appends them to the frames list. This loop will continue indefinitely until the user interrupts it with a keyboard interrupt (Ctrl+C).
     try:
         while True:
-            data = stream.read(1024)
+            data = stream.read(FRAMES)
             frames.append(data)
     except KeyboardInterrupt:
         pass

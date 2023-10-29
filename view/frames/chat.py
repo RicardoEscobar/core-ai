@@ -4,8 +4,8 @@ from tkinter import ttk
 import requests
 
 from view.frames.message_window import MessageWindow
-from controller.conversation import completion_create
-from controller.conversation.conversations.conversation_example import persona
+from controller.waifuai import completion_create
+from controller.waifuai.conversations.conversation_example import persona
 
 
 timestamp = int(time.time())
