@@ -171,7 +171,7 @@ class VTuberChat:
                     prompt=self.prompt,
                     gpt_model=self.gpt_model,
                     voice=self.voice,
-                    audio_dir_path="./audio",
+                    audio_output_dir="./audio",
                 ))
             await task
         except TypeError as error:
@@ -418,7 +418,7 @@ class VTuberChat:
         prompt: str = None,
         gpt_model: str = None,
         voice: Union[elevenlabs.Voice, str] = None,
-        audio_dir_path: str = "./audio",
+        audio_output_dir: str = ".",
     ):
         """Trigger a VTuber interaction with the chat
         args:
@@ -447,7 +447,7 @@ class VTuberChat:
                 prompt=prompt,
                 gpt_model=gpt_model,
                 voice=voice,
-                audio_dir_path=audio_dir_path,
+                audio_output_dir=audio_output_dir,
             )
         elif isinstance(voice, str):
             self.logger.info("Generating Microsoft AI Speech completion.")
@@ -458,7 +458,7 @@ class VTuberChat:
                         prompt=prompt,
                         gpt_model=gpt_model,
                         selected_voice=voice,
-                        audio_dir_path=audio_dir_path,
+                        audio_output_dir=audio_output_dir,
                     )
                 except Exception as exception:
                     module_logger.error(exception)
