@@ -28,7 +28,7 @@ from controller.waifuai.completion_create import (
 )
 from controller.llmchain import get_response_unfiltered
 from controller.play_audio import play_audio, get_audio_duration
-from controller.waifuai.conversations.azure_conversation import persona
+from controller.waifuai.conversations.echoes_of_the_future import persona
 from controller.load_openai import load_openai
 from controller.natural_voice import generate_multilingual
 from controller.vrchat import VRChat
