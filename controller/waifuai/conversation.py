@@ -237,7 +237,7 @@ def stream_conversation(
     stream_completion = StreamCompletion(
         voice=natural_voice,
         voice_model="eleven_multilingual_v2",
-        prompt=persona["system"],
+        persona=persona["system"],
         gpt_model=gpt_model,
         temperature=0.9,
         stream_mode=True,
@@ -276,7 +276,7 @@ def stream_conversation(
             while True:
                 try:
                     response = stream_completion.generate_completion(
-                        prompt=persona["messages"], # Contains the conversation data
+                        persona=persona["messages"], # Contains the conversation data
                         temperature=0.9,
                         stream_mode=True,
                         gpt_model=gpt_model,
