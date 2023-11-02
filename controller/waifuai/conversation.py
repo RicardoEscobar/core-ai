@@ -276,7 +276,7 @@ def stream_conversation(
             while True:
                 try:
                     response = stream_completion.generate_completion(
-                        persona=persona["messages"], # Contains the conversation data
+                        persona=persona, # Contains the conversation data
                         temperature=0.9,
                         stream_mode=True,
                         gpt_model=gpt_model,
