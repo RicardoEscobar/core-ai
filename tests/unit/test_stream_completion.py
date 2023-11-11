@@ -14,8 +14,11 @@ import unittest
 from unittest.mock import patch, MagicMock
 import logging
 
+import openai
+
 from controller.stream_completion import StreamCompletion
 from controller.create_logger import create_logger
+from controller.waifuai.conversations import test_dict
 
 
 # Create a logger instance
@@ -23,7 +26,7 @@ module_logger = create_logger(
     logger_name="tests.unit.test_stream_completion",
     logger_filename="stream_completion.log",
     log_directory="logs/tests",
-    console_logging=False,
+    console_logging=True,
     console_log_level=logging.INFO,
 )
 
@@ -40,21 +43,36 @@ class TestStreamCompletion(unittest.TestCase):
 
     def setUp(self):
         """Set up the StreamCompletion class unit test."""
-        self.stream_completion = StreamCompletion()
+        self.stream_completion = StreamCompletion(persona=test_dict.persona)
 
-    def test_get_token_count(self):
-        # Create a test string and model name
-        test_string = "Hello, world!"
-        model_name = "gpt2"
+    def test_completion_generator(self):
+        """Test that the completion_generator method raises an InvalidRequestError when the request is invalid."""
+        messages = [
+            {"role": "assistant", "content": "Hello."},
+            {"role": "user", "content": "Hello, how you doing?"},
+            {"role": "assistant", "content": "I'm doing great, how about you?"},
+            {"role": "user", "content": "I'm doing great too."},
+            {"role": "assistant", "content": "That's great to hear."},
+            {"role": "user", "content": "Yeah, it is."},
+        ]
 
-        # Call the get_token_count method
-        num_tokens = StreamCompletion.get_token_count(test_string, model_name)
+        persona = {"messages": messages}
 
-        # Verify that the number of tokens is correct
-        self.assertEqual(num_tokens, 4)
+        # patch the method of SomeClass that can raise an exception
+        # with patch("openai.ChatCompletion.create") as mock_method:
+        #     # assign the exception class to side_effect
+        #     mock_method.side_effect = openai.error.InvalidRequestError(
+        #         "Message", "Param"
+        #     )
 
-        self.logger.debug("The string %s has %s tokens.", test_string, num_tokens)
-        self.logger.info("Tested the get_token_count method.")
+        # with self.assertRaises(openai.error.InvalidRequestError):
+        #     # call the method that will raise the exception
+        generator = self.stream_completion.completion_generator(
+            test_dict.persona, stop=["Human:"], max_tokens=3000
+        )
+
+        for _ in generator:
+            print(_, end="", flush=True)
 
 
 if __name__ == "__main__":

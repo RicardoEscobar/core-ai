@@ -87,44 +87,66 @@ def get_response(
         except openai.error.Timeout as error:
             # Handle timeout error, e.g. retry or log
             module_logger.critical(
-                f"openai.error.Timeout:\nOpenAI API request timed out: {error}\nFull traceback:\n{traceback.format_exc()}"
+                "openai.error.Timeout:\nOpenAI API request timed out: %s\nFull traceback:\n%s",
+                error,
+                traceback.format_exc(),
             )
             return error
         except openai.error.APIError as error:
             # Handle API error, e.g. retry or log
             module_logger.critical(
-                f"openai.error.APIError:\nOpenAI API returned an API Error: {error}"
+                "openai.error.APIError:\nOpenAI API returned an API Error: %s", error
             )
             return error
         except openai.error.APIConnectionError as error:
             # Handle connection error, e.g. check network or log
             module_logger.critical(
-                f"openai.error.APIConnectionError:\nOpenAI API request failed to connect: {error}\nFull traceback:\n{traceback.format_exc()}"
+                ("openai.error.APIConnectionError:\n"
+                 "OpenAI API request failed to connect: %s\n"
+                 "Full traceback:\n%s"),
+                error,
+                traceback.format_exc(),
             )
             return error
         except openai.error.InvalidRequestError as error:
             module_logger.critical(
-                f"openai.error.InvalidRequestError:\n{error}\nFull traceback:\n{traceback.format_exc()}"
+                "openai.error.InvalidRequestError:\n%s\nFull traceback:\n%s",
+                error,
+                traceback.format_exc(),
             )
             # Token limit exceeded (e.g. 4097 tokens for GPT-4)
-            new_messages = truncate_conversation(messages, token_threshold=GPT4_TOKEN_LIMIT - max_tokens)
-            pass
+            new_messages = truncate_conversation(
+                messages,
+                token_threshold=GPT4_TOKEN_LIMIT - max_tokens - 1,
+            )
         except openai.error.AuthenticationError as error:
             # Handle authentication error, e.g. check credentials or log
             module_logger.critical(
-                f"openai.error.AuthenticationError:\nOpenAI API request was not authorized: {error}\nFull traceback:\n{traceback.format_exc()}"
+                ("openai.error.AuthenticationError:\n"
+                 "OpenAI API request was not authorized: %s\n"
+                 "Full traceback:\n%s"),
+                error,
+                traceback.format_exc(),
             )
             return error
         except openai.error.PermissionError as error:
             # Handle permission error, e.g. check scope or log
             module_logger.critical(
-                f"openai.error.PermissionError:\nOpenAI API request was not permitted: {error}\nFull traceback:\n{traceback.format_exc()}"
+                ("openai.error.PermissionError:\n"
+                 "OpenAI API request was not permitted: %s\n"
+                 "Full traceback:\n%s"),
+                error,
+                traceback.format_exc(),
             )
             return error
         except openai.error.RateLimitError as error:
             # Handle rate limit error, e.g. wait or log
             module_logger.critical(
-                f"openai.error.RateLimitError:\nOpenAI API request exceeded rate limit: {error}\nFull traceback:\n{traceback.format_exc()}"
+                ("openai.error.RateLimitError:\n"
+                 "OpenAI API request exceeded rate limit: %s\n"
+                 "Full traceback:\n%s"),
+                error,
+                traceback.format_exc(),
             )
             return error
         else:
