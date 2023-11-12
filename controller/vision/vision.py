@@ -43,7 +43,7 @@ def vision_url():
 @time_it
 def vision_file():
     # Path to your image
-    image_path = r"C:\Users\Jorge\git\core-ai\img\test2_empty_space.png"
+    image_path = r"C:\Users\Jorge\git\core-ai\img\output.png"
 
     # Getting the base64 string
     base64_image = encode_image(image_path)
@@ -54,7 +54,7 @@ def vision_file():
             {
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": "Describe this picture in spanish."}, # "This is a VRChat avatar chattting with you, answer to it and compliment the avatar, describing a cute detail about it. Do it in Spanish."}, # "This is a VRChat avatar on this picture, if the name shows avobe it what is it? if there is a chat message, what does it say? and describe the avatar"},
+                    {"type": "text", "text": "Greet this VRChat user, using her name and compliment her avatar mentioning cute details about it."}, # "This is a VRChat avatar chattting with you, answer to it and compliment the avatar, describing a cute detail about it. Do it in Spanish."}, # "This is a VRChat avatar on this picture, if the name shows avobe it what is it? if there is a chat message, what does it say? and describe the avatar"},
                     {
                         "type": "image_url",
                         "image_url": {"url": f"data:image/png;base64,{base64_image}",
@@ -76,7 +76,7 @@ def encode_image(image_path):
 
 @time_it
 def main():
-    response = vision_url()
+    response = vision_file()
     print(response.choices[0])
 
 
