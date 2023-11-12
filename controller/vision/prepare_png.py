@@ -1,5 +1,6 @@
 from PIL import Image
 
+
 def resize_image_without_empty_space(image_path, output_path, padding=0):
     # Open the image
     image = Image.open(image_path)
@@ -28,30 +29,40 @@ def resize_image_without_empty_space(image_path, output_path, padding=0):
     # Save the resized image without empty space
     resized_image.save(output_path)
 
+
 def crop_image_square(image_path, output_path, size):
     """Crops an image to a square at the center of the original image.
     args:
         image_path: The path to the image to edit.
         output_path: The path to save the cropped image.
         size: The size to crop the image to a square (width = height)."""
-    
-    # Open the image
-    original_image = Image.open(image_path)
-    
+
+    while True:
+        try:
+            # Open the image
+            original_image = Image.open(image_path)
+        except (FileNotFoundError, PermissionError) as error:
+            # If the image_path is not found, return False
+            print(error)
+            continue
+        else:
+            break
+
     # Get the original image dimensions
     original_width, original_height = original_image.size
-    
+
     # Calculate the cropping box
     left = (original_width - size) // 2
     top = (original_height - size) // 2
     right = (original_width + size) // 2
     bottom = (original_height + size) // 2
-    
+
     # Crop the image
     cropped_image = original_image.crop((left, top, right, bottom))
-    
+
     # Save the cropped image
     cropped_image.save(output_path)
+
 
 def crop_image_vertical(image_path, output_path, size):
     """Crops an image to a rectangle at the center of the original image. The longest side of the rectangle is the image height while the shorter side is the size argument in pixels.
@@ -59,29 +70,30 @@ def crop_image_vertical(image_path, output_path, size):
         image_path: The path to the image to edit.
         output_path: The path to save the cropped image.
         size: The size to crop the image to a rectangle (shorter side)."""
-    
+
     # Open the image
     original_image = Image.open(image_path)
-    
+
     # Get the original image dimensions
     original_width, original_height = original_image.size
-    
+
     # Calculate the cropping box
     left = (original_width - size) // 2
     top = 0
     right = (original_width + size) // 2
     bottom = original_height
-    
+
     # Crop the image
     cropped_image = original_image.crop((left, top, right, bottom))
-    
+
     # Save the cropped image
     cropped_image.save(output_path)
-    
 
-# Example usage:
-input_image_path = "test2_crop.png"
-output_image_path = "test2_empty_space.png"
-resize_image_without_empty_space(input_image_path, output_image_path, padding=0)
-# crop_image_square(input_image_path, output_image_path, size=512)
-# crop_image_vertical(input_image_path, output_image_path, size=512)
+
+if __name__ == "__main__":
+    # Example usage:
+    input_image_path = "test2_crop.png"
+    output_image_path = "test2_empty_space.png"
+    resize_image_without_empty_space(input_image_path, output_image_path, padding=0)
+    # crop_image_square(input_image_path, output_image_path, size=512)
+    # crop_image_vertical(input_image_path, output_image_path, size=512)
