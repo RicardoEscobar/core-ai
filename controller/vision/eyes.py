@@ -1,14 +1,26 @@
 """This module is for the eyes of the AI, the vision, the ability to see."""
+# If this file is running alone, then add the root folder to the Python path
+if __name__ == "__main__":
+    import sys
+    from pathlib import Path
+
+    root_folder = Path(__file__).parent.parent.parent
+    sys.path.append(str(root_folder))
+
 from pathlib import Path
 import getpass
 import json
 from typing import Dict, Literal
 import logging
 import time
+import subprocess
 
 import pyautogui
 
 from controller.create_logger import create_logger
+
+
+subprocess.Popen(["python", "controller/vision/picture_detector.py"])
 
 # Create a logger instance
 log = create_logger(
@@ -98,7 +110,13 @@ class Eyes:
     def take_picture():
         """Take a picture using the in game VRChat Camera or multi layer camera.
         The picture will be saved in the picture_output_folder."""
-        pyautogui.mouseDown(button='left')
-        pyautogui.sleep(1)  # Keep the button pressed for a second
-        pyautogui.mouseUp(button='left')
+        pyautogui.mouseDown(button="left")
+        pyautogui.sleep(0.5)  # Keep the button pressed for half a second
+        pyautogui.mouseUp(button="left")
         log.info("Picture taken.")
+
+
+if __name__ == "__main__":
+    eyes = Eyes()
+    time.sleep(5)
+    eyes.take_picture()
