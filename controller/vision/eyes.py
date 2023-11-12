@@ -14,11 +14,21 @@ from typing import Dict, Literal
 import logging
 import time
 import subprocess
+import base64
 
+from openai import OpenAI
 import pyautogui
 
 from controller.create_logger import create_logger
+from controller.load_openai import load_openai
+from controller.time_it import time_it
 
+
+# Load the OpenAI API key from the .env file
+load_openai()
+
+# Create an instance of the OpenAI class
+client = OpenAI()
 
 # Run the picture_detector.py script in a subprocess to watch for new pictures
 # and process them
