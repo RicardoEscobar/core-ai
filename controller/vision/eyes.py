@@ -20,6 +20,8 @@ import pyautogui
 from controller.create_logger import create_logger
 
 
+# Run the picture_detector.py script in a subprocess to watch for new pictures
+# and process them
 subprocess.Popen(["python", "controller/vision/picture_detector.py"])
 
 # Create a logger instance
