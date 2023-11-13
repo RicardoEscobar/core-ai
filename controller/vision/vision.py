@@ -77,7 +77,7 @@ def encode_image(image_path):
 @time_it
 def main():
     response = vision_file()
-    print(response.choices[0])
+    print(response.choices[0].message.content)
 
 
 if __name__ == "__main__":
