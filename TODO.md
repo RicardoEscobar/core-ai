@@ -14,3 +14,9 @@ On the vision branch, I want to create the code to give vision or eyes to the Wa
 2023-11-12 20:10:52
 
 Turns out that I need to migrate to `openai v1` to use the `image` parameter, so I will need to wait until I migrate to `v1` to continue with this task.
+
+2023-11-13 02:39:51
+
+Just finished the migration of OpenAI API to `v1`, now I can continue with the task.
+
+But I been working for 13 hours straight, so I will continue tomorrow.
