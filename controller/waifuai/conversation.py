@@ -233,6 +233,7 @@ def stream_conversation(
     gpt_model: str = "gpt-4",
     selected_voice: str = persona["selected_voice"],
     natural_voice: Union[Voice, str] = None,
+    voice_model: str = "eleven_turbo_v2",
     is_filtered: bool = True,
     output_dir: str = ".",
     max_tokens: int = 50,
@@ -250,7 +251,7 @@ def stream_conversation(
     # Create a StreamCompletion instance
     stream_completion = StreamCompletion(
         voice=natural_voice,
-        voice_model="eleven_multilingual_v2",
+        voice_model=voice_model,
         persona=persona_data["system"],
         gpt_model=gpt_model,
         temperature=0.9,
@@ -298,7 +299,7 @@ def stream_conversation(
                         max_tokens=max_tokens,
                         stop=stop,
                         voice=natural_voice,
-                        voice_model="eleven_multilingual_v2",
+                        voice_model=voice_model,
                         audio_output_dir=output_dir,
                     )
                 except Exception as error:
