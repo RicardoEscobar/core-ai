@@ -32,7 +32,7 @@ client = OpenAI()
 
 # Run the picture_detector.py script in a subprocess to watch for new pictures
 # and process them
-picture_detector_process = subprocess.Popen(["python", "controller/vision/picture_detector.py"])
+# picture_detector_process = subprocess.Popen(["python", "controller/vision/picture_detector.py"])
 
 # Create a logger instance
 log = create_logger(
@@ -191,4 +191,4 @@ if __name__ == "__main__":
             time.sleep(2)
             continue
 
-    picture_detector_process.terminate()
+    # picture_detector_process.terminate()
