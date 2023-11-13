@@ -31,6 +31,7 @@ from controller.get_audio_filepath import get_audio_filepath
 from controller.conversation_handler import truncate_conversation_persona
 from controller.get_token_count import get_token_count_persona
 from controller.waifuai.completion_create import save_conversation
+from controller.waifuai.conversations.echoes_of_the_future import persona
 
 # Load the OpenAI API key, elevenlabs API key
 client = load_openai()
@@ -52,7 +53,7 @@ class StreamCompletion:
         self,
         persona: Dict[str, str],
         voice: Voice = None,
-        voice_model: str = "eleven_multilingual_v2",
+        voice_model: str = "eleven_turbo_v2",
         gpt_model: str = "gpt-4",
         temperature=0.9,
         stream_mode=True,
@@ -111,7 +112,7 @@ class StreamCompletion:
         max_tokens: int = 150,
         stop: Union[str, List[str]] = None,
         voice: Voice = None,
-        voice_model: str = "eleven_multilingual_v2",
+        voice_model: str = "eleven_turbo_v2",
         filename_length: int = 100,
         audio_output_dir: str = ".",
     ) -> Dict[str, str]:
@@ -127,7 +128,7 @@ class StreamCompletion:
             stop (Union[str, List[str]], optional): The stop characters to use. Defaults to None.
             voice (Voice, optional): The voice to use. Defaults to None.
             audio_output_dir (str, optional): The directory path to save the audio to. Defaults to "./audio".
-            voice_model (str, optional): The voice model to use. Defaults to "eleven_multilingual_v2".
+            voice_model (str, optional): The voice model to use. Defaults to "eleven_turbo_v2".
 
         returns:
             Dict[str, str]: Generated response from the OpenAI API and the filepath of the audio file e. g. {"last_completion": "Hello world!", "filepath": "./audio/20210901_123456_Hello_world.mp3"}
@@ -156,7 +157,7 @@ class StreamCompletion:
         if not isinstance(persona, dict):
             self.logger.error("persona must be a dict.")
             raise ValueError("persona must be a dict.")
-        
+
         # Check if persona has a "messages" key
         if "messages" not in persona:
             self.logger.error("persona must have a 'messages' key.")
@@ -173,19 +174,30 @@ class StreamCompletion:
             max_tokens=max_tokens,
             stop=self.stop,
         )
+
         self.logger.debug("phrase_generator created: %s", phrase_generator)
 
-        self.audio_stream = generate(
+        audio_stream = generate(
             text=phrase_generator,
-            voice=voice,
+            voice=voice.name,
             model=voice_model,
             stream=stream_mode,
         )
-        self.logger.debug("audio_stream created: %s", self.audio_stream)
 
         # Play the audio stream
-        play_audio_stream = stream(self.audio_stream)
-        self.logger.debug("play_audio_stream created: %s", play_audio_stream)
+        self.audio_stream = stream(audio_stream)
+
+        # Get the size of the audio stream
+        size_in_bytes = len(self.audio_stream)
+        size_in_kilobytes = size_in_bytes / 1024
+        size_in_megabytes = size_in_kilobytes / 1024
+
+        self.logger.debug(
+            "audio_stream created, size: %s bytes, %.2f KB, %.2f MB",
+            format(size_in_bytes, ","),
+            size_in_kilobytes,
+            size_in_megabytes,
+        )
 
         # Create the filename as a Path object
         if self.last_completion == "":
@@ -214,7 +226,7 @@ class StreamCompletion:
 
         # Save the audio stream to a file
         mp3_file = str(mp3_filepath.resolve())
-        save(play_audio_stream, mp3_file)
+        save(self.audio_stream, mp3_file)
 
         return {"last_completion": self.last_completion, "filepath": mp3_file}
 
@@ -327,21 +339,25 @@ class StreamCompletion:
         if not isinstance(persona, dict):
             self.logger.error("persona must be a dict.")
             raise ValueError("persona must be a dict.")
-        
+
         # Check if persona has a "messages" key
         if "messages" not in persona:
             self.logger.error("persona must have a 'messages' key.")
             raise ValueError("persona must have a 'messages' key.")
-        
+
         # Check if persona["messages"] is a list
         if not isinstance(persona["messages"], list):
             self.logger.error("persona['messages'] must be a list.")
             raise ValueError("persona['messages'] must be a list.")
-        
+
         # Check if persona["messages"] is too long and if so, truncate it
         token_count = get_token_count_persona(persona, gpt_model)
         while token_count > GPT4_TOKEN_LIMIT - max_tokens:
-            module_logger.info("persona['messages'] token count = %s is too long for %s limit. Truncating it.", token_count, gpt_model)
+            module_logger.info(
+                "persona['messages'] token count = %s is too long for %s limit. Truncating it.",
+                token_count,
+                gpt_model,
+            )
             persona = truncate_conversation_persona(persona)
             self.persona = persona
 
@@ -356,7 +372,7 @@ class StreamCompletion:
         while True:
             # send a ChatCompletion request
             try:
-                response = openai.ChatCompletion.create(
+                response = client.chat.completions.create(
                     model=gpt_model,
                     messages=persona["messages"],
                     temperature=temperature,
@@ -364,51 +380,37 @@ class StreamCompletion:
                     max_tokens=max_tokens,
                     stop=stop,
                 )
-            except openai.error.Timeout as error:
+            except openai.APITimeoutError as error:
                 # Handle timeout error, e.g. retry or log
                 module_logger.critical(
-                    f"openai.error.Timeout:\nOpenAI API request timed out: {error}\nFull traceback:\n{traceback.format_exc()}"
+                    f"openai.APITimeoutError:\nOpenAI API request timed out: {error}\nFull traceback:\n{traceback.format_exc()}"
                 )
                 yield error
                 return  # Stop the function after yielding the error
-            except openai.error.APIError as error:
-                # Handle API error, e.g. retry or log
-                module_logger.critical(
-                    f"openai.error.APIError:\nOpenAI API returned an API Error: {error}"
-                )
-                yield error
-                return  # Stop the function after yielding the error
-            except openai.error.APIConnectionError as error:
+            except openai.APIConnectionError as error:
                 # Handle connection error, e.g. check network or log
                 module_logger.critical(
-                    f"openai.error.APIConnectionError:\nOpenAI API request failed to connect: {error}\nFull traceback:\n{traceback.format_exc()}"
+                    f"openai.APIConnectionError:\nOpenAI API request failed to connect: {error}\nFull traceback:\n{traceback.format_exc()}"
                 )
                 yield error
                 return  # Stop the function after yielding the error
-            except openai.error.InvalidRequestError as error:
+            except openai.APIResponseValidationError as error:
                 module_logger.critical(
-                    f"openai.error.InvalidRequestError:\n{error}\nFull traceback:\n{traceback.format_exc()}"
+                    f"openai.APIResponseValidationError:\n{error}\nFull traceback:\n{traceback.format_exc()}"
                 )
                 yield error
                 return  # Continue the function after yielding the error
-            except openai.error.AuthenticationError as error:
+            except openai.APIStatusError as error:
                 # Handle authentication error, e.g. check credentials or log
                 module_logger.critical(
-                    f"openai.error.AuthenticationError:\nOpenAI API request was not authorized: {error}\nFull traceback:\n{traceback.format_exc()}"
+                    f"openai.APIStatusError:\nOpenAI API request was not authorized: {error}\nFull traceback:\n{traceback.format_exc()}"
                 )
                 yield error
                 return  # Stop the function after yielding the error
-            except openai.error.PermissionError as error:
+            except openai.APIError as error:
                 # Handle permission error, e.g. check scope or log
                 module_logger.critical(
-                    f"openai.error.PermissionError:\nOpenAI API request was not permitted: {error}\nFull traceback:\n{traceback.format_exc()}"
-                )
-                yield error
-                return  # Stop the function after yielding the error
-            except openai.error.RateLimitError as error:
-                # Handle rate limit error, e.g. wait or log
-                module_logger.critical(
-                    f"openai.error.RateLimitError:\nOpenAI API request exceeded rate limit: {error}\nFull traceback:\n{traceback.format_exc()}"
+                    f"openai.APIError: {error}\nFull traceback:\n{traceback.format_exc()}"
                 )
                 yield error
                 return  # Stop the function after yielding the error
@@ -427,23 +429,23 @@ class StreamCompletion:
                 time.time() - start_time
             )  # calculate the time delay of the chunk
             collected_chunks.append(chunk)  # save the event response
-            chunk_delta = chunk["choices"][0]["delta"]  # extract the delta content
+
+            chunk_delta = chunk.choices[0].delta
             collected_deltas.append(chunk_delta)  # save the delta content
-            # if chunk_delta dict contains "role" key or is an emtpy dict, then is not a sentence
-            if "role" in chunk_delta or not chunk_delta:
+            # if chunk_delta has no content, then skip it
+            if chunk_delta.content == "":
                 self.logger.debug(
-                    "Message received {:.2f} seconds after request: {}".format(
-                        chunk_time, chunk_delta
+                    "Message skipped {:.2f} seconds after request: {}\nRole: {}, content: {}".format(
+                        chunk_time, chunk_delta, chunk_delta.role, chunk_delta.content
                     )
                 )
                 continue
-            else:
-                # if the chunk is a sentence, then yield the sentence
-                if chunk_delta["content"] != "":
-                    sentence += chunk_delta["content"]
+            elif chunk_delta.content:
+                # if the chunk.content is None, then skip it
+                sentence += chunk_delta.content
 
                 # check if the sentence is complete, yield the sentence
-                if chunk_delta["content"].endswith(yield_characters):
+                if chunk_delta.content.endswith(yield_characters):
                     response = sentence
                     sentence = ""
 
@@ -455,10 +457,14 @@ class StreamCompletion:
                     elif isinstance(response, str):
                         # print(response, end="", flush=True)
                         yield response + " "
+                    else:
+                        raise ValueError(
+                            "response must be a string, not {}".format(type(response))
+                        )
 
             self.logger.debug(
-                "Message received {:.2f} seconds after request: {}".format(
-                    chunk_time, chunk_delta
+                "Message received {:.2f} seconds after request: {}\nRole: {}, content: {}".format(
+                    chunk_time, chunk_delta, chunk_delta.role, chunk_delta.content
                 )
             )
 
@@ -466,10 +472,18 @@ class StreamCompletion:
         self.logger.info(
             "Full response received {:.2f} seconds after request".format(chunk_time)
         )
-        full_reply_content = "".join([m.get("content", "") for m in collected_deltas])
+        # full_reply_content = "".join([message.content for message in collected_deltas])
+        full_reply_content = "".join(
+            [
+                message.content if message.content is not None else ""
+                for message in collected_deltas
+            ]
+        )
 
         # Log the last completion
-        self.logger.info("\033[92mAssistant:\033[0m \033[33m%s\033[0m\n", full_reply_content)
+        self.logger.info(
+            "\033[92mAssistant:\033[0m \033[33m%s\033[0m\n", full_reply_content
+        )
 
         # Save last completion
         self.last_completion = full_reply_content
@@ -478,7 +492,7 @@ class StreamCompletion:
 @time_it
 def test_generate_completion():
     """Test the generate_completion method."""
-    stream_completion = StreamCompletion()
+    stream_completion = StreamCompletion(persona=persona)
     stream_completion.generate_completion()
 
 
@@ -510,7 +524,7 @@ def test_get_voices():
         text="No se porque se tarda tanto en generar el audio, tal vez es porque el servicio esta saturado.",
         stream=True,
         voice=voice,
-        model="eleven_multilingual_v2",
+        model="eleven_turbo_v2",
     )
     stream(audio_stream)
 
