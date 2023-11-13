@@ -53,4 +53,5 @@ def watch_directory(path):
 
 if __name__ == "__main__":
     directory_to_watch = r"C:\Users\Jorge\git\core-ai\img"
+    print(f"Watching directory: {directory_to_watch}")
     watch_directory(directory_to_watch)
