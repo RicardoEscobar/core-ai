@@ -10,3 +10,7 @@ On the vision branch, I want to create the code to give vision or eyes to the Wa
 1. Make funtions or methods using watchdog to detect when a new image is created inside the `img` folder.
 1. Make functions or methods to read the images, prepare and save them to be used as context.
 1. Integrate the functions or methods to the main code.
+
+2023-11-12 20:10:52
+
+Turns out that I need to migrate to `openai v1` to use the `image` parameter, so I will need to wait until I migrate to `v1` to continue with this task.
