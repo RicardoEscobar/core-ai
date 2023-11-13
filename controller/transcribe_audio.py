@@ -1,17 +1,16 @@
 # Note: you need to be using OpenAI Python v0.27.0 for the code below to work
 import os
 import openai
-from dotenv import load_dotenv
+from controller.load_openai import load_openai
 
-# Load environment variables from .env file
-load_dotenv()
 
-# Set the OpenAI API key
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Load the OpenAI API key from the .env file
+client = load_openai()
 
 def transcribe(audio_file_path: str) -> str:
     audio_file= open(audio_file_path, "rb")
-    transcript = openai.Audio.transcribe("whisper-1", audio_file)
+    transcript = client.audio.transcriptions.create("whisper-1", audio_file)
+    
     return transcript['text']
 
 def translate(audio_file_path: str) -> str:
