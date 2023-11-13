@@ -37,6 +37,7 @@ from controller.get_audio_filepath import get_audio_filepath
 from controller.conversation_handler import truncate_conversation
 from controller.stream_completion import StreamCompletion
 from controller.create_logger import create_logger
+from controller.vision.eyes import Eyes
 
 
 # Create a logger
