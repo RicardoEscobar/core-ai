@@ -29,7 +29,7 @@ def truncate_conversation(conversation: Dict, token_threshold: int) -> Dict:
     """Given a conversation, remove the number of tokens from the conversation.
     Args:
         conversation (Dict): A conversation.
-        set_tokens (int): The number of tokens to be used as threshold.
+        token_threshold (int): The number of tokens to be used as threshold.
     Returns:
         Dict: A conversation with the tokens removed.
     """
