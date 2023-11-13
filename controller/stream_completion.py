@@ -33,7 +33,7 @@ from controller.get_token_count import get_token_count_persona
 from controller.waifuai.completion_create import save_conversation
 
 # Load the OpenAI API key, elevenlabs API key
-load_openai()
+client = load_openai()
 
 # Create a logger instance
 module_logger = create_logger(
