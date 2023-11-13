@@ -5,6 +5,7 @@ from elevenlabs import set_api_key
 
 
 def load_openai():
+    """Load the OpenAI API key from the .env file and return an OpenAI client"""
     # Load environment variables from .env file
     load_dotenv()
 
