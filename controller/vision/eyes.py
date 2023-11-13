@@ -32,7 +32,8 @@ client = OpenAI()
 
 # Run the picture_detector.py script in a subprocess to watch for new pictures
 # and process them
-subprocess.Popen(["python", "controller/vision/picture_detector.py"])
+picture_detector_process = subprocess.Popen(["python", "controller/vision/picture_detector.py"])
+print("Picture detector started.")
 
 # Create a logger instance
 log = create_logger(
@@ -127,8 +128,68 @@ class Eyes:
         pyautogui.mouseUp(button="left")
         log.info("Picture taken.")
 
+    # @time_it
+    @staticmethod
+    # Function to encode the image
+    def encode_image(image_path: str) -> bytes:
+        with open(image_path, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode("utf-8")
+
+    @staticmethod
+    @time_it
+    def vision_file(
+        image_path: str = r"C:\Users\Jorge\git\core-ai\img\latest_picture_512x512.png",
+        gpt_model: str = "gpt-4-vision-preview",
+        prompt: str = "Explain this image:",
+        max_tokens: int = 300,
+        detail: Literal["low", "high"] = "low",
+    ) -> str:
+        """Returns the response from the OpenAI API after sending an image."""
+
+        # Getting the base64 string
+        base64_image = Eyes.encode_image(image_path)
+
+        response = client.chat.completions.create(
+            model=gpt_model,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": prompt,
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{base64_image}",
+                                "detail": detail,
+                            },
+                        },
+                    ],
+                }
+            ],
+            max_tokens=max_tokens,
+        )
+
+        # Return the text from the first choice
+        return response.choices[0].message.content
+
 
 if __name__ == "__main__":
-    eyes = Eyes()
-    time.sleep(5)
-    eyes.take_picture()
+    time.sleep(2)
+    Eyes.take_picture()
+    time.sleep(2)
+    # If the image_path = r"C:\Users\Jorge\git\core-ai\img\latest_picture_512x512.png" exist and is a valid png file, then run the vision_file() function
+    filepath = Path(r"C:\Users\Jorge\git\core-ai\img\latest_picture_512x512.png")
+    while True:
+        if filepath.is_file() and filepath.__sizeof__() > 0:
+            print("The file exists.")
+            print(Eyes.vision_file())
+            break
+        else:
+            print("The file does not exist.")
+            time.sleep(2)
+            continue
+
+    picture_detector_process.terminate()
