@@ -17,6 +17,7 @@ from typing import Dict, List, Union
 import logging
 
 from elevenlabs.api import Voice, VoiceSettings
+import openai
 
 from controller import detect_audio
 from controller import transcribe_audio
@@ -130,7 +131,10 @@ def conversation(
         natural_voice (Union[Voice, str], optional): Set to None to use the
         default voice. Defaults to None.
     """
-    TOKEN_THRESHOLD = 4096  # Half of the max token length for GTP-4 (8192 tokens)
+    # gpt-4-vision-preview has a max token length of 128,000. Returns a maximum
+    # of 4,096 output tokens.So 128_000 - 4096 = 123_904 as the token threshold.
+    TOKEN_THRESHOLD = 123_904
+
     # Load the OpenAI API key
     load_openai()
 
@@ -244,6 +248,8 @@ def stream_conversation(
     if stop is None:
         stop = ["Jorge:"]
 
+    # TODO: Replace this with the max token length for the given model,
+    # calculate it or get it from openai.api
     TOKEN_THRESHOLD = 4096  # Half of the max token length for GTP-4 (8192 tokens)
     # Load the OpenAI API key
     load_openai()
@@ -420,9 +426,9 @@ def main():
             "gender": "female",
         },
         samples=None,
-        settings=VoiceSettings(stability=0.5, similarity_boost=0.75),
         design=None,
-        preview_url="https://storage.googleapis.com/eleven-public-prod/U1Rx6ByQzXTKXc5wPxu4fXvSRqO2/voices/chQ8GR2cY20KeFjeSaXI/293c3953-463e-42d3-8a92-ccedad1b9280.mp3",
+        preview_url="https://storage.googleapis.com/eleven-public-prod/U1Rx6ByQzXTKXc5wPxu4fXvSRqO2/voices/chQ8GR2cY20KeFjeSaXI/0ea12727-861b-47b8-8acc-ca22acdc93be.mp3",
+        settings=None,
     )
 
     male_natural_voice = Voice(
@@ -452,9 +458,10 @@ def main():
     # Run the conversation
     stream_conversation(
         persona_data=persona, # Contains the conversation data
-        gpt_model="gpt-4", # The GPT model to be used
+        gpt_model="gpt-4-vision-preview", # The GPT model to be used
         selected_voice=persona["selected_voice"],  # The default voice is used
         natural_voice=hailey_natural_voice,  # Set to None to use the default voice
+        voice_model="eleven_multilingual_v2",  # The voice model to be used
         is_filtered=True,  # Set to False to enable NSFW content
         output_dir=persona["audio_output_path"], # The output folder for audio files
         max_tokens=2000, # The max tokens for the response
