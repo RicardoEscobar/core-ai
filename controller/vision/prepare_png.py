@@ -1,4 +1,26 @@
+# If this file is running alone, then add the root folder to the Python path
+if __name__ == "__main__":
+    import sys
+    from pathlib import Path
+
+    root_folder = Path(__file__).parent.parent.parent
+    sys.path.append(str(root_folder))
+
+import logging
+
 from PIL import Image
+
+from controller.create_logger import create_logger
+
+
+# Create a logger instance
+log = create_logger(
+    logger_name="controller.vision.prepare_png",
+    logger_filename="prepare_png.log",
+    log_directory="logs",
+    console_logging=True,
+    console_log_level=logging.INFO,
+)
 
 
 def resize_image_without_empty_space(image_path, output_path, padding=0):
@@ -43,7 +65,7 @@ def crop_image_square(image_path, output_path, size):
             original_image = Image.open(image_path)
         except (FileNotFoundError, PermissionError) as error:
             # If the image_path is not found, return False
-            print(error)
+            log.error(error)
             continue
         else:
             break
