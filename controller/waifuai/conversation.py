@@ -242,6 +242,7 @@ def stream_conversation(
     output_dir: str = ".",
     max_tokens: int = 50,
     stop: Union[str, List[str]] = None,
+    tools: List[Dict] = None,
 ):
     """This version of conversation method uses the StreamCompletion class. So it's faster than the conversation method."""
 
@@ -265,6 +266,7 @@ def stream_conversation(
         max_tokens=max_tokens,
         stop=stop,
         yield_characters=(".", "?", "!", "\n", ":", ";"),
+        tools=tools,
     )
 
     # Create the output folder if it doesn't exist
@@ -307,6 +309,7 @@ def stream_conversation(
                         voice=natural_voice,
                         voice_model=voice_model,
                         audio_output_dir=output_dir,
+                        tools=tools,
                     )
                 except Exception as error:
                     logger.error("Error: %s", str(error))
@@ -465,6 +468,7 @@ def main():
         is_filtered=True,  # Set to False to enable NSFW content
         output_dir=persona["audio_output_path"], # The output folder for audio files
         max_tokens=2000, # The max tokens for the response
+        tools=None, # The tools to be used
     )
 
 
