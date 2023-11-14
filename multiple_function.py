@@ -3,25 +3,40 @@ import json
 
 from controller.load_openai import load_openai
 
+from controller.vision.eyes import Eyes
+
 
 client = load_openai()
 
-# Example dummy function hard coded to return the same weather
-# In production, this could be your backend API or an external API
+
+# Example dummy function hard coded to return the same
+# weather In production, this could be your backend API or an external API
 def get_current_weather(location, unit="fahrenheit"):
     """Get the current weather in a given location"""
     if "tokyo" in location.lower():
         return json.dumps({"location": "Tokyo", "temperature": "10", "unit": "celsius"})
     elif "san francisco" in location.lower():
-        return json.dumps({"location": "San Francisco", "temperature": "72", "unit": "fahrenheit"})
+        return json.dumps(
+            {"location": "San Francisco", "temperature": "72", "unit": "fahrenheit"}
+        )
     elif "paris" in location.lower():
         return json.dumps({"location": "Paris", "temperature": "22", "unit": "celsius"})
     else:
         return json.dumps({"location": location, "temperature": "unknown"})
 
+
 def run_conversation():
     # Step 1: send the conversation and available functions to the model
-    messages = [{"role": "user", "content": "What's the weather like in San Francisco, Tokyo, and Paris?"}]
+    messages = [
+        {
+            "role": "system",
+            "content": "You are a VRchat user. You are talking to Jorge another VRchat user inside VRChat.",
+        },
+        {
+            "role": "user",
+            "content": "Hey, my name is Jorge. What's your name?",
+        }
+    ]
     tools = [
         {
             "type": "function",
@@ -40,7 +55,24 @@ def run_conversation():
                     "required": ["location"],
                 },
             },
-        }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "take_picture_and_process",
+                "description": "Use this when asked to see something or someone inside VRChat and talk about it.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "prompt": {
+                            "type": "string",
+                            "description": "The prompt to use.",
+                        },
+                    },
+                    "required": ["prompt"],
+                },
+            },
+        },
     ]
     response = client.chat.completions.create(
         model="gpt-4-1106-preview",
@@ -55,7 +87,8 @@ def run_conversation():
         # Step 3: call the function
         # Note: the JSON response may not always be valid; be sure to handle errors
         available_functions = {
-            "get_current_weather": get_current_weather,
+            # "get_current_weather": get_current_weather,
+            "take_picture_and_process": Eyes.take_picture_and_process,
         }  # only one function in this example, but you can have multiple
         messages.append(response_message)  # extend conversation with assistant's reply
         # Step 4: send the info for each function call and function response to the model
@@ -63,9 +96,12 @@ def run_conversation():
             function_name = tool_call.function.name
             function_to_call = available_functions[function_name]
             function_args = json.loads(tool_call.function.arguments)
+            # function_response = function_to_call(
+            #     location=function_args.get("location"),
+            #     unit=function_args.get("unit"),
+            # )
             function_response = function_to_call(
-                location=function_args.get("location"),
-                unit=function_args.get("unit"),
+                prompt=function_args.get("prompt"),
             )
             messages.append(
                 {
@@ -80,4 +116,7 @@ def run_conversation():
             messages=messages,
         )  # get a new response from the model where it can see the function response
         return second_response
+    # TODO add an else block to handle when the model doesn't want to call a function but still wants to continue the conversation
+
+
 print(run_conversation())
