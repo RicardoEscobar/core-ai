@@ -4,7 +4,6 @@ import json
 from controller.load_openai import load_openai
 
 
-
 client = load_openai()
 
 # Example dummy function hard coded to return the same weather
@@ -44,7 +43,7 @@ def run_conversation():
         }
     ]
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo-1106",
+        model="gpt-4-1106-preview",
         messages=messages,
         tools=tools,
         tool_choice="auto",  # auto is default, but we'll be explicit
@@ -77,7 +76,7 @@ def run_conversation():
                 }
             )  # extend conversation with function response
         second_response = client.chat.completions.create(
-            model="gpt-3.5-turbo-1106",
+            model="gpt-4-1106-preview",
             messages=messages,
         )  # get a new response from the model where it can see the function response
         return second_response
