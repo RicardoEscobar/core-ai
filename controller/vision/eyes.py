@@ -197,8 +197,8 @@ class Eyes:
             The response from the OpenAI API after sending an image."""
         Eyes.take_picture()
         time.sleep(2)
+
         # If the image_path = r"C:\Users\Jorge\git\core-ai\img\latest_picture_512x512.png" exist and is a valid png file, then run the vision_file() function
-        filepath = Path(r"C:\Users\Jorge\git\core-ai\img\latest_picture_512x512.png")
         while True:
             if filepath.is_file() and filepath.__sizeof__() > 0:
                 print("The file exists.")
