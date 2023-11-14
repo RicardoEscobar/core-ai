@@ -174,6 +174,47 @@ class Eyes:
         # Return the text from the first choice
         return response.choices[0].message.content
 
+    @staticmethod
+    @time_it
+    def take_picture_and_process(
+        image_path: str = r"C:\Users\Jorge\git\core-ai\img\latest_picture_512x512.png",
+        gpt_model: str = "gpt-4-vision-preview",
+        prompt: str = "Explain this image:",
+        max_tokens: int = 300,
+        detail: Literal["low", "high"] = "low",
+    ):
+        """Take a picture using the in game VRChat Camera or multi layer camera.
+        The picture will be saved in the picture_output_folder, then the picture
+        will be processed by the vision_file() function and the response will
+        be returned.
+        args:
+            image_path: The path to the image to be processed.
+            gpt_model: The GPT model to use.
+            prompt: The prompt to use.
+            max_tokens: The max tokens to use.
+            detail: The detail to use.
+        returns:
+            The response from the OpenAI API after sending an image."""
+        Eyes.take_picture()
+        time.sleep(2)
+        # If the image_path = r"C:\Users\Jorge\git\core-ai\img\latest_picture_512x512.png" exist and is a valid png file, then run the vision_file() function
+        filepath = Path(r"C:\Users\Jorge\git\core-ai\img\latest_picture_512x512.png")
+        while True:
+            if filepath.is_file() and filepath.__sizeof__() > 0:
+                print("The file exists.")
+                print(Eyes.vision_file(
+                    image_path=image_path,
+                    gpt_model=gpt_model,
+                    prompt=prompt,
+                    max_tokens=max_tokens,
+                    detail=detail,
+                ))
+                break
+            else:
+                print("The file does not exist.")
+                time.sleep(2)
+                continue
+
 
 if __name__ == "__main__":
     time.sleep(2)
