@@ -125,7 +125,7 @@ class Eyes:
         pyautogui.mouseDown(button="left")
         pyautogui.sleep(0.5)  # Keep the button pressed for half a second
         pyautogui.mouseUp(button="left")
-        log.info("Picture taken.")
+        log.info("Picture taken: %s", repr(Eyes.picture_output_folder))
 
     # @time_it
     @staticmethod
@@ -182,11 +182,9 @@ class Eyes:
         prompt: str = "Explain this image:",
         max_tokens: int = 300,
         detail: Literal["low", "high"] = "low",
-    ):
+    ) -> str:
         """Take a picture using the in game VRChat Camera or multi layer camera.
-        The picture will be saved in the picture_output_folder, then the picture
-        will be processed by the vision_file() function and the response will
-        be returned.
+        Use this static method when asked to see something or someone inside VRChat.
         args:
             image_path: The path to the image to be processed.
             gpt_model: The GPT model to use.
@@ -194,42 +192,34 @@ class Eyes:
             max_tokens: The max tokens to use.
             detail: The detail to use.
         returns:
-            The response from the OpenAI API after sending an image."""
+            The response (str) from the OpenAI API after sending an image."""
         Eyes.take_picture()
         time.sleep(2)
 
         # If the image_path = r"C:\Users\Jorge\git\core-ai\img\latest_picture_512x512.png" exist and is a valid png file, then run the vision_file() function
+        filepath = Path(image_path)
         while True:
             if filepath.is_file() and filepath.__sizeof__() > 0:
-                print("The file exists.")
-                print(Eyes.vision_file(
+                log.info("The file exists.")
+                response = Eyes.vision_file(
                     image_path=image_path,
                     gpt_model=gpt_model,
                     prompt=prompt,
                     max_tokens=max_tokens,
                     detail=detail,
-                ))
+                )
+                print(response)
                 break
             else:
-                print("The file does not exist.")
+                log.warning("The file does not exist.")
                 time.sleep(2)
                 continue
+
+        log.debug("response = %s", repr(response))
+        return response
 
 
 if __name__ == "__main__":
     time.sleep(2)
-    Eyes.take_picture()
-    time.sleep(2)
-    # If the image_path = r"C:\Users\Jorge\git\core-ai\img\latest_picture_512x512.png" exist and is a valid png file, then run the vision_file() function
-    filepath = Path(r"C:\Users\Jorge\git\core-ai\img\latest_picture_512x512.png")
-    while True:
-        if filepath.is_file() and filepath.__sizeof__() > 0:
-            print("The file exists.")
-            print(Eyes.vision_file())
-            break
-        else:
-            print("The file does not exist.")
-            time.sleep(2)
-            continue
-
+    content = Eyes.take_picture_and_process()
     # picture_detector_process.terminate()
