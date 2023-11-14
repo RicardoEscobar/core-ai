@@ -318,7 +318,9 @@ class StreamCompletion:
         yields:
             str: The next completion."""
 
-        GPT4_TOKEN_LIMIT = 4097
+        # gpt-4-vision-preview has a max token length of 128,000. Returns a maximum
+        # of 4,096 output tokens.So 128_000 - 4096 = 123_904 as the token threshold.
+        TOKEN_THRESHOLD = 123_904
 
         # Reset the last completion
         self.last_completion = ""
@@ -352,7 +354,7 @@ class StreamCompletion:
 
         # Check if persona["messages"] is too long and if so, truncate it
         token_count = get_token_count_persona(persona, gpt_model)
-        while token_count > GPT4_TOKEN_LIMIT - max_tokens:
+        while token_count > TOKEN_THRESHOLD - max_tokens:
             module_logger.info(
                 "persona['messages'] token count = %s is too long for %s limit. Truncating it.",
                 token_count,
