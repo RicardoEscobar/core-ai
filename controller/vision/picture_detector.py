@@ -11,6 +11,7 @@ if __name__ == "__main__":
 import time
 from pathlib import Path
 import getpass
+import logging
 
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -19,6 +20,16 @@ from controller.vision.prepare_png import (
     resize_image_without_empty_space,
     crop_image_square,
     crop_image_vertical,
+)
+from controller.create_logger import create_logger
+
+# Create a logger instance
+log = create_logger(
+    logger_name="controller.vision.picture_detector",
+    logger_filename="picture_detector.log",
+    log_directory="logs",
+    console_logging=True,
+    console_log_level=logging.INFO,
 )
 
 username = getpass.getuser()
@@ -29,7 +40,7 @@ class MyHandler(FileSystemEventHandler):
         if event.is_directory:
             return
         if event.src_path.endswith(".png"):
-            print(f"New PNG file created: {event.src_path}")
+            log.debug("New PNG file created: %s", event.src_path)
             latest_picture = (
                 r"C:/Users/" + username + r"/git/core-ai/img/latest_picture_512x512.png"
             )
@@ -53,5 +64,5 @@ def watch_directory(path):
 
 if __name__ == "__main__":
     directory_to_watch = r"C:\Users\Jorge\git\core-ai\img"
-    print(f"Watching directory: {directory_to_watch}")
+    log.debug(f"Watching directory: {directory_to_watch}")
     watch_directory(directory_to_watch)
