@@ -60,6 +60,7 @@ class StreamCompletion:
         max_tokens: int = 150,
         stop: Union[str, List[str]] = None,
         yield_characters: Tuple[str] = None,
+        tools: List[Dict[str, str]] = None,
     ):
         """Initialize the StreamCompletion class."""
         self.logger = module_logger
@@ -98,6 +99,27 @@ class StreamCompletion:
         self.max_tokens = max_tokens
         self.stop = stop
 
+        if tools is None:
+            self.tools = [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "take_picture_and_process",
+                        "description": "Use this when asked to see something or someone inside VRChat and talk about it.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "prompt": {
+                                    "type": "string",
+                                    "description": "The prompt to use.",
+                                },
+                            },
+                            "required": ["prompt"],
+                        },
+                    },
+                },
+            ]
+
         # Saves the last completion generated.
         self.last_completion = ""
 
@@ -115,6 +137,7 @@ class StreamCompletion:
         voice_model: str = "eleven_turbo_v2",
         filename_length: int = 100,
         audio_output_dir: str = ".",
+        tools: List[Dict[str, str]] = None,
     ) -> Dict[str, str]:
         """Generate a completion from the OpenAI API.
         args:
@@ -129,6 +152,9 @@ class StreamCompletion:
             voice (Voice, optional): The voice to use. Defaults to None.
             audio_output_dir (str, optional): The directory path to save the audio to. Defaults to "./audio".
             voice_model (str, optional): The voice model to use. Defaults to "eleven_turbo_v2".
+            tools (List[Dict[str, str]], optional): A list of tools the model may call.
+                Currently, only functions are supported as a tool.
+                Use this to provide a list of functions the model may generate JSON inputs for. Defaults to None.
 
         returns:
             Dict[str, str]: Generated response from the OpenAI API and the filepath of the audio file e. g. {"last_completion": "Hello world!", "filepath": "./audio/20210901_123456_Hello_world.mp3"}
@@ -153,6 +179,9 @@ class StreamCompletion:
         if voice is None:
             voice = self.voice
 
+        if tools is None:
+            tools = self.tools
+
         # Check if persona is a dict
         if not isinstance(persona, dict):
             self.logger.error("persona must be a dict.")
@@ -173,6 +202,7 @@ class StreamCompletion:
             yield_characters=yield_characters,
             max_tokens=max_tokens,
             stop=self.stop,
+            tools=tools,
         )
 
         self.logger.debug("phrase_generator created: %s", phrase_generator)
@@ -242,6 +272,7 @@ class StreamCompletion:
         stream_mode=True,
         max_tokens: int = 150,
         stop: Union[str, List[str]] = None,
+        tools: List[Dict[str, str]] = None,
     ) -> None:
         """Generate a completion from the Microsoft AI Speech API.
         args:
@@ -280,6 +311,7 @@ class StreamCompletion:
             yield_characters=yield_characters,
             max_tokens=max_tokens,
             stop=stop,
+            tools=tools,
         ):
             # Wait for the next chunk
             completion_finished = "".join(completion)
@@ -304,6 +336,8 @@ class StreamCompletion:
         yield_characters: Tuple[str] = None,
         max_tokens: int = 150,
         stop: Union[str, List[str]] = None,
+        tools: List[Dict[str, str]] = None,
+        tool_choice: str = "auto",
     ):
         """This generator function yields the next completion from the OpenAI API from a stream mode openai completion. Each time a sentence is completed, the generator yields the sentence. To detect the end of a sentence, the generator looks for a period, question mark, or exclamation point at the end of the sentence. If the sentence is not complete, then the generator yields None. If the generator yields None, then the caller should call the generator again to get the next completion. If the generator yields a sentence, then the caller should call the generator again to get the next completion. The generator will yield None when the stream is complete.
         args:
@@ -315,6 +349,9 @@ class StreamCompletion:
             yield_characters (Tuple[str], optional): The characters to yield. Defaults to None.
             max_tokens (int, optional): The maximum number of tokens to use. Defaults to 150.
             stop (Union[str, List[str]], optional): The stop characters to use. Defaults to None.
+            tools (List[Dict[str, str]], optional): A list of tools the model may call.
+                Currently, only functions are supported as a tool.
+                Use this to provide a list of functions the model may generate JSON inputs for. Defaults to None.
         yields:
             str: The next completion."""
 
@@ -336,6 +373,9 @@ class StreamCompletion:
 
         if stop is None:
             stop = self.stop
+
+        if tools is None:
+            tools = self.tools
 
         # Check if persona is a dict
         if not isinstance(persona, dict):
@@ -371,6 +411,7 @@ class StreamCompletion:
         # record the time before the request is sent
         start_time = time.time()
 
+        # TODO THIS IS THE OLD CODE THAT WORKS, BUT DOES NOT SUPPORT FUNTION CALLS
         while True:
             # send a ChatCompletion request
             try:
