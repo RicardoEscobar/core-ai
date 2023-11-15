@@ -42,16 +42,20 @@ class MyHandler(FileSystemEventHandler):
         if event.src_path.endswith(".png"):
             log.debug("New PNG file created: %s", event.src_path)
             latest_picture = (
-                r"C:/Users/" + username + r"/git/core-ai/img/latest_picture_512x512.png"
+                "./img/latest_picture_512x512.png"
             )
             if latest_picture != event.src_path:
                 crop_image_square(event.src_path, latest_picture, size=512)
 
 
 def watch_directory(path):
+    # Create path if it doesn't exist
+    path = Path(path)
+    path.mkdir(parents=True, exist_ok=True)
+
     event_handler = MyHandler()
     observer = Observer()
-    observer.schedule(event_handler, path, recursive=True)
+    observer.schedule(event_handler, str(path), recursive=True)
     observer.start()
 
     try:
@@ -63,6 +67,6 @@ def watch_directory(path):
 
 
 if __name__ == "__main__":
-    directory_to_watch = r"C:\Users\Jorge\git\core-ai\img"
+    directory_to_watch = "./img"
     log.debug(f"Watching directory: {directory_to_watch}")
     watch_directory(directory_to_watch)
