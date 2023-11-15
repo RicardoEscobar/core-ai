@@ -1,7 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 
-from controller.clean_file import clean_filename
+from controller.clean_filename import clean_filename
 
 
 def get_audio_filepath(
@@ -19,6 +19,7 @@ def get_audio_filepath(
         returns:
             str: The filename.
         """
+
         if output_dir == ".":
             output_dir_path = Path(".") / "audio"
 
