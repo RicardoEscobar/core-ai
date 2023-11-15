@@ -89,6 +89,16 @@ class Eyes:
             camera_config = self.camera_config
         self.detail = detail
 
+        # If config.json file does not exist, create it
+        if not Path(self.config_json_file).is_file():
+            with open(self.config_json_file, "w", encoding="utf-8") as file:
+                json.dump(camera_config, file, indent=4)
+                log.info(
+                    "The config.json file was not found at %s, using the default camera config. One was created at that location as: %s",
+                    self.config_json_file,
+                    self.config_json_path,
+                )
+
     def get_camera_config_file(self, config_json_file: str = None) -> Dict:
         """Returns the camera config from the config.json file as a dictionary."""
         # Validate that the config_json_file is not None
@@ -137,7 +147,7 @@ class Eyes:
     @staticmethod
     @time_it
     def vision_file(
-        image_path: str = r"C:\Users\Jorge\git\core-ai\img\latest_picture_512x512.png",
+        image_path: str = "./img/latest_picture_512x512.png",
         gpt_model: str = "gpt-4-vision-preview",
         prompt: str = "Explain this image:",
         max_tokens: int = 300,
@@ -220,6 +230,8 @@ class Eyes:
 
 
 if __name__ == "__main__":
-    time.sleep(2)
-    content = Eyes.take_picture_and_process()
+    # Instantiate the Eyes class
+    eyes = Eyes()
+    # time.sleep(2)
+    # content = Eyes.take_picture_and_process()
     # picture_detector_process.terminate()
