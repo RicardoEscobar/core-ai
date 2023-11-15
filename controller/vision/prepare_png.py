@@ -49,6 +49,7 @@ def resize_image_without_empty_space(image_path, output_path, padding=0):
     resized_image.paste(cropped_image, (x_offset, y_offset))
 
     # Save the resized image without empty space
+    log.info("Saving resized image without empty space to %s", output_path)
     resized_image.save(output_path)
 
 
@@ -83,6 +84,7 @@ def crop_image_square(image_path, output_path, size):
     cropped_image = original_image.crop((left, top, right, bottom))
 
     # Save the cropped image
+    log.info("Saving resized image without empty space to %s", output_path)
     cropped_image.save(output_path)
 
 
