@@ -17,6 +17,7 @@ from pathlib import Path
 from controller.custom_thread import CustomThread
 from pathlib import Path
 import traceback
+import json
 
 import openai
 from elevenlabs import generate, stream, save, voices
@@ -30,8 +31,9 @@ from controller.time_it import time_it
 from controller.get_audio_filepath import get_audio_filepath
 from controller.conversation_handler import truncate_conversation_persona
 from controller.get_token_count import get_token_count_persona
-from controller.waifuai.completion_create import save_conversation
-from controller.waifuai.conversations.echoes_of_the_future import persona
+from controller.waifuai.completion_create import save_conversation, generate_message
+from controller.waifuai.conversations.vrchat_runa import persona
+from controller.vision.eyes import Eyes
 
 # Load the OpenAI API key, elevenlabs API key
 client = load_openai()
@@ -61,6 +63,8 @@ class StreamCompletion:
         stop: Union[str, List[str]] = None,
         yield_characters: Tuple[str] = None,
         tools: List[Dict[str, str]] = None,
+        tool_choice: str = "auto",
+        available_functions=None,
     ):
         """Initialize the StreamCompletion class."""
         self.logger = module_logger
@@ -120,6 +124,14 @@ class StreamCompletion:
                 },
             ]
 
+        self.tool_choice = tool_choice
+        if available_functions is None:
+            self.available_functions = (
+                {
+                    "take_picture_and_process": Eyes.take_picture_and_process,
+                },
+            )
+
         # Saves the last completion generated.
         self.last_completion = ""
 
@@ -138,6 +150,8 @@ class StreamCompletion:
         filename_length: int = 100,
         audio_output_dir: str = ".",
         tools: List[Dict[str, str]] = None,
+        tool_choice: str = "auto",
+        available_functions: Dict = None,
     ) -> Dict[str, str]:
         """Generate a completion from the OpenAI API.
         args:
@@ -203,6 +217,8 @@ class StreamCompletion:
             max_tokens=max_tokens,
             stop=self.stop,
             tools=tools,
+            tool_choice=tool_choice,
+            available_functions=available_functions,
         )
 
         self.logger.debug("phrase_generator created: %s", phrase_generator)
@@ -232,7 +248,7 @@ class StreamCompletion:
         # Create the filename as a Path object
         if self.last_completion == "":
             filename = get_audio_filepath(
-                persona, filename_length, output_dir=audio_output_dir
+                persona["name"], filename_length, output_dir=audio_output_dir
             )
         else:
             filename = self.last_completion[:filename_length]
@@ -273,6 +289,8 @@ class StreamCompletion:
         max_tokens: int = 150,
         stop: Union[str, List[str]] = None,
         tools: List[Dict[str, str]] = None,
+        tool_choice: str = "auto",
+        available_functions: Dict = None,
     ) -> None:
         """Generate a completion from the Microsoft AI Speech API.
         args:
@@ -312,6 +330,8 @@ class StreamCompletion:
             max_tokens=max_tokens,
             stop=stop,
             tools=tools,
+            tool_choice=tool_choice,
+            available_functions=available_functions,
         ):
             # Wait for the next chunk
             completion_finished = "".join(completion)
@@ -338,6 +358,7 @@ class StreamCompletion:
         stop: Union[str, List[str]] = None,
         tools: List[Dict[str, str]] = None,
         tool_choice: str = "auto",
+        available_functions: Dict = None,
     ):
         """This generator function yields the next completion from the OpenAI API from a stream mode openai completion. Each time a sentence is completed, the generator yields the sentence. To detect the end of a sentence, the generator looks for a period, question mark, or exclamation point at the end of the sentence. If the sentence is not complete, then the generator yields None. If the generator yields None, then the caller should call the generator again to get the next completion. If the generator yields a sentence, then the caller should call the generator again to get the next completion. The generator will yield None when the stream is complete.
         args:
@@ -377,6 +398,12 @@ class StreamCompletion:
         if tools is None:
             tools = self.tools
 
+        if tool_choice is None:
+            tool_choice = self.tool_choice
+
+        if available_functions is None:
+            available_functions = self.available_functions
+
         # Check if persona is a dict
         if not isinstance(persona, dict):
             self.logger.error("persona must be a dict.")
@@ -411,125 +438,191 @@ class StreamCompletion:
         # record the time before the request is sent
         start_time = time.time()
 
-        # TODO THIS IS THE OLD CODE THAT WORKS, BUT DOES NOT SUPPORT FUNTION CALLS
-        while True:
-            # send a ChatCompletion request
-            try:
-                response = client.chat.completions.create(
-                    model=gpt_model,
-                    messages=persona["messages"],
-                    temperature=temperature,
-                    stream=stream_mode,  # again, we set stream=True
-                    max_tokens=max_tokens,
-                    stop=stop,
-                )
-            except openai.APITimeoutError as error:
-                # Handle timeout error, e.g. retry or log
-                module_logger.critical(
-                    f"openai.APITimeoutError:\nOpenAI API request timed out: {error}\nFull traceback:\n{traceback.format_exc()}"
-                )
-                yield error
-                return  # Stop the function after yielding the error
-            except openai.APIConnectionError as error:
-                # Handle connection error, e.g. check network or log
-                module_logger.critical(
-                    f"openai.APIConnectionError:\nOpenAI API request failed to connect: {error}\nFull traceback:\n{traceback.format_exc()}"
-                )
-                yield error
-                return  # Stop the function after yielding the error
-            except openai.APIResponseValidationError as error:
-                module_logger.critical(
-                    f"openai.APIResponseValidationError:\n{error}\nFull traceback:\n{traceback.format_exc()}"
-                )
-                yield error
-                return  # Continue the function after yielding the error
-            except openai.APIStatusError as error:
-                # Handle authentication error, e.g. check credentials or log
-                module_logger.critical(
-                    f"openai.APIStatusError:\nOpenAI API request was not authorized: {error}\nFull traceback:\n{traceback.format_exc()}"
-                )
-                yield error
-                return  # Stop the function after yielding the error
-            except openai.APIError as error:
-                # Handle permission error, e.g. check scope or log
-                module_logger.critical(
-                    f"openai.APIError: {error}\nFull traceback:\n{traceback.format_exc()}"
-                )
-                yield error
-                return  # Stop the function after yielding the error
-            else:
-                # No error, break the loop
-                break
+        # In Python, when you assign a list to a variable, the variable holds a
+        # reference to the list, not a copy of the list. This means that if you
+        # modify the list through the variable, the original list is also
+        # modified.
+        messages = persona["messages"].copy()
 
-        # create variables to collect the stream of chunks
-        collected_chunks = []
-        collected_deltas = []
-        sentence = ""
+        # Step 1: send the messages and tools to the model
+        response = client.chat.completions.create(
+            model="gpt-4-1106-preview",
+            messages=messages,
+            tools=tools,
+            tool_choice=tool_choice,  # auto is default, but we'll be explicit
+        )
 
-        # iterate through the stream of events
-        for chunk in response:
-            chunk_time = (
-                time.time() - start_time
-            )  # calculate the time delay of the chunk
-            collected_chunks.append(chunk)  # save the event response
+        response_message = response.choices[0].message
+        tool_calls = response_message.tool_calls
+        # Step 2: check if the model wanted to call a function
+        if tool_calls:
+            # Step 3: call the function
+            # Note: the JSON response may not always be valid; be sure to handle errors
+            if available_functions is None:
+                available_functions = {
+                    "take_picture_and_process": Eyes.take_picture_and_process,
+                }  # only one function in this example, but you can have multiple
+            messages.append(
+                response_message
+            )  # extend conversation with assistant's reply
+            # Step 4: send the info for each function call and function response to the model
+            for tool_call in tool_calls:
+                function_name = tool_call.function.name
+                function_to_call = available_functions[function_name]
+                function_args = json.loads(tool_call.function.arguments)
 
-            chunk_delta = chunk.choices[0].delta
-            collected_deltas.append(chunk_delta)  # save the delta content
-            # if chunk_delta has no content, then skip it
-            if chunk_delta.content == "":
+                function_response = function_to_call(
+                    prompt=function_args.get("prompt"),
+                )
+                messages.append(
+                    {
+                        "tool_call_id": tool_call.id,
+                        "role": "tool",
+                        "name": function_name,
+                        "content": function_response,
+                    }
+                )  # extend conversation with function response
+            second_response = client.chat.completions.create(
+                model="gpt-4-1106-preview",
+                messages=messages,
+            )  # get a new response from the model where it can see the function response
+
+            # Log the last completion
+            full_reply_content = second_response.choices[0].message.content
+            self.logger.info(
+                "\033[92mAssistant:\033[0m \033[33m%s\033[0m\n", full_reply_content
+            )
+
+            # Save last completion
+            self.last_completion = full_reply_content
+
+            # required to add a space after the function yield or else audio will throw an error
+            yield self.last_completion + " "
+        else:
+            # TODO THIS IS THE OLD CODE THAT WORKS, BUT DOES NOT SUPPORT FUNTION CALLS
+            while True:
+                # send a ChatCompletion request
+                try:
+                    response = client.chat.completions.create(
+                        model=gpt_model,
+                        messages=persona["messages"],
+                        temperature=temperature,
+                        stream=stream_mode,  # again, we set stream=True
+                        max_tokens=max_tokens,
+                        stop=stop,
+                    )
+                except openai.APITimeoutError as error:
+                    # Handle timeout error, e.g. retry or log
+                    module_logger.critical(
+                        f"openai.APITimeoutError:\nOpenAI API request timed out: {error}\nFull traceback:\n{traceback.format_exc()}"
+                    )
+                    yield error
+                    return  # Stop the function after yielding the error
+                except openai.APIConnectionError as error:
+                    # Handle connection error, e.g. check network or log
+                    module_logger.critical(
+                        f"openai.APIConnectionError:\nOpenAI API request failed to connect: {error}\nFull traceback:\n{traceback.format_exc()}"
+                    )
+                    yield error
+                    return  # Stop the function after yielding the error
+                except openai.APIResponseValidationError as error:
+                    module_logger.critical(
+                        f"openai.APIResponseValidationError:\n{error}\nFull traceback:\n{traceback.format_exc()}"
+                    )
+                    yield error
+                    return  # Continue the function after yielding the error
+                except openai.APIStatusError as error:
+                    # Handle authentication error, e.g. check credentials or log
+                    module_logger.critical(
+                        f"openai.APIStatusError:\nOpenAI API request was not authorized: {error}\nFull traceback:\n{traceback.format_exc()}"
+                    )
+                    yield error
+                    return  # Stop the function after yielding the error
+                except openai.APIError as error:
+                    # Handle permission error, e.g. check scope or log
+                    module_logger.critical(
+                        f"openai.APIError: {error}\nFull traceback:\n{traceback.format_exc()}"
+                    )
+                    yield error
+                    return  # Stop the function after yielding the error
+                else:
+                    # No error, break the loop
+                    break
+
+            # create variables to collect the stream of chunks
+            collected_chunks = []
+            collected_deltas = []
+            sentence = ""
+
+            # iterate through the stream of events
+            for chunk in response:
+                chunk_time = (
+                    time.time() - start_time
+                )  # calculate the time delay of the chunk
+                collected_chunks.append(chunk)  # save the event response
+
+                chunk_delta = chunk.choices[0].delta
+                collected_deltas.append(chunk_delta)  # save the delta content
+                # if chunk_delta has no content, then skip it
+                if chunk_delta.content == "":
+                    self.logger.debug(
+                        "Message skipped {:.2f} seconds after request: {}\nRole: {}, content: {}".format(
+                            chunk_time,
+                            chunk_delta,
+                            chunk_delta.role,
+                            chunk_delta.content,
+                        )
+                    )
+                    continue
+                elif chunk_delta.content:
+                    # if the chunk.content is None, then skip it
+                    sentence += chunk_delta.content
+
+                    # check if the sentence is complete, yield the sentence
+                    if chunk_delta.content.endswith(yield_characters):
+                        response = sentence
+                        sentence = ""
+
+                        if isinstance(response, str) and response.endswith(
+                            (" ", ".", "?", "!")
+                        ):
+                            # print(response, end="", flush=True)
+                            yield response
+                        elif isinstance(response, str):
+                            # print(response, end="", flush=True)
+                            yield response + " "
+                        else:
+                            raise ValueError(
+                                "response must be a string, not {}".format(
+                                    type(response)
+                                )
+                            )
+
                 self.logger.debug(
-                    "Message skipped {:.2f} seconds after request: {}\nRole: {}, content: {}".format(
+                    "Message received {:.2f} seconds after request: {}\nRole: {}, content: {}".format(
                         chunk_time, chunk_delta, chunk_delta.role, chunk_delta.content
                     )
                 )
-                continue
-            elif chunk_delta.content:
-                # if the chunk.content is None, then skip it
-                sentence += chunk_delta.content
 
-                # check if the sentence is complete, yield the sentence
-                if chunk_delta.content.endswith(yield_characters):
-                    response = sentence
-                    sentence = ""
-
-                    if isinstance(response, str) and response.endswith(
-                        (" ", ".", "?", "!")
-                    ):
-                        # print(response, end="", flush=True)
-                        yield response
-                    elif isinstance(response, str):
-                        # print(response, end="", flush=True)
-                        yield response + " "
-                    else:
-                        raise ValueError(
-                            "response must be a string, not {}".format(type(response))
-                        )
-
-            self.logger.debug(
-                "Message received {:.2f} seconds after request: {}\nRole: {}, content: {}".format(
-                    chunk_time, chunk_delta, chunk_delta.role, chunk_delta.content
-                )
+            # Log the time delay and text received
+            self.logger.info(
+                "Full response received {:.2f} seconds after request".format(chunk_time)
+            )
+            # full_reply_content = "".join([message.content for message in collected_deltas])
+            full_reply_content = "".join(
+                [
+                    message.content if message.content is not None else ""
+                    for message in collected_deltas
+                ]
             )
 
-        # Log the time delay and text received
-        self.logger.info(
-            "Full response received {:.2f} seconds after request".format(chunk_time)
-        )
-        # full_reply_content = "".join([message.content for message in collected_deltas])
-        full_reply_content = "".join(
-            [
-                message.content if message.content is not None else ""
-                for message in collected_deltas
-            ]
-        )
+            # Log the last completion
+            self.logger.info(
+                "\033[92mAssistant:\033[0m \033[33m%s\033[0m\n", full_reply_content
+            )
 
-        # Log the last completion
-        self.logger.info(
-            "\033[92mAssistant:\033[0m \033[33m%s\033[0m\n", full_reply_content
-        )
-
-        # Save last completion
-        self.last_completion = full_reply_content
+            # Save last completion
+            self.last_completion = full_reply_content
 
 
 @time_it
