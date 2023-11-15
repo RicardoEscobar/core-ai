@@ -480,7 +480,8 @@ def main():
         output_dir=persona["audio_output_path"], # The output folder for audio files
         max_tokens=2000, # The max tokens for the response
         tools=persona["tools"], # The tools to be used
-
+        tool_choice=persona["tool_choice"], # The tool choice
+        available_functions=persona["available_functions"], # The available functions
     )
 
 
