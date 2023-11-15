@@ -459,9 +459,7 @@ class StreamCompletion:
             # Step 3: call the function
             # Note: the JSON response may not always be valid; be sure to handle errors
             if available_functions is None:
-                available_functions = {
-                    "take_picture_and_process": Eyes.take_picture_and_process,
-                }  # only one function in this example, but you can have multiple
+                available_functions = self.available_functions
             messages.append(
                 response_message
             )  # extend conversation with assistant's reply
