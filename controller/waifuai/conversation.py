@@ -18,6 +18,7 @@ import logging
 
 from elevenlabs.api import Voice, VoiceSettings
 import openai
+import traceback
 
 from controller import detect_audio
 from controller import transcribe_audio
@@ -29,7 +30,7 @@ from controller.waifuai.completion_create import (
 )
 from controller.llmchain import get_response_unfiltered
 from controller.play_audio import play_audio, get_audio_duration
-from controller.waifuai.conversations.echoes_of_the_future import persona
+from controller.waifuai.conversations.vrchat_runa import persona
 from controller.load_openai import load_openai
 from controller.natural_voice import generate_multilingual
 from controller.vrchat import VRChat
@@ -243,11 +244,16 @@ def stream_conversation(
     max_tokens: int = 50,
     stop: Union[str, List[str]] = None,
     tools: List[Dict] = None,
+    tool_choice: str = "auto",
+    available_functions: Dict = None,
 ):
     """This version of conversation method uses the StreamCompletion class. So it's faster than the conversation method."""
 
     if stop is None:
         stop = ["Jorge:"]
+
+    if available_functions is None:
+        available_functions = persona_data["available_functions"]
 
     # TODO: Replace this with the max token length for the given model,
     # calculate it or get it from openai.api
@@ -267,6 +273,8 @@ def stream_conversation(
         stop=stop,
         yield_characters=(".", "?", "!", "\n", ":", ";"),
         tools=tools,
+        tool_choice=tool_choice,
+        available_functions=available_functions,
     )
 
     # Create the output folder if it doesn't exist
@@ -310,9 +318,12 @@ def stream_conversation(
                         voice_model=voice_model,
                         audio_output_dir=output_dir,
                         tools=tools,
+                        tool_choice=tool_choice,
+                        available_functions=available_functions,
                     )
                 except Exception as error:
                     logger.error("Error: %s", str(error))
+                    logger.error(traceback.format_exc())
                     # Truncate the conversation
                     # persona = truncate_conversation(persona, TOKEN_THRESHOLD)
                     continue
@@ -461,14 +472,15 @@ def main():
     # Run the conversation
     stream_conversation(
         persona_data=persona, # Contains the conversation data
-        gpt_model="gpt-4-vision-preview", # The GPT model to be used
+        gpt_model="gpt-4-1106-preview", # The GPT model to be used
         selected_voice=persona["selected_voice"],  # The default voice is used
         natural_voice=hailey_natural_voice,  # Set to None to use the default voice
         voice_model="eleven_multilingual_v2",  # The voice model to be used
         is_filtered=True,  # Set to False to enable NSFW content
         output_dir=persona["audio_output_path"], # The output folder for audio files
         max_tokens=2000, # The max tokens for the response
-        tools=None, # The tools to be used
+        tools=persona["tools"], # The tools to be used
+
     )
 
 
