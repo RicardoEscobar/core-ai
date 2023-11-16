@@ -44,8 +44,11 @@ class MyHandler(FileSystemEventHandler):
             latest_picture = (
                 "./img/latest_picture_512x512.png"
             )
+            latest = Path(latest_picture)
+            event_src_path = Path(event.src_path)
             if latest_picture != event.src_path:
-                crop_image_square(event.src_path, latest_picture, size=512)
+                log.debug("Cropping image to square: %s", latest)
+                crop_image_square(event.src_path, latest, size=512)
 
 
 def watch_directory(path):
