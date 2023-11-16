@@ -7,8 +7,10 @@ if __name__ == "__main__":
     sys.path.append(str(root_folder))
 
 import logging
+from pathlib import Path
 
 from PIL import Image
+import traceback
 
 from controller.create_logger import create_logger
 
@@ -59,14 +61,20 @@ def crop_image_square(image_path, output_path, size):
         image_path: The path to the image to edit.
         output_path: The path to save the cropped image.
         size: The size to crop the image to a square (width = height)."""
+    
+    image_path = Path(image_path)
+    image_path_resolved = image_path.resolve()
 
     while True:
         try:
+            log.info("Trying to open image %s", image_path_resolved)
             # Open the image
             original_image = Image.open(image_path)
-        except (FileNotFoundError, PermissionError) as error:
+            log.info("Opened image %s", image_path_resolved)
+        except (FileNotFoundError, PermissionError, Exception) as error:
             # If the image_path is not found, return False
-            log.error(error)
+            log.error(">error: %s", error)
+            log.error(traceback.format_exc())
             continue
         else:
             break
@@ -84,8 +92,9 @@ def crop_image_square(image_path, output_path, size):
     cropped_image = original_image.crop((left, top, right, bottom))
 
     # Save the cropped image
-    log.info("Saving resized image without empty space to %s", output_path)
-    cropped_image.save(output_path)
+    output_image = Path(output_path).resolve()
+    log.info("Saving resized image without empty space to %s", output_image)
+    cropped_image.save(output_image)
 
 
 def crop_image_vertical(image_path, output_path, size):
