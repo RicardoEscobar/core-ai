@@ -135,7 +135,7 @@ class Eyes:
         pyautogui.mouseDown(button="left")
         pyautogui.sleep(0.5)  # Keep the button pressed for half a second
         pyautogui.mouseUp(button="left")
-        log.info("Picture taken: %s", repr(Eyes.picture_output_folder))
+        log.info("Picture output folder: %s", repr(Eyes.picture_output_folder))
 
     # @time_it
     @staticmethod
@@ -187,7 +187,7 @@ class Eyes:
     @staticmethod
     @time_it
     def take_picture_and_process(
-        image_path: str = r"C:\Users\Jorge\git\core-ai\img\latest_picture_512x512.png",
+        image_path: str = "./img/latest_picture_512x512.png",
         gpt_model: str = "gpt-4-vision-preview",
         prompt: str = "Explain this image:",
         max_tokens: int = 300,
