@@ -54,7 +54,7 @@ class StreamCompletion:
     def __init__(
         self,
         persona: Dict[str, str],
-        voice: Voice = None,
+        voice: Union[Voice, str] = None,
         voice_model: str = "eleven_turbo_v2",
         gpt_model: str = "gpt-4",
         temperature=0.9,
