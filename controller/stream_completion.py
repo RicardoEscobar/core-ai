@@ -462,34 +462,44 @@ class StreamCompletion:
         except openai.APITimeoutError as error:
             # Handle timeout error, e.g. retry or log
             module_logger.critical(
-                f"openai.APITimeoutError:\nOpenAI API request timed out: {error}\nFull traceback:\n{traceback.format_exc()}"
+                "openai.APITimeoutError:\nOpenAI API request timed out: %s\nFull traceback:\n%s",
+                error,
+                traceback.format_exc()
             )
             yield error
             return  # Stop the function after yielding the error
         except openai.APIConnectionError as error:
             # Handle connection error, e.g. check network or log
             module_logger.critical(
-                f"openai.APIConnectionError:\nOpenAI API request failed to connect: {error}\nFull traceback:\n{traceback.format_exc()}"
+                "openai.APIConnectionError:\nOpenAI API request failed to connect: %s\nFull traceback:\n%s",
+                error,
+                traceback.format_exc()
             )
             yield error
             return  # Stop the function after yielding the error
         except openai.APIResponseValidationError as error:
             module_logger.critical(
-                f"openai.APIResponseValidationError:\n{error}\nFull traceback:\n{traceback.format_exc()}"
+                "openai.APIResponseValidationError: %s\nFull traceback:\n%s",
+                error,
+                traceback.format_exc()
             )
             yield error
             return  # Continue the function after yielding the error
         except openai.APIStatusError as error:
             # Handle authentication error, e.g. check credentials or log
             module_logger.critical(
-                f"openai.APIStatusError:\nOpenAI API request was not authorized: {error}\nFull traceback:\n{traceback.format_exc()}"
+                "openai.APIStatusError:\nOpenAI API request was not authorized: %s\nFull traceback:\n%s",
+                error,
+                traceback.format_exc()
             )
             yield error
             return  # Stop the function after yielding the error
         except openai.APIError as error:
             # Handle permission error, e.g. check scope or log
             module_logger.critical(
-                f"openai.APIError: {error}\nFull traceback:\n{traceback.format_exc()}"
+                "openai.APIError: %s\nFull traceback:\n%s",
+                error,
+                traceback.format_exc()
             )
             yield error
             return  # Stop the function after yielding the error
@@ -554,34 +564,44 @@ class StreamCompletion:
                 except openai.APITimeoutError as error:
                     # Handle timeout error, e.g. retry or log
                     module_logger.critical(
-                        f"openai.APITimeoutError:\nOpenAI API request timed out: {error}\nFull traceback:\n{traceback.format_exc()}"
+                        "openai.APITimeoutError:\nOpenAI API request timed out: %s\nFull traceback:\n%s",
+                        error,
+                        traceback.format_exc()
                     )
                     yield error
                     return  # Stop the function after yielding the error
                 except openai.APIConnectionError as error:
                     # Handle connection error, e.g. check network or log
                     module_logger.critical(
-                        f"openai.APIConnectionError:\nOpenAI API request failed to connect: {error}\nFull traceback:\n{traceback.format_exc()}"
+                        "openai.APIConnectionError:\nOpenAI API request failed to connect: %s\nFull traceback:\n%s",
+                        error,
+                        traceback.format_exc()
                     )
                     yield error
                     return  # Stop the function after yielding the error
                 except openai.APIResponseValidationError as error:
                     module_logger.critical(
-                        f"openai.APIResponseValidationError:\n{error}\nFull traceback:\n{traceback.format_exc()}"
+                        "openai.APIResponseValidationError: %s\nFull traceback:\n%s",
+                        error,
+                        traceback.format_exc()
                     )
                     yield error
                     return  # Continue the function after yielding the error
                 except openai.APIStatusError as error:
                     # Handle authentication error, e.g. check credentials or log
                     module_logger.critical(
-                        f"openai.APIStatusError:\nOpenAI API request was not authorized: {error}\nFull traceback:\n{traceback.format_exc()}"
+                        "openai.APIStatusError:\nOpenAI API request was not authorized: %s\nFull traceback:\n%s",
+                        error,
+                        traceback.format_exc()
                     )
                     yield error
                     return  # Stop the function after yielding the error
                 except openai.APIError as error:
                     # Handle permission error, e.g. check scope or log
                     module_logger.critical(
-                        f"openai.APIError: {error}\nFull traceback:\n{traceback.format_exc()}"
+                        "openai.APIError: %s\nFull traceback:\n%s",
+                        error,
+                        traceback.format_exc()
                     )
                     yield error
                     return  # Stop the function after yielding the error
