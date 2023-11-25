@@ -433,6 +433,7 @@ class StreamCompletion:
                 token_count,
                 gpt_model,
             )
+
             persona = truncate_conversation_persona(persona)
             self.persona = persona
 
