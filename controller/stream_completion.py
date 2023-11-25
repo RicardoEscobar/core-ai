@@ -12,7 +12,7 @@ if __name__ == "__main__":
 import time
 from datetime import datetime
 import logging
-from typing import Tuple, Union, List, Dict
+from typing import Tuple, Union, List, Dict, Iterable
 from pathlib import Path
 from controller.custom_thread import CustomThread
 from pathlib import Path
@@ -234,6 +234,10 @@ class StreamCompletion:
         )
 
         # Play the audio stream
+        if audio_stream is None:
+            self.logger.error("audio_stream is None.\n%s", traceback.format_exc())
+            raise ValueError(f"audio_stream is None.\n{traceback.format_exc()}")
+
         self.audio_stream = stream(audio_stream)
 
         # Get the size of the audio stream
@@ -560,7 +564,7 @@ class StreamCompletion:
                         model=gpt_model,
                         messages=persona["messages"],
                         temperature=temperature,
-                        stream=stream_mode,  # again, we set stream=True
+                        stream=stream_mode, # again, we set stream=True
                         max_tokens=max_tokens,
                         stop=stop,
                     )
@@ -617,7 +621,6 @@ class StreamCompletion:
             collected_deltas = []
             sentence = ""
 
-            # iterate through the stream of events
             for chunk in response:
                 chunk_time = (
                     time.time() - start_time
