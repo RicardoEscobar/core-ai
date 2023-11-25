@@ -386,6 +386,9 @@ class StreamCompletion:
         # of 4,096 output tokens.So 128_000 - 4096 = 123_904 as the token threshold.
         TOKEN_THRESHOLD = 123_904
 
+        # Set the second response model
+        SECOND_RESPONSE_MODEL = "gpt-4-vision-preview"
+
         # Reset the last completion
         self.last_completion = ""
 
@@ -464,7 +467,7 @@ class StreamCompletion:
             module_logger.critical(
                 "openai.APITimeoutError:\nOpenAI API request timed out: %s\nFull traceback:\n%s",
                 error,
-                traceback.format_exc()
+                traceback.format_exc(),
             )
             yield error
             return  # Stop the function after yielding the error
@@ -473,7 +476,7 @@ class StreamCompletion:
             module_logger.critical(
                 "openai.APIConnectionError:\nOpenAI API request failed to connect: %s\nFull traceback:\n%s",
                 error,
-                traceback.format_exc()
+                traceback.format_exc(),
             )
             yield error
             return  # Stop the function after yielding the error
@@ -481,7 +484,7 @@ class StreamCompletion:
             module_logger.critical(
                 "openai.APIResponseValidationError: %s\nFull traceback:\n%s",
                 error,
-                traceback.format_exc()
+                traceback.format_exc(),
             )
             yield error
             return  # Continue the function after yielding the error
@@ -490,7 +493,7 @@ class StreamCompletion:
             module_logger.critical(
                 "openai.APIStatusError:\nOpenAI API request was not authorized: %s\nFull traceback:\n%s",
                 error,
-                traceback.format_exc()
+                traceback.format_exc(),
             )
             yield error
             return  # Stop the function after yielding the error
@@ -499,7 +502,7 @@ class StreamCompletion:
             module_logger.critical(
                 "openai.APIError: %s\nFull traceback:\n%s",
                 error,
-                traceback.format_exc()
+                traceback.format_exc(),
             )
             yield error
             return  # Stop the function after yielding the error
@@ -533,7 +536,7 @@ class StreamCompletion:
                     }
                 )  # extend conversation with function response
             second_response = client.chat.completions.create(
-                model="gpt-4-1106-preview",
+                model=SECOND_RESPONSE_MODEL,
                 messages=messages,
             )  # get a new response from the model where it can see the function response
 
@@ -566,7 +569,7 @@ class StreamCompletion:
                     module_logger.critical(
                         "openai.APITimeoutError:\nOpenAI API request timed out: %s\nFull traceback:\n%s",
                         error,
-                        traceback.format_exc()
+                        traceback.format_exc(),
                     )
                     yield error
                     return  # Stop the function after yielding the error
@@ -575,7 +578,7 @@ class StreamCompletion:
                     module_logger.critical(
                         "openai.APIConnectionError:\nOpenAI API request failed to connect: %s\nFull traceback:\n%s",
                         error,
-                        traceback.format_exc()
+                        traceback.format_exc(),
                     )
                     yield error
                     return  # Stop the function after yielding the error
@@ -583,7 +586,7 @@ class StreamCompletion:
                     module_logger.critical(
                         "openai.APIResponseValidationError: %s\nFull traceback:\n%s",
                         error,
-                        traceback.format_exc()
+                        traceback.format_exc(),
                     )
                     yield error
                     return  # Continue the function after yielding the error
@@ -592,7 +595,7 @@ class StreamCompletion:
                     module_logger.critical(
                         "openai.APIStatusError:\nOpenAI API request was not authorized: %s\nFull traceback:\n%s",
                         error,
-                        traceback.format_exc()
+                        traceback.format_exc(),
                     )
                     yield error
                     return  # Stop the function after yielding the error
@@ -601,7 +604,7 @@ class StreamCompletion:
                     module_logger.critical(
                         "openai.APIError: %s\nFull traceback:\n%s",
                         error,
-                        traceback.format_exc()
+                        traceback.format_exc(),
                     )
                     yield error
                     return  # Stop the function after yielding the error
