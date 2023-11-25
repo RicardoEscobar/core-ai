@@ -451,13 +451,48 @@ class StreamCompletion:
         # modified.
         messages = persona["messages"].copy()
 
-        # Step 1: send the messages and tools to the model
-        response = client.chat.completions.create(
-            model="gpt-4-1106-preview",
-            messages=messages,
-            tools=tools,
-            tool_choice=tool_choice,  # auto is default, but we'll be explicit
-        )
+        try:
+            # Step 1: send the messages and tools to the model
+            response = client.chat.completions.create(
+                model="gpt-4-1106-preview",
+                messages=messages,
+                tools=tools,
+                tool_choice=tool_choice,  # auto is default, but we'll be explicit
+            )
+        except openai.APITimeoutError as error:
+            # Handle timeout error, e.g. retry or log
+            module_logger.critical(
+                f"openai.APITimeoutError:\nOpenAI API request timed out: {error}\nFull traceback:\n{traceback.format_exc()}"
+            )
+            yield error
+            return  # Stop the function after yielding the error
+        except openai.APIConnectionError as error:
+            # Handle connection error, e.g. check network or log
+            module_logger.critical(
+                f"openai.APIConnectionError:\nOpenAI API request failed to connect: {error}\nFull traceback:\n{traceback.format_exc()}"
+            )
+            yield error
+            return  # Stop the function after yielding the error
+        except openai.APIResponseValidationError as error:
+            module_logger.critical(
+                f"openai.APIResponseValidationError:\n{error}\nFull traceback:\n{traceback.format_exc()}"
+            )
+            yield error
+            return  # Continue the function after yielding the error
+        except openai.APIStatusError as error:
+            # Handle authentication error, e.g. check credentials or log
+            module_logger.critical(
+                f"openai.APIStatusError:\nOpenAI API request was not authorized: {error}\nFull traceback:\n{traceback.format_exc()}"
+            )
+            yield error
+            return  # Stop the function after yielding the error
+        except openai.APIError as error:
+            # Handle permission error, e.g. check scope or log
+            module_logger.critical(
+                f"openai.APIError: {error}\nFull traceback:\n{traceback.format_exc()}"
+            )
+            yield error
+            return  # Stop the function after yielding the error
 
         response_message = response.choices[0].message
         tool_calls = response_message.tool_calls
