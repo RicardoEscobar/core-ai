@@ -2,7 +2,7 @@
 if __name__ == "__main__":
     from pathlib import Path
 
-    project_directory = Path(__file__).parent
+    project_directory = Path(__file__).parent.parent
     import sys
 
     # sys.path.insert(0, str(project_directory))

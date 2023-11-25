@@ -87,44 +87,74 @@ def get_response(
         except openai.error.Timeout as error:
             # Handle timeout error, e.g. retry or log
             module_logger.critical(
-                f"openai.error.Timeout:\nOpenAI API request timed out: {error}\nFull traceback:\n{traceback.format_exc()}"
+                "openai.error.Timeout:\nOpenAI API request timed out: %s\nFull traceback:\n%s",
+                error,
+                traceback.format_exc(),
             )
             return error
         except openai.error.APIError as error:
             # Handle API error, e.g. retry or log
             module_logger.critical(
-                f"openai.error.APIError:\nOpenAI API returned an API Error: {error}"
+                "openai.error.APIError:\nOpenAI API returned an API Error: %s", error
             )
             return error
         except openai.error.APIConnectionError as error:
             # Handle connection error, e.g. check network or log
             module_logger.critical(
-                f"openai.error.APIConnectionError:\nOpenAI API request failed to connect: {error}\nFull traceback:\n{traceback.format_exc()}"
+                (
+                    "openai.error.APIConnectionError:\n"
+                    "OpenAI API request failed to connect: %s\n"
+                    "Full traceback:\n%s"
+                ),
+                error,
+                traceback.format_exc(),
             )
             return error
         except openai.error.InvalidRequestError as error:
             module_logger.critical(
-                f"openai.error.InvalidRequestError:\n{error}\nFull traceback:\n{traceback.format_exc()}"
+                "openai.error.InvalidRequestError:\n%s\nFull traceback:\n%s",
+                error,
+                traceback.format_exc(),
             )
             # Token limit exceeded (e.g. 4097 tokens for GPT-4)
-            new_messages = truncate_conversation(messages, token_threshold=GPT4_TOKEN_LIMIT - max_tokens)
-            pass
+            new_messages = truncate_conversation(
+                messages,
+                token_threshold=GPT4_TOKEN_LIMIT - max_tokens - 1,
+            )
         except openai.error.AuthenticationError as error:
             # Handle authentication error, e.g. check credentials or log
             module_logger.critical(
-                f"openai.error.AuthenticationError:\nOpenAI API request was not authorized: {error}\nFull traceback:\n{traceback.format_exc()}"
+                (
+                    "openai.error.AuthenticationError:\n"
+                    "OpenAI API request was not authorized: %s\n"
+                    "Full traceback:\n%s"
+                ),
+                error,
+                traceback.format_exc(),
             )
             return error
         except openai.error.PermissionError as error:
             # Handle permission error, e.g. check scope or log
             module_logger.critical(
-                f"openai.error.PermissionError:\nOpenAI API request was not permitted: {error}\nFull traceback:\n{traceback.format_exc()}"
+                (
+                    "openai.error.PermissionError:\n"
+                    "OpenAI API request was not permitted: %s\n"
+                    "Full traceback:\n%s"
+                ),
+                error,
+                traceback.format_exc(),
             )
             return error
         except openai.error.RateLimitError as error:
             # Handle rate limit error, e.g. wait or log
             module_logger.critical(
-                f"openai.error.RateLimitError:\nOpenAI API request exceeded rate limit: {error}\nFull traceback:\n{traceback.format_exc()}"
+                (
+                    "openai.error.RateLimitError:\n"
+                    "OpenAI API request exceeded rate limit: %s\n"
+                    "Full traceback:\n%s"
+                ),
+                error,
+                traceback.format_exc(),
             )
             return error
         else:
@@ -135,13 +165,17 @@ def get_response(
 
             # Check if GPT wanted to call a function
             if response_message.get("function_call"):
-                module_logger.info("Function call: %s", response_message["function_call"])
+                module_logger.info(
+                    "Function call: %s", response_message["function_call"]
+                )
 
                 # Call the function
                 # Note: the JSON response may not always be valid; be sure to handle errors
                 function_name = response_message["function_call"]["name"]
                 fuction_to_call = available_functions[function_name]
-                function_args = json.loads(response_message["function_call"]["arguments"])
+                function_args = json.loads(
+                    response_message["function_call"]["arguments"]
+                )
                 function_response = fuction_to_call(**function_args)
 
                 module_logger.info(
@@ -180,7 +214,11 @@ def get_response(
             else:
                 return first_response["choices"][0]["message"]["content"]
         finally:
-            module_logger.info("Finally ==> %s", first_response["choices"][0]["message"])
+            module_logger.info(
+                "Finally ==> %s", first_response["choices"][0]["message"]
+            )
+
+
 
 
 def save_conversation(persona: Dict):
@@ -189,14 +227,50 @@ def save_conversation(persona: Dict):
     if not isinstance(persona, dict):
         raise TypeError("persona argument must be a dictionary")
 
-    with open(persona["conversation_file_path"], mode="w", encoding="utf-8") as file:
-        file_contents = (
-            '"""This is an example of a conversation that can be used by the podcaster_ai_controller.py script."""\n'
-            f"from pathlib import Path, WindowsPath, PosixPath, PureWindowsPath, PurePosixPath, PurePath\n\n"
-            f"# This dictionary is used to save the conversation to a file.\n"
-            f"persona  = {repr(persona)}\n"
-        )
-        file.write(file_contents)
+    with open(persona["conversation_file_path"], mode="r+", encoding="utf-8") as file:
+        TEMPLATE = f"""\"\"\"This is an example of a conversation that can be used by the script.\"\"\"
+from pathlib import Path
+from controller.vision.eyes import Eyes
+
+
+# Constants
+DIRECTORY = Path(__file__).parent
+FILENAME = Path(__file__).name
+
+
+# This dictionary is used to save the conversation to a file.
+persona = {{
+    "name": "{persona["name"]}",
+    "age": {persona["age"]},
+    "selected_voice": "{persona["selected_voice"]}",
+    "target_language": "{persona["target_language"]}",
+    "conversation_file_path": DIRECTORY / FILENAME,
+    "audio_output_path": Path('{persona["audio_output_path"].as_posix()}'),
+    "tools": {persona["tools"]},
+    "available_functions": {{
+        "take_picture_and_process": Eyes.take_picture_and_process,
+    }},  # only one function in this example, but you can have multiple
+    "tool_choice": "auto",  # auto is default, but we'll be explicit
+}}
+
+# Add system to describe the persona.
+persona[
+    "system"
+] = f\"\"\"You are an artificial intelligence powered friend.
+Your name is {{persona["name"]}}, you are {{persona["age"]}} years old, you speak in {{persona["target_language"]}} only.
+You are talking with Jorge, inside VRChat.
+\"\"\"
+
+# Add system to messages.
+persona["messages"] = {persona["messages"]}
+
+persona["old_messages"] = {persona["old_messages"]}
+
+"""
+        with open(persona["conversation_file_path"], mode="r+", encoding="utf-8") as file:
+            file.seek(0)
+            file.write(TEMPLATE)
+            file.truncate()
 
 
 def main():
