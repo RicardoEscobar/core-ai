@@ -376,6 +376,9 @@ class StreamCompletion:
             tools (List[Dict[str, str]], optional): A list of tools the model may call.
                 Currently, only functions are supported as a tool.
                 Use this to provide a list of functions the model may generate JSON inputs for. Defaults to None.
+            tool_choice (str, optional): The tool choice to use. Defaults to "auto".
+            available_functions (Dict, optional): A dictionary of available functions the model may call.
+
         yields:
             str: The next completion."""
 
