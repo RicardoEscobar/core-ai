@@ -137,10 +137,10 @@ def get_response(
             )
             return error
         else:
-            module_logger.error("Error ==> %s", first_response["choices"][0]["message"])
+            module_logger.error("Error ==> %s", first_response.choices[0].message.content)
 
             # Get the response message
-            response_message = first_response["choices"][0]["message"]
+            response_message = first_response.choices[0].message
 
             # Check if GPT wanted to call a function
             if response_message.get("function_call"):
@@ -196,9 +196,6 @@ def get_response(
             module_logger.info(
                 "Finally ==> %s", first_response.choices[0].message.content
             )
-
-
-
 
 def save_conversation(persona: Dict):
     """Save the conversation to the conversation file."""
