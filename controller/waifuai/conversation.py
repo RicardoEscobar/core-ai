@@ -17,6 +17,8 @@ from typing import Dict, List, Union
 import logging
 
 from elevenlabs.api import Voice, VoiceSettings
+import openai
+import traceback
 
 from controller import detect_audio
 from controller import transcribe_audio
@@ -28,7 +30,7 @@ from controller.waifuai.completion_create import (
 )
 from controller.llmchain import get_response_unfiltered
 from controller.play_audio import play_audio, get_audio_duration
-from controller.waifuai.conversations.echoes_of_the_future import persona
+from controller.waifuai.conversations.vrchat_runa import persona
 from controller.load_openai import load_openai
 from controller.natural_voice import generate_multilingual
 from controller.vrchat import VRChat
@@ -37,6 +39,7 @@ from controller.get_audio_filepath import get_audio_filepath
 from controller.conversation_handler import truncate_conversation
 from controller.stream_completion import StreamCompletion
 from controller.create_logger import create_logger
+from controller.vision.eyes import Eyes
 
 
 # Create a logger
@@ -129,7 +132,10 @@ def conversation(
         natural_voice (Union[Voice, str], optional): Set to None to use the
         default voice. Defaults to None.
     """
-    TOKEN_THRESHOLD = 4096  # Half of the max token length for GTP-4 (8192 tokens)
+    # gpt-4-vision-preview has a max token length of 128,000. Returns a maximum
+    # of 4,096 output tokens.So 128_000 - 4096 = 123_904 as the token threshold.
+    TOKEN_THRESHOLD = 123_904
+
     # Load the OpenAI API key
     load_openai()
 
@@ -232,16 +238,25 @@ def stream_conversation(
     gpt_model: str = "gpt-4",
     selected_voice: str = persona["selected_voice"],
     natural_voice: Union[Voice, str] = None,
+    voice_model: str = "eleven_turbo_v2",
     is_filtered: bool = True,
     output_dir: str = ".",
     max_tokens: int = 50,
     stop: Union[str, List[str]] = None,
+    tools: List[Dict] = None,
+    tool_choice: str = "auto",
+    available_functions: Dict = None,
 ):
     """This version of conversation method uses the StreamCompletion class. So it's faster than the conversation method."""
 
     if stop is None:
         stop = ["Jorge:"]
 
+    if available_functions is None:
+        available_functions = persona_data["available_functions"]
+
+    # TODO: Replace this with the max token length for the given model,
+    # calculate it or get it from openai.api
     TOKEN_THRESHOLD = 4096  # Half of the max token length for GTP-4 (8192 tokens)
     # Load the OpenAI API key
     load_openai()
@@ -249,7 +264,7 @@ def stream_conversation(
     # Create a StreamCompletion instance
     stream_completion = StreamCompletion(
         voice=natural_voice,
-        voice_model="eleven_multilingual_v2",
+        voice_model=voice_model,
         persona=persona_data["system"],
         gpt_model=gpt_model,
         temperature=0.9,
@@ -257,6 +272,9 @@ def stream_conversation(
         max_tokens=max_tokens,
         stop=stop,
         yield_characters=(".", "?", "!", "\n", ":", ";"),
+        tools=tools,
+        tool_choice=tool_choice,
+        available_functions=available_functions,
     )
 
     # Create the output folder if it doesn't exist
@@ -297,11 +315,15 @@ def stream_conversation(
                         max_tokens=max_tokens,
                         stop=stop,
                         voice=natural_voice,
-                        voice_model="eleven_multilingual_v2",
+                        voice_model=voice_model,
                         audio_output_dir=output_dir,
+                        tools=tools,
+                        tool_choice=tool_choice,
+                        available_functions=available_functions,
                     )
                 except Exception as error:
                     logger.error("Error: %s", str(error))
+                    logger.error(traceback.format_exc())
                     # Truncate the conversation
                     # persona = truncate_conversation(persona, TOKEN_THRESHOLD)
                     continue
@@ -418,9 +440,9 @@ def main():
             "gender": "female",
         },
         samples=None,
-        settings=VoiceSettings(stability=0.5, similarity_boost=0.75),
         design=None,
-        preview_url="https://storage.googleapis.com/eleven-public-prod/U1Rx6ByQzXTKXc5wPxu4fXvSRqO2/voices/chQ8GR2cY20KeFjeSaXI/293c3953-463e-42d3-8a92-ccedad1b9280.mp3",
+        preview_url="https://storage.googleapis.com/eleven-public-prod/U1Rx6ByQzXTKXc5wPxu4fXvSRqO2/voices/chQ8GR2cY20KeFjeSaXI/0ea12727-861b-47b8-8acc-ca22acdc93be.mp3",
+        settings=None,
     )
 
     male_natural_voice = Voice(
@@ -450,12 +472,16 @@ def main():
     # Run the conversation
     stream_conversation(
         persona_data=persona, # Contains the conversation data
-        gpt_model="gpt-4", # The GPT model to be used
+        gpt_model="gpt-4-1106-preview", # The GPT model to be used
         selected_voice=persona["selected_voice"],  # The default voice is used
         natural_voice=hailey_natural_voice,  # Set to None to use the default voice
+        voice_model="eleven_multilingual_v2",  # The voice model to be used
         is_filtered=True,  # Set to False to enable NSFW content
         output_dir=persona["audio_output_path"], # The output folder for audio files
         max_tokens=2000, # The max tokens for the response
+        tools=persona["tools"], # The tools to be used
+        tool_choice=persona["tool_choice"], # The tool choice
+        available_functions=persona["available_functions"], # The available functions
     )
 
 
