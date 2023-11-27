@@ -27,15 +27,17 @@ module_logger = create_logger(
 MODEL_USED = "gpt-3.5-turbo-0613"  # "gpt-4-0613"
 
 
-def generate_message(role: str, content: str) -> Dict:
+def generate_message(role: str, content: str) -> Dict | None:
     """
     Generate a message for the OpenAI API.
 
     Args:
-        role (str): The role of the message either "system", "user", or "assistant".
-        content (str): The content of the message.
+        role (str): The role of the message either "system", "user", or
+        "assistant". content (str): The content of the message.
     returns:
-        Dict: The message to send to the OpenAI API. e.g. {"role": "user", "content": "Hello!"}
+        Dict: The message to send to the OpenAI API. e.g. {"role": "user",
+        "content": "Hello!"} if the message is not a valid message then return
+        None.
     """
     message = {"role": role, "content": content}
     return message
