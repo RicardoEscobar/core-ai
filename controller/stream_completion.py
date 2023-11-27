@@ -391,7 +391,7 @@ class StreamCompletion:
         TOKEN_THRESHOLD = 123_904
 
         # Set the second response model
-        SECOND_RESPONSE_MODEL = "gpt-4-vision-preview"
+        SECOND_RESPONSE_MODEL = "gpt-4-1106-preview"
 
         # Reset the last completion
         self.last_completion = ""
@@ -539,10 +539,15 @@ class StreamCompletion:
                         "content": function_response,
                     }
                 )  # extend conversation with function response
-            second_response = client.chat.completions.create(
-                model=SECOND_RESPONSE_MODEL,
-                messages=messages,
-            )  # get a new response from the model where it can see the function response
+            try:
+                second_response = client.chat.completions.create(
+                    model=SECOND_RESPONSE_MODEL,
+                    messages=messages,
+                )  # get a new response from the model where it can see the function response
+            except Exception as error:
+                module_logger.critical("second_response error: %s\n%s\n%s", error, traceback.format_exc(), messages)
+                yield error
+                return  # Stop the function after yielding the error
 
             # Log the last completion
             full_reply_content = second_response.choices[0].message.content
