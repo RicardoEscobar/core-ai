@@ -299,7 +299,8 @@ def stream_conversation(
 
         # Step 3: Prompt OpenAI's API to generate a response.
         # Save the user input to the persona["messages"] list
-        persona_data["messages"].append(generate_message("user", transcribed_prompt))
+        generated_message = generate_message("user", transcribed_prompt)
+        persona_data["messages"].append(generated_message)
 
         # if is_filtered is True, then filter the response
         if is_filtered:
@@ -324,8 +325,6 @@ def stream_conversation(
                 except Exception as error:
                     logger.error("Error: %s", str(error))
                     logger.error(traceback.format_exc())
-                    # Truncate the conversation
-                    # persona = truncate_conversation(persona, TOKEN_THRESHOLD)
                     continue
                 else:
                     break
