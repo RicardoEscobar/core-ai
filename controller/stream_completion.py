@@ -390,8 +390,8 @@ class StreamCompletion:
         # of 4,096 output tokens.So 128_000 - 4096 = 123_904 as the token threshold.
         TOKEN_THRESHOLD = 123_904
 
-        # Set the second response model
-        SECOND_RESPONSE_MODEL = "gpt-4-1106-preview"
+        # Set the function tool response model
+        TOOL_MODEL = "gpt-4-1106-preview"
 
         # Reset the last completion
         self.last_completion = ""
@@ -461,7 +461,7 @@ class StreamCompletion:
         try:
             # Step 1: send the messages and tools to the model
             response = client.chat.completions.create(
-                model="gpt-4-1106-preview",
+                model=TOOL_MODEL,
                 messages=messages,
                 tools=tools,
                 tool_choice=tool_choice,  # auto is default, but we'll be explicit
@@ -541,11 +541,16 @@ class StreamCompletion:
                 )  # extend conversation with function response
             try:
                 second_response = client.chat.completions.create(
-                    model=SECOND_RESPONSE_MODEL,
+                    model=TOOL_MODEL,
                     messages=messages,
                 )  # get a new response from the model where it can see the function response
             except Exception as error:
-                module_logger.critical("second_response error: %s\n%s\n%s", error, traceback.format_exc(), messages)
+                module_logger.critical(
+                    "second_response error: %s\n%s\n%s",
+                    error,
+                    traceback.format_exc(),
+                    messages,
+                )
                 yield error
                 return  # Stop the function after yielding the error
 
@@ -569,7 +574,7 @@ class StreamCompletion:
                         model=gpt_model,
                         messages=persona["messages"],
                         temperature=temperature,
-                        stream=stream_mode, # again, we set stream=True
+                        stream=stream_mode,  # again, we set stream=True
                         max_tokens=max_tokens,
                         stop=stop,
                     )
@@ -626,6 +631,7 @@ class StreamCompletion:
             collected_deltas = []
             sentence = ""
 
+            # iterate over the response chunks and log the time delay and text received
             for chunk in response:
                 chunk_time = (
                     time.time() - start_time
