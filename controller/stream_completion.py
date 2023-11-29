@@ -543,6 +543,7 @@ class StreamCompletion:
                 second_response = client.chat.completions.create(
                     model=TOOL_MODEL,
                     messages=messages,
+                    stream=stream_mode,  # again, we set stream=True
                 )  # get a new response from the model where it can see the function response
             except Exception as error:
                 module_logger.critical(
@@ -553,18 +554,24 @@ class StreamCompletion:
                 )
                 yield error
                 return  # Stop the function after yielding the error
+            
+            if stream_mode:
+                # responses is a generator object that yields full sentences from the last response, this response is saved in the self.last_completion variable
+                responses = self.response_generator(second_response, start_time, yield_characters)
+                for response_yield in responses:
+                    yield response_yield
+            else:
+                # Log the last completion
+                full_reply_content = second_response.choices[0].message.content
+                self.logger.info(
+                    "\033[92mAssistant:\033[0m \033[33m%s\033[0m\n", full_reply_content
+                )
 
-            # Log the last completion
-            full_reply_content = second_response.choices[0].message.content
-            self.logger.info(
-                "\033[92mAssistant:\033[0m \033[33m%s\033[0m\n", full_reply_content
-            )
+                # Save last completion
+                self.last_completion = full_reply_content
 
-            # Save last completion
-            self.last_completion = full_reply_content
-
-            # required to add a space after the function yield or else audio will throw an error
-            yield self.last_completion + " "
+                # required to add a space after the function yield or else audio will throw an error
+                yield self.last_completion + " "
         else:
             # TODO THIS IS THE OLD CODE THAT WORKS, BUT DOES NOT SUPPORT FUNTION CALLS
             while True:
@@ -626,80 +633,108 @@ class StreamCompletion:
                     # No error, break the loop
                     break
 
-            # create variables to collect the stream of chunks
-            collected_chunks = []
-            collected_deltas = []
-            sentence = ""
-
-            # iterate over the response chunks and log the time delay and text received
-            for chunk in response:
-                chunk_time = (
-                    time.time() - start_time
-                )  # calculate the time delay of the chunk
-                collected_chunks.append(chunk)  # save the event response
-
-                chunk_delta = chunk.choices[0].delta
-                collected_deltas.append(chunk_delta)  # save the delta content
-                # if chunk_delta has no content, then skip it
-                if chunk_delta.content == "":
-                    self.logger.debug(
-                        "Message skipped {:.2f} seconds after request: {}\nRole: {}, content: {}".format(
-                            chunk_time,
-                            chunk_delta,
-                            chunk_delta.role,
-                            chunk_delta.content,
-                        )
-                    )
-                    continue
-                elif chunk_delta.content:
-                    # if the chunk.content is None, then skip it
-                    sentence += chunk_delta.content
-
-                    # check if the sentence is complete, yield the sentence
-                    if chunk_delta.content.endswith(yield_characters):
-                        response = sentence
-                        sentence = ""
-
-                        if isinstance(response, str) and response.endswith(
-                            (" ", ".", "?", "!")
-                        ):
-                            # print(response, end="", flush=True)
-                            yield response
-                        elif isinstance(response, str):
-                            # print(response, end="", flush=True)
-                            yield response + " "
-                        else:
-                            raise ValueError(
-                                "response must be a string, not {}".format(
-                                    type(response)
-                                )
-                            )
-
-                self.logger.debug(
-                    "Message received {:.2f} seconds after request: {}\nRole: {}, content: {}".format(
-                        chunk_time, chunk_delta, chunk_delta.role, chunk_delta.content
-                    )
+            if stream_mode:
+                # responses is a generator object that yields full sentences from the last response, this response is saved in the self.last_completion variable
+                responses = self.response_generator(response, start_time, yield_characters)
+                for response_yield in responses:
+                    yield response_yield
+            else:
+                # Log the last completion
+                full_reply_content = second_response.choices[0].message.content
+                self.logger.info(
+                    "\033[92mAssistant:\033[0m \033[33m%s\033[0m\n", full_reply_content
                 )
 
-            # Log the time delay and text received
-            self.logger.info(
-                "Full response received {:.2f} seconds after request".format(chunk_time)
-            )
-            # full_reply_content = "".join([message.content for message in collected_deltas])
-            full_reply_content = "".join(
-                [
-                    message.content if message.content is not None else ""
-                    for message in collected_deltas
-                ]
+                # Save last completion
+                self.last_completion = full_reply_content
+
+                # required to add a space after the function yield or else audio will throw an error
+                yield self.last_completion + " "
+
+
+    def response_generator(self, response, start_time, yield_characters):
+        """This generator function yields the next completion from the OpenAI API from a stream mode openai completion. Each time a sentence is completed, the generator yields the sentence. To detect the end of a sentence, the generator looks for a period, question mark, or exclamation point at the end of the sentence. If the sentence is not complete, then the generator yields None. If the generator yields None, then the caller should call the generator again to get the next completion. If the generator yields a sentence, then the caller should call the generator again to get the next completion. The generator will yield None when the stream is complete.
+        args:
+            response (openai.api_resources.chat_completion.ChatCompletion): The response from the OpenAI API.
+            start_time (float): The start time of the request.
+            yield_characters (Tuple[str]): The characters to yield.
+        yields:
+            str: The next completion sentence."""
+        # create variables to collect the stream of chunks
+        collected_chunks = []
+        collected_deltas = []
+        sentence = ""
+
+        # iterate over the response chunks and log the time delay and text received
+        for chunk in response:
+            module_logger.debug("chunk type %s", type(chunk))
+            module_logger.debug("chunk %s", chunk)
+            chunk_time = (
+                time.time() - start_time
+            )  # calculate the time delay of the chunk
+            collected_chunks.append(chunk)  # save the event response
+
+            chunk_delta = chunk.choices[0].delta
+            collected_deltas.append(chunk_delta)  # save the delta content
+            # if chunk_delta has no content, then skip it
+            if chunk_delta.content == "":
+                self.logger.debug(
+                    "Message skipped {:.2f} seconds after request: {}\nRole: {}, content: {}".format(
+                        chunk_time,
+                        chunk_delta,
+                        chunk_delta.role,
+                        chunk_delta.content,
+                    )
+                )
+                continue
+            elif chunk_delta.content:
+                # if the chunk.content is None, then skip it
+                sentence += chunk_delta.content
+
+                # check if the sentence is complete, yield the sentence
+                if chunk_delta.content.endswith(yield_characters):
+                    response_yield = sentence
+                    sentence = ""
+
+                    if isinstance(response_yield, str) and response_yield.endswith(
+                        (" ", ".", "?", "!")
+                    ):
+                        # print(response, end="", flush=True)
+                        yield response_yield
+                    elif isinstance(response_yield, str):
+                        # print(response, end="", flush=True)
+                        yield response_yield + " "
+                    else:
+                        raise ValueError(
+                            "response must be a string, not {}".format(
+                                type(response_yield)
+                            )
+                        )
+
+            self.logger.debug(
+                "Message received {:.2f} seconds after request: {}\nRole: {}, content: {}".format(
+                    chunk_time, chunk_delta, chunk_delta.role, chunk_delta.content
+                )
             )
 
-            # Log the last completion
-            self.logger.info(
-                "\033[92mAssistant:\033[0m \033[33m%s\033[0m\n", full_reply_content
-            )
+        # Log the time delay and text received
+        self.logger.info(
+            "Full response received {:.2f} seconds after request".format(chunk_time)
+        )
+        full_reply_content = "".join(
+            [
+                message.content if message.content is not None else ""
+                for message in collected_deltas
+            ]
+        )
 
-            # Save last completion
-            self.last_completion = full_reply_content
+        # Log the last completion
+        self.logger.info(
+            "\033[92mAssistant:\033[0m \033[33m%s\033[0m\n", full_reply_content
+        )
+
+        # Save last completion
+        self.last_completion = full_reply_content
 
 
 @time_it
