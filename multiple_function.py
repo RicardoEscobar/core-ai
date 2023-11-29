@@ -34,7 +34,7 @@ def run_conversation():
         },
         {
             "role": "user",
-            "content": "Hey, my name is Jorge. What's your name?",
+            "content": "Hey, my name is Jorge. What's your name? and what's the wheather like in Paris?",
         }
     ]
     tools = [
@@ -87,7 +87,7 @@ def run_conversation():
         # Step 3: call the function
         # Note: the JSON response may not always be valid; be sure to handle errors
         available_functions = {
-            # "get_current_weather": get_current_weather,
+            "get_current_weather": get_current_weather,
             "take_picture_and_process": Eyes.take_picture_and_process,
         }  # only one function in this example, but you can have multiple
         messages.append(response_message)  # extend conversation with assistant's reply
@@ -96,13 +96,13 @@ def run_conversation():
             function_name = tool_call.function.name
             function_to_call = available_functions[function_name]
             function_args = json.loads(tool_call.function.arguments)
-            # function_response = function_to_call(
-            #     location=function_args.get("location"),
-            #     unit=function_args.get("unit"),
-            # )
             function_response = function_to_call(
-                prompt=function_args.get("prompt"),
+                location=function_args.get("location"),
+                unit=function_args.get("unit"),
             )
+            # function_response = function_to_call(
+            #     prompt=function_args.get("prompt"),
+            # )
             messages.append(
                 {
                     "tool_call_id": tool_call.id,
@@ -115,7 +115,13 @@ def run_conversation():
             model="gpt-4-1106-preview",
             messages=messages,
         )  # get a new response from the model where it can see the function response
-        return second_response
+        
+        # Save the conversation to a file
+        # with open("conversation.json", "w") as f:
+        #     json.dump(messages, f)
+        print(messages)
+        
+        return second_response.choices[0].message.content
     # TODO add an else block to handle when the model doesn't want to call a function but still wants to continue the conversation
 
 

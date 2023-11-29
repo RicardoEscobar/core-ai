@@ -16,7 +16,7 @@ from pathlib import Path
 from time import sleep
 
 from youtube_transcript_api import YouTubeTranscriptApi
-from pytube import YouTube
+from pytube import YouTube, Search
 import openai
 
 from controller.get_token_count import get_token_count
@@ -27,10 +27,11 @@ from controller.get_audio_filepath import get_audio_filepath
 
 
 # Load the OpenAI API key
-load_openai()
+client = load_openai()
 
 # Constants
 TOKEN_LIMITS = {
+    "gpt-4-1106-preview": 300_000,
     "gpt-4": 8192,
     "gpt-4-0613": 8192,
     "gpt-4-32k": 32768,
@@ -62,6 +63,7 @@ RATE_LIMITS = {
     "gpt-4": {"TPM": 10_000, "RPM": 200},
     "gpt-4-0314": {"TPM": 10_000, "RPM": 200},
     "gpt-4-0613": {"TPM": 10_000, "RPM": 200},
+    "gpt-4-1106-preview": {"TPM": 300_000, "RPM": 5000, "TPD": 5_000_000},
 }
 
 
@@ -105,14 +107,14 @@ def save_transcript(video_id: str, filename: str = None) -> None:
         file.write(text)
 
 
-def is_prompt_too_big(text: str, ai_model: str = "gpt-4") -> bool:
+def is_prompt_too_big(text: str, gpt_model: str = "gpt-4-1106-preview") -> bool:
     """
     Given a text, ask if the text should be divided into smaller prompts.
     The text is too long when the token count is greater than half the token limit of the given AI model.
     """
 
     # Get the token limit for the specified model
-    token_limit = TOKEN_LIMITS[ai_model]
+    token_limit = TOKEN_LIMITS[gpt_model]
 
     # Get the token count for the text
     token_count = get_token_count(text)
@@ -142,7 +144,7 @@ def split_text_into_segments(text, character_limit) -> List[str]:
 
 
 def get_sumarized_text(
-    text: str, ai_model: str = "gpt-4", max_tokens: int = 100, language: str = "English"
+    text: str, gpt_model: str = "gpt-4-1106-preview", max_tokens: int = 100, language: str = "English"
 ) -> str:
     """
     Given a text, return a summary of the text.
@@ -152,7 +154,7 @@ def get_sumarized_text(
     system_content = f"Summarize content you are provided from a video transcript, for an adult of 100 I.Q. in {language}"
     system_content_token_count = get_token_count(system_content)
 
-    BIGGEST_MODEL = "gpt-3.5-turbo-16k"
+    BIGGEST_MODEL = "gpt-4-1106-preview"
     SLEEP_TIME = 60  # seconds
 
     # Get the token count for the text
@@ -160,17 +162,17 @@ def get_sumarized_text(
     used_tokens = system_content_token_count + token_count
 
     # Get the token limit for the specified model
-    token_limit = TOKEN_LIMITS[ai_model] - system_content_token_count
+    token_limit = TOKEN_LIMITS[gpt_model] - system_content_token_count
 
     # If chosen model is too small, then change model to a bigger one.
     if (
-        is_prompt_too_big(text, ai_model)
+        is_prompt_too_big(text, gpt_model)
         and token_count < TOKEN_LIMITS[BIGGEST_MODEL] - system_content_token_count
-        and ai_model != BIGGEST_MODEL
+        and gpt_model != BIGGEST_MODEL
     ):
         # Change model to "gpt-3.5-turbo-16k": 16385
         token_limit = TOKEN_LIMITS[BIGGEST_MODEL] - used_tokens
-        ai_model = BIGGEST_MODEL
+        gpt_model = BIGGEST_MODEL
 
     if token_count > token_limit:
         print(f"The text is too long to be summarized: {token_count}/{token_limit}")
@@ -180,8 +182,8 @@ def get_sumarized_text(
     # Get the summarized text
     while True:
         try:
-            response = openai.ChatCompletion.create(
-                model=ai_model,
+            response = client.chat.completions.create(
+                model=gpt_model,
                 messages=[
                     {
                         "role": "system",
@@ -193,7 +195,7 @@ def get_sumarized_text(
                 max_tokens=max_tokens,
                 # stop=["\n", " Human:", " AI:"],
             )
-        except openai.error.RateLimitError as rate_limit_error:
+        except openai.RateLimitError as rate_limit_error:
             print(
                 f"{rate_limit_error}. Waiting {SLEEP_TIME} seconds before trying again."
             )
@@ -223,9 +225,9 @@ def get_yt_summary(
     max_tokens: int = 100,
     output_dir: str = None,
     language: str = "English",
+    gpt_model: str = "gpt-4-1106-preview",
 ) -> str:
     """Given a video id, return the summarized content of the video."""
-    AI_MODEL = "gpt-4"
 
     # Get the output directory as a Path object
     if output_dir is None:
@@ -244,7 +246,7 @@ def get_yt_summary(
 
     # Get the summarized text
     summarized_text = get_sumarized_text(
-        video_transcript, AI_MODEL, max_tokens, language
+        video_transcript, gpt_model, max_tokens, language
     )
 
     # Get the title of the YouTube video
@@ -258,8 +260,14 @@ def get_yt_summary(
     
     return summarized_text
 
+def yt_search(query: str) -> List[YouTube]:
+    """Search for a video on YouTube and return the video id."""
+    # Search for the video
+    search = Search(query)
 
-def main():
+    return search.results
+
+def old_test():
     VIDEO_ID = "beEqgUZKZfw"
     summary = get_yt_summary(
         video_id=VIDEO_ID, max_tokens=200, output_dir=None, language="Spanish"
@@ -287,6 +295,17 @@ def main():
 
     # Play audio file
     play_audio(audio_file)
+
+def main():
+    query = "OpenAI drama"
+    output_dir = Path(__file__).parent.parent / "video_caption" / query
+    videos = yt_search(query)
+    for video in videos[:3]:
+        summary = get_yt_summary(
+            video_id=video.video_id, max_tokens=200, output_dir=str(output_dir), language="Spanish"
+        )
+        print(f"{summary}\n====================\n")
+
 
 
 if __name__ == "__main__":
