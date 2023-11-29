@@ -224,6 +224,8 @@ persona = {{
     "target_language": "{persona["target_language"]}",
     "conversation_file_path": DIRECTORY / FILENAME,
     "audio_output_path": Path('{persona["audio_output_path"].as_posix()}'),
+    "elevenlabs_voice_model": "{persona["elevenlabs_voice_model"]}",
+    "gpt_model": "{persona["gpt_model"]}",
     "tools": {persona["tools"]},
     "available_functions": {{
         "take_picture_and_process": Eyes.take_picture_and_process,
