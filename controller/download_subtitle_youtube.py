@@ -209,7 +209,7 @@ def get_sumarized_text(
     return result
 
 
-def get_yt_video_title(video_id: str) -> str:
+def get_youtube_video_title(video_id: str) -> str:
     """Get the title of a YouTube video."""
     # Get the title of the YouTube video
     yt = YouTube("https://youtu.be/" + video_id)
@@ -220,7 +220,7 @@ def get_yt_video_title(video_id: str) -> str:
     return title
 
 
-def get_yt_summary(
+def get_youtube_summary(
     video_id: str,
     max_tokens: int = 100,
     output_dir: str = None,
@@ -250,7 +250,7 @@ def get_yt_summary(
     )
 
     # Get the title of the YouTube video
-    title = get_yt_video_title(video_id)
+    title = get_youtube_video_title(video_id)
 
     # Save the summarized text to a file
     filename = f"summarized_{video_id}_{title}.txt"
@@ -260,8 +260,12 @@ def get_yt_summary(
     
     return summarized_text
 
-def yt_search(query: str) -> List[YouTube]:
-    """Search for a video on YouTube and return the video id."""
+def youtube_search(query: str) -> List[YouTube]:
+    """Search for a video on YouTube and return the video id.
+    args:
+        query: The query to search for.
+    returns:
+        A list of YouTube videos."""
     # Search for the video
     search = Search(query)
 
@@ -269,7 +273,7 @@ def yt_search(query: str) -> List[YouTube]:
 
 def old_test():
     VIDEO_ID = "beEqgUZKZfw"
-    summary = get_yt_summary(
+    summary = get_youtube_summary(
         video_id=VIDEO_ID, max_tokens=200, output_dir=None, language="Spanish"
     )
 
@@ -277,7 +281,7 @@ def old_test():
 
     # Constants for speech synthesis configuration
     SELECTED_VOICE = 'Larissa'
-    video_title = get_yt_video_title(VIDEO_ID)
+    video_title = get_youtube_video_title(VIDEO_ID)
 
     # Save the summarized text to a file
     filename = f"summarized_{VIDEO_ID}_{video_title}"
@@ -299,9 +303,9 @@ def old_test():
 def main():
     query = "OpenAI drama"
     output_dir = Path(__file__).parent.parent / "video_caption" / query
-    videos = yt_search(query)
+    videos = youtube_search(query)
     for video in videos[:3]:
-        summary = get_yt_summary(
+        summary = get_youtube_summary(
             video_id=video.video_id, max_tokens=200, output_dir=str(output_dir), language="Spanish"
         )
         print(f"{summary}\n====================\n")
