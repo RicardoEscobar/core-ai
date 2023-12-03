@@ -20,13 +20,13 @@ import traceback
 import json
 
 import openai
-from elevenlabs import generate, stream, save, voices
+from elevenlabs import generate, stream, save, voices, play
 from elevenlabs.api import Voice, VoiceSettings
 
 from controller.load_openai import load_openai
 from controller.create_logger import create_logger
 from controller.speech_synthesis import get_speech_synthesizer, speak_text_into_file
-from controller.play_audio import play_audio
+from controller.play_audio import play_audio, play_audio_stream, play_audio_mp3
 from controller.time_it import time_it
 from controller.get_audio_filepath import get_audio_filepath
 from controller.conversation_handler import truncate_conversation_persona
@@ -176,6 +176,10 @@ class StreamCompletion:
         returns:
             Dict[str, str]: Generated response from the OpenAI API and the filepath of the audio file e. g. {"last_completion": "Hello world!", "filepath": "./audio/20210901_123456_Hello_world.mp3"}
         """
+        # Create a variable to hold the audio stream
+        audio = b""
+        chunks_audio = b""
+        CHUNKS_AUDIO_THRESHOLD = 100_000
 
         # Initialize the variables
         if persona is None:
@@ -231,6 +235,7 @@ class StreamCompletion:
             voice=voice.name,
             model=voice_model,
             stream=stream_mode,
+            stream_chunk_size=100_000,
         )
 
         # Play the audio stream
@@ -238,7 +243,52 @@ class StreamCompletion:
             self.logger.error("audio_stream is None.\n%s", traceback.format_exc())
             raise ValueError(f"audio_stream is None.\n{traceback.format_exc()}")
 
-        self.audio_stream = stream(audio_stream)
+        # TODO repleace elevenlabs.stream function with elevenlabs.play function
+        if isinstance(audio_stream, Iterable):
+            # Validate the audio_output_dir
+            if isinstance(audio_output_dir, Path):
+                chunk_output_dir = audio_output_dir / "tmp"
+            elif isinstance(audio_output_dir, str):
+                chunk_output_dir = audio_output_dir + "/tmp"
+            else:
+                chunk_output_dir = "./tmp"
+
+            self.logger.debug("audio_stream is an Iterable.")
+            for index, chunk in enumerate(audio_stream):
+                if chunk is not None:
+                    audio += chunk
+                    chunks_audio += chunk
+                    # Play the audio stream when it reaches the threshold
+                    if len(chunks_audio) >= CHUNKS_AUDIO_THRESHOLD:
+                        play(chunks_audio)
+                        chunks_audio = b""
+                    # Create a temporary folder to save the audio chunks to
+                    filename = time.strftime("%Y%m%d_%H%M%S") + "_chunk_" + str(index)
+
+                    chunk_filepath = Path(
+                        get_audio_filepath(
+                            filename,
+                            file_extension="mp3",
+                            filename_length=filename_length,
+                            output_dir=chunk_output_dir,
+                        )
+                    )
+                    self.logger.debug("mp3_filepath created: %s", chunk_filepath)
+
+                    # Save the audio stream to a file
+                    mp3_file = str(chunk_filepath.resolve())
+                    save(chunk, mp3_file)
+                    # Open and play the audio file
+                    # play_audio_mp3(mp3_file)
+            # Play the last chunk
+            play(chunks_audio)
+
+        else:
+            self.logger.debug("audio_stream is not an Iterable.")
+            audio = audio_stream
+            play(audio)
+
+        self.audio_stream = audio
 
         # Get the size of the audio stream
         size_in_bytes = len(self.audio_stream)
@@ -273,7 +323,7 @@ class StreamCompletion:
         self.logger.debug("mp3_filepath created: %s", mp3_filepath)
 
         # Create the folder if it does not exist
-        mp3_filepath.parent.mkdir(parents=True, exist_ok=True)
+        # mp3_filepath.parent.mkdir(parents=True, exist_ok=True)
 
         self.logger.debug("Saving audio to %s", {mp3_filepath.resolve()})
 
@@ -554,10 +604,12 @@ class StreamCompletion:
                 )
                 yield error
                 return  # Stop the function after yielding the error
-            
+
             if stream_mode:
                 # responses is a generator object that yields full sentences from the last response, this response is saved in the self.last_completion variable
-                responses = self.response_generator(second_response, start_time, yield_characters)
+                responses = self.response_generator(
+                    second_response, start_time, yield_characters
+                )
                 for response_yield in responses:
                     yield response_yield
             else:
@@ -635,8 +687,11 @@ class StreamCompletion:
 
             if stream_mode:
                 # responses is a generator object that yields full sentences from the last response, this response is saved in the self.last_completion variable
-                responses = self.response_generator(response, start_time, yield_characters)
+                responses = self.response_generator(
+                    response, start_time, yield_characters
+                )
                 for response_yield in responses:
+                    module_logger.debug("response_yield: %s", response_yield)
                     yield response_yield
             else:
                 # Log the last completion
@@ -650,7 +705,6 @@ class StreamCompletion:
 
                 # required to add a space after the function yield or else audio will throw an error
                 yield self.last_completion + " "
-
 
     def response_generator(self, response, start_time, yield_characters):
         """This generator function yields the next completion from the OpenAI API from a stream mode openai completion. Each time a sentence is completed, the generator yields the sentence. To detect the end of a sentence, the generator looks for a period, question mark, or exclamation point at the end of the sentence. If the sentence is not complete, then the generator yields None. If the generator yields None, then the caller should call the generator again to get the next completion. If the generator yields a sentence, then the caller should call the generator again to get the next completion. The generator will yield None when the stream is complete.
