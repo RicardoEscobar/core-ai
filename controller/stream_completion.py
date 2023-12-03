@@ -569,9 +569,8 @@ class StreamCompletion:
             # Note: the JSON response may not always be valid; be sure to handle errors
             if available_functions is None:
                 available_functions = self.available_functions
-            messages.append(
-                response_message
-            )  # extend conversation with assistant's reply
+            # extend conversation with assistant's reply
+            messages.append(response_message)
             # Step 4: send the info for each function call and function response to the model
             for tool_call in tool_calls:
                 function_name = tool_call.function.name
