@@ -1,4 +1,5 @@
 import os
+import sys
 from openai import OpenAI
 from dotenv import load_dotenv
 from elevenlabs import set_api_key
@@ -23,6 +24,11 @@ def load_openai():
     # E:\\downloads (PC)
     # C:\\Users\\Ricardo\\Downloads (Laptop)
     os.environ["PATH"] += os.pathsep + os.getenv("MPV_PATH")
+
+    # Add project root to PYTHONPATH
+    root_folder = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    if root_folder not in sys.path:
+        sys.path.append(root_folder)
 
     return client
 
