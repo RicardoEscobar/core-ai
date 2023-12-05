@@ -264,7 +264,7 @@ def stream_conversation(
         available_functions = persona_data["available_functions"]
     
     if yield_characters is None:
-        yield_characters = (".", "?", "!", "\n", ":", ";", " ")
+        yield_characters = (".", "?", "!", "\n", ":", ";")
 
     # TODO: Replace this with the max token length for the given model,
     # calculate it or get it from openai.api
@@ -506,7 +506,7 @@ def main():
         tools=persona["tools"],  # The tools to be used
         tool_choice=persona["tool_choice"],  # The tool choice
         available_functions=persona["available_functions"],  # The available functions
-        yield_characters=(".", "?", "!", "\n", ":", ";", " "),  # The yield characters, used to split the response into phrases
+        yield_characters=(".", "?", "!", "\n", ":", ";",),  # The yield characters, used to split the response into phrases
     )
 
 
