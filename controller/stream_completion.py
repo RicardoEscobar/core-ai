@@ -243,55 +243,11 @@ class StreamCompletion:
             self.logger.error("audio_stream is None.\n%s", traceback.format_exc())
             raise ValueError(f"audio_stream is None.\n{traceback.format_exc()}")
 
-        # TODO repleace elevenlabs.stream function with elevenlabs.play function
-        if isinstance(audio_stream, Iterable):
-            # Validate the audio_output_dir
-            if isinstance(audio_output_dir, Path):
-                chunk_output_dir = audio_output_dir / "tmp"
-            elif isinstance(audio_output_dir, str):
-                chunk_output_dir = audio_output_dir + "/tmp"
-            else:
-                chunk_output_dir = "./tmp"
-
-            self.logger.debug("audio_stream is an Iterable.")
-            for index, chunk in enumerate(audio_stream):
-                if chunk is not None:
-                    audio += chunk
-                    chunks_audio += chunk
-                    # Play the audio stream when it reaches the threshold
-                    if len(chunks_audio) >= CHUNKS_AUDIO_THRESHOLD:
-                        play(chunks_audio)
-                        chunks_audio = b""
-                    # Create a temporary folder to save the audio chunks to
-                    filename = time.strftime("%Y%m%d_%H%M%S") + "_chunk_" + str(index)
-
-                    chunk_filepath = Path(
-                        get_audio_filepath(
-                            filename,
-                            file_extension="mp3",
-                            filename_length=filename_length,
-                            output_dir=chunk_output_dir,
-                        )
-                    )
-                    self.logger.debug("mp3_filepath created: %s", chunk_filepath)
-
-                    # Save the audio stream to a file
-                    mp3_file = str(chunk_filepath.resolve())
-                    save(chunk, mp3_file)
-                    # Open and play the audio file
-                    # play_audio_mp3(mp3_file)
-            # Play the last chunk
-            play(chunks_audio)
-
-        else:
-            self.logger.debug("audio_stream is not an Iterable.")
-            audio = audio_stream
-            play(audio)
-
-        self.audio_stream = audio
+        # Play the audio stream and save it to a file
+        completed_audio_stream = stream(audio_stream)
 
         # Get the size of the audio stream
-        size_in_bytes = len(self.audio_stream)
+        size_in_bytes = len(completed_audio_stream)
         size_in_kilobytes = size_in_bytes / 1024
         size_in_megabytes = size_in_kilobytes / 1024
 
@@ -320,18 +276,13 @@ class StreamCompletion:
                 output_dir=audio_output_dir,
             )
         )
-        self.logger.debug("mp3_filepath created: %s", mp3_filepath)
-
-        # Create the folder if it does not exist
-        # mp3_filepath.parent.mkdir(parents=True, exist_ok=True)
-
         self.logger.debug("Saving audio to %s", {mp3_filepath.resolve()})
 
         # Save the audio stream to a file
-        mp3_file = str(mp3_filepath.resolve())
-        save(self.audio_stream, mp3_file)
+        mp3_audiofile = str(mp3_filepath.resolve())
+        save(completed_audio_stream, mp3_audiofile)
 
-        return {"last_completion": self.last_completion, "filepath": mp3_file}
+        return {"last_completion": self.last_completion, "filepath": mp3_audiofile}
 
     def generate_microsoft_ai_speech_completion(
         self,
@@ -569,9 +520,8 @@ class StreamCompletion:
             # Note: the JSON response may not always be valid; be sure to handle errors
             if available_functions is None:
                 available_functions = self.available_functions
-            messages.append(
-                response_message
-            )  # extend conversation with assistant's reply
+            # extend conversation with assistant's reply
+            messages.append(response_message)
             # Step 4: send the info for each function call and function response to the model
             for tool_call in tool_calls:
                 function_name = tool_call.function.name

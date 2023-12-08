@@ -13,7 +13,7 @@ if __name__ == "__main__":
     sys.path.append(str(root_folder))
 
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Tuple
 import logging
 
 from elevenlabs.api import Voice, VoiceSettings
@@ -253,6 +253,7 @@ def stream_conversation(
     tools: List[Dict] = None,
     tool_choice: str = "auto",
     available_functions: Dict = None,
+    yield_characters: Tuple = None,
 ):
     """This version of conversation method uses the StreamCompletion class. So it's faster than the conversation method."""
 
@@ -261,6 +262,9 @@ def stream_conversation(
 
     if available_functions is None:
         available_functions = persona_data["available_functions"]
+    
+    if yield_characters is None:
+        yield_characters = (".", "?", "!", "\n", ":", ";")
 
     # TODO: Replace this with the max token length for the given model,
     # calculate it or get it from openai.api
@@ -278,7 +282,7 @@ def stream_conversation(
         stream_mode=True,
         max_tokens=max_tokens,
         stop=stop,
-        yield_characters=(".", "?", "!", "\n", ":", ";"),
+        yield_characters=yield_characters,
         tools=tools,
         tool_choice=tool_choice,
         available_functions=available_functions,
@@ -502,6 +506,7 @@ def main():
         tools=persona["tools"],  # The tools to be used
         tool_choice=persona["tool_choice"],  # The tool choice
         available_functions=persona["available_functions"],  # The available functions
+        yield_characters=(".", "?", "!", "\n", ":", ";", " ",),  # The yield characters, used to split the response into phrases
     )
 
 
