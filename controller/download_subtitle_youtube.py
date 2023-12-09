@@ -106,10 +106,7 @@ def save_transcript(video_id: str, filename: str = None) -> None:
         directory.mkdir(parents=True, exist_ok=True)
         # Saves the conversation to a file.
         directory = Path(__file__).parent.parent / "video_caption"
-        filename = yt.title + ".txt"
-        # Remove invalid characters from the filename.
-        for character in r'[]/\;,><&*:%=+@!#^()|?^"':
-            filename = filename.replace(character, "_")
+        filename = clean_filename(yt.title) + ".txt"
         filepath = directory / filename
     elif isinstance(filename, str):
         # Create a directory to save the conversation if not exists.
