@@ -14,6 +14,7 @@ if __name__ == "__main__":
 from typing import List, Dict
 from pathlib import Path
 from time import sleep
+import logging
 
 from youtube_transcript_api import YouTubeTranscriptApi
 from pytube import YouTube, Search
@@ -24,7 +25,19 @@ from controller.load_openai import load_openai
 from controller.speech_synthesis import get_speech_synthesizer, speak_text_into_file
 from controller.play_audio import play_audio
 from controller.get_audio_filepath import get_audio_filepath
+from controller.clean_filename import clean_filename
+from controller.create_logger import create_logger
 
+
+# Create logger
+log = create_logger(
+    logger_name=__name__,
+    logger_filename="download_subtitle_youtube.log",
+    log_directory="logs",
+    add_date_to_filename=False,
+    console_logging=True,
+    console_log_level=logging.INFO,
+)
 
 # Load the OpenAI API key
 client = load_openai()
@@ -72,7 +85,7 @@ def get_transcript(video_id):
 
     # get the video captions/subtitles as a list of dictionaries
     video_data = YouTubeTranscriptApi.get_transcript(
-        video_id=video_id, languages=["es", "en"]
+        video_id=video_id, languages=["es-MX", "en-US", "es", "en"]
     )
 
     # loop through the list of dictionaries and get the text
@@ -253,7 +266,7 @@ def get_youtube_summary(
     title = get_youtube_video_title(video_id)
 
     # Save the summarized text to a file
-    filename = f"summarized_{video_id}_{title}.txt"
+    filename = clean_filename(f"summarized_{video_id}_{title}") + ".txt"
     filepath = output_dir_path / filename
     with open(filepath, mode="w", encoding="utf-8") as file:
         file.write(summarized_text)
@@ -300,16 +313,19 @@ def old_test():
     # Play audio file
     play_audio(audio_file)
 
-def main():
-    query = "OpenAI drama"
-    output_dir = Path(__file__).parent.parent / "video_caption" / query
+
+def youtube_query(query: str, max_videos: int = 3):
+    clean_query = clean_filename(query)
+    output_dir = Path(__file__).parent.parent / "video_caption" / clean_query
     videos = youtube_search(query)
-    for video in videos[:3]:
+    for video in videos[:max_videos]:
         summary = get_youtube_summary(
             video_id=video.video_id, max_tokens=200, output_dir=str(output_dir), language="Spanish"
         )
-        print(f"{summary}\n====================\n")
+        log.info(f"YouTube ID:{video.video_id}\nTitle: {video.title}\nSummary: {summary}\n")
 
+def main():
+    youtube_query("Super Mario RPG")
 
 
 if __name__ == "__main__":
