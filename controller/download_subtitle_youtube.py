@@ -316,13 +316,13 @@ def old_test():
     play_audio(audio_file)
 
 
-def youtube_query(query: str, max_videos: int = 3, language: str = "Spanish"):
+def youtube_query(query: str, max_videos: int = 3, language: str = "Spanish", max_tokens: int = 200):
     clean_query = clean_filename(query)
     output_dir = Path(__file__).parent.parent / "video_caption" / clean_query
     videos = youtube_search(query)
     for video in videos[:max_videos]:
         summary = get_youtube_summary(
-            video_id=video.video_id, max_tokens=200, output_dir=str(output_dir), language=language
+            video_id=video.video_id, max_tokens=max_tokens, output_dir=str(output_dir), language=language
         )
         log.info(f"YouTube ID:{video.video_id}\nTitle: {video.title}\nSummary: {summary}\n")
 
