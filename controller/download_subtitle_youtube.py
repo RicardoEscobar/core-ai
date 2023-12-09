@@ -96,6 +96,11 @@ def get_transcript(video_id):
 
 
 def save_transcript(video_id: str, filename: str = None) -> None:
+    """Save the captions/subtitles from a YouTube Video to a file.
+    args:
+        video_id: The id of the YouTube video.
+        filename: The name of the file to save the captions/subtitles.
+    """
     # get the captions/subtitles from the video
     text = get_transcript(video_id)
     # get the video title from YouTube
@@ -311,13 +316,13 @@ def old_test():
     play_audio(audio_file)
 
 
-def youtube_query(query: str, max_videos: int = 3):
+def youtube_query(query: str, max_videos: int = 3, language: str = "Spanish"):
     clean_query = clean_filename(query)
     output_dir = Path(__file__).parent.parent / "video_caption" / clean_query
     videos = youtube_search(query)
     for video in videos[:max_videos]:
         summary = get_youtube_summary(
-            video_id=video.video_id, max_tokens=200, output_dir=str(output_dir), language="Spanish"
+            video_id=video.video_id, max_tokens=200, output_dir=str(output_dir), language=language
         )
         log.info(f"YouTube ID:{video.video_id}\nTitle: {video.title}\nSummary: {summary}\n")
 
