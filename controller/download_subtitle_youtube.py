@@ -287,6 +287,7 @@ def youtube_search(query: str) -> List[YouTube]:
     return search.results
 
 def old_test():
+    """This function is used for testing the get_youtube_summary function."""
     VIDEO_ID = "beEqgUZKZfw"
     summary = get_youtube_summary(
         video_id=VIDEO_ID, max_tokens=200, output_dir=None, language="Spanish"
@@ -324,7 +325,7 @@ def youtube_query(query: str, max_videos: int = 3, language: str = "Spanish", ma
         summary = get_youtube_summary(
             video_id=video.video_id, max_tokens=max_tokens, output_dir=str(output_dir), language=language
         )
-        log.info(f"YouTube ID:{video.video_id}\nTitle: {video.title}\nSummary: {summary}\n")
+        log.info("YouTube ID:%s\nTitle: %s\nSummary: %s\n", video.video_id, video.title, summary)
 
 def main():
     youtube_query("Super Mario RPG")
