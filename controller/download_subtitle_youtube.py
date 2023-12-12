@@ -159,7 +159,10 @@ def split_text_into_segments(text, character_limit) -> List[str]:
 
 
 def get_sumarized_text(
-    text: str, gpt_model: str = "gpt-4-1106-preview", max_tokens: int = 100, language: str = "English"
+    text: str,
+    gpt_model: str = "gpt-4-1106-preview",
+    max_tokens: int = 100,
+    language: str = "English",
 ) -> str:
     """
     Given a text, return a summary of the text.
@@ -272,8 +275,9 @@ def get_youtube_summary(
     filepath = output_dir_path / filename
     with open(filepath, mode="w", encoding="utf-8") as file:
         file.write(summarized_text)
-    
+
     return summarized_text
+
 
 def youtube_search(query: str) -> List[YouTube]:
     """Search for a video on YouTube and return the video id.
@@ -286,6 +290,7 @@ def youtube_search(query: str) -> List[YouTube]:
 
     return search.results
 
+
 def old_test():
     """This function is used for testing the get_youtube_summary function."""
     VIDEO_ID = "beEqgUZKZfw"
@@ -296,7 +301,7 @@ def old_test():
     DIRECTORY = Path(__file__).parent.parent / "video_caption"
 
     # Constants for speech synthesis configuration
-    SELECTED_VOICE = 'Larissa'
+    SELECTED_VOICE = "Larissa"
     video_title = get_youtube_video_title(VIDEO_ID)
 
     # Save the summarized text to a file
@@ -317,18 +322,45 @@ def old_test():
     play_audio(audio_file)
 
 
-def youtube_query(query: str, max_videos: int = 3, language: str = "Spanish", max_tokens: int = 200):
+def youtube_query(
+    query: str, max_videos: int = 1, language: str = "Spanish", max_tokens: int = 200
+):
+    """Search for a query on YouTube and return the summarized content of the videos. By default, only one video is summarized.
+    If  the argument max_videos is greater than 1, then that number of videos will be summarized and yielded.
+    If language is "Spanish", then the video will be summarized in Spanish using the Spanish language version of the video.
+    max_tokens is the maximum number of tokens for the AI model to use on the summarized text.
+    args:
+        query: The query to search for.
+        max_videos: The maximum number of videos to summarize.
+        language: The language of the videos.
+        max_tokens: The maximum number of tokens for the AI model.
+    yields:
+        A summary of the video."""
     clean_query = clean_filename(query)
     output_dir = Path(__file__).parent.parent / "video_caption" / clean_query
     videos = youtube_search(query)
     for video in videos[:max_videos]:
         summary = get_youtube_summary(
-            video_id=video.video_id, max_tokens=max_tokens, output_dir=str(output_dir), language=language
+            video_id=video.video_id,
+            max_tokens=max_tokens,
+            output_dir=str(output_dir),
+            language=language,
         )
-        log.info("YouTube ID:%s\nTitle: %s\nSummary: %s\n", video.video_id, video.title, summary)
+        log.info(
+            "YouTube ID:%s\nTitle: %s\nSummary: %s\n",
+            video.video_id,
+            video.title,
+            summary,
+        )
+        yield summary
+
 
 def main():
-    youtube_query("Super Mario RPG")
+    query = "EVE Online | Down the Rabbit Hole"
+    generator = youtube_query(query=query, max_videos=1, language="Spanish")
+    for index, summary in enumerate(generator):
+        log.info("Summary %s: %s\n",  index + 1, summary)
+
 
 
 if __name__ == "__main__":
