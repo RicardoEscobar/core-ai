@@ -359,8 +359,7 @@ def main():
     query = "EVE Online | Down the Rabbit Hole"
     generator = youtube_query(query=query, max_videos=1, language="Spanish")
     for index, summary in enumerate(generator):
-        log.info("Summary %s: %s\n",  index + 1, summary)
-
+        log.info("Summary %s: %s\n", index + 1, summary)
 
 
 if __name__ == "__main__":
