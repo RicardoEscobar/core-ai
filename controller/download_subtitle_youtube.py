@@ -332,7 +332,7 @@ def youtube_query(
     args:
         query: The query to search for.
         max_videos: The maximum number of videos to summarize.
-        language: The language of the videos.
+        language: The language of the video transciption.
         max_tokens: The maximum number of tokens for the AI model.
     yields:
         A summary of the video."""
