@@ -12,11 +12,35 @@ if root_folder not in sys.path:
 from typing import List
 from pathlib import Path
 import json
+import requests
 
 from pytube import Channel, YouTube, Search
 from youtube_transcript_api import YouTubeTranscriptApi
 
 from controller.clean_filename import clean_filename
+from controller.load_openai import load_openai
+
+
+# Load YouTube API key
+load_openai()
+
+def get_video_description(video_url: str) -> str:
+    """Get the description of a video.
+    args:
+        video_url: The url of the video.
+    returns:
+        The description of the video."""
+    # Get the video id
+    video_id = video_url.split("=")[-1]
+
+    # Get the video description
+    api_key = os.getenv("YOUTUBE_API_KEY")
+    url = f"https://www.googleapis.com/youtube/v3/videos?part=snippet&id={video_id}&key={api_key}"
+    response = requests.get(url)
+    response_json = response.json()
+    video_description = response_json["items"][0]["snippet"]["description"]
+
+    return video_description
 
 
 def youtube_search(query: str) -> List[YouTube]:
@@ -45,7 +69,7 @@ def get_transcript(video: YouTube) -> str:
     # loop through the list of dictionaries and get the transcript
     result = ""
     for data in video_data:
-        result += f"{data['text']} "
+        result += f"{data['text']}"
 
     return result
 
@@ -77,6 +101,7 @@ def youtube_query(
             "video_name": video.title,
             "video_url": video.watch_url,
             "video_id": video.video_id,
+            "video_description": get_video_description(video.watch_url),
             "transcript": get_transcript(video),
         }
 
@@ -114,7 +139,7 @@ def ai_youtube_search(
 
 def main():
     """The main function."""
-    query = "Is Mega Man Dead? Brianycus"
+    query = "EVE Online | Down the Rabbit Hole"
     result = json.loads(ai_youtube_search(query))
     print(f"The video transcript is:\n{result[0]['filename']}")
 
