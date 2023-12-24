@@ -41,6 +41,7 @@ from controller.stream_completion import StreamCompletion
 from controller.create_logger import create_logger
 from controller.vision.eyes import Eyes
 from controller.transcribe_audio import language_codes
+from controller.ai_functions import available_functions, tools
 
 
 # Create a logger
@@ -503,9 +504,9 @@ def main():
         is_filtered=True,  # Set to False to enable NSFW content
         output_dir=persona["audio_output_path"],  # The output folder for audio files
         max_tokens=2000,  # The max tokens for the response
-        tools=persona["tools"],  # The tools to be used
+        tools=tools,  # The tools to be used
         tool_choice=persona["tool_choice"],  # The tool choice
-        available_functions=persona["available_functions"],  # The available functions
+        available_functions=available_functions,  # The available functions
         yield_characters=(".", "?", "!", "\n", ":", ";", " ",),  # The yield characters, used to split the response into phrases
     )
 
