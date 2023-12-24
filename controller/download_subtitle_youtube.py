@@ -326,7 +326,7 @@ def youtube_query(
     query: str, max_videos: int = 1, language: str = "Spanish", max_tokens: int = 200
 ):
     """Search for a query on YouTube and return the summarized content of the videos. By default, only one video is summarized.
-    If  the argument max_videos is greater than 1, then that number of videos will be summarized and yielded.
+    If the argument max_videos is greater than 1, then that number of videos will be summarized and yielded.
     If language is "Spanish", then the video will be summarized in Spanish using the Spanish language version of the video.
     max_tokens is the maximum number of tokens for the AI model to use on the summarized text.
     args:
