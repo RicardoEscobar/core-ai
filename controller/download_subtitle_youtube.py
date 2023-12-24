@@ -333,7 +333,7 @@ def youtube_query(
         query: The query to search for.
         max_videos: The maximum number of videos to summarize.
         language: The language of the video transciption.
-        max_tokens: The maximum number of tokens for the AI model.
+        max_tokens: The maximum number of tokens for the AI model to use for each video.
     yields:
         A summary of the video."""
     clean_query = clean_filename(query)
