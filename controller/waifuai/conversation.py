@@ -494,12 +494,14 @@ def main():
         preview_url="https://storage.googleapis.com/eleven-public-prod/U1Rx6ByQzXTKXc5wPxu4fXvSRqO2/voices/07If6JkaNiXuzSTEgKuj/c973d3e5-89f1-43e8-861d-89ef866ce41f.mp3",
     )
 
+    cecilia_cortes_morales = Voice(voice_id="8otMrswOK7DEs0BuIyzd")
+
     # Run the conversation
     stream_conversation(
         persona_data=persona,  # Contains the conversation data
         gpt_model=persona["gpt_model"],  # The GPT model to be used
         selected_voice=persona["selected_voice"],  # The default voice is used
-        natural_voice=hailey_natural_voice,  # Set to None to use the default voice
+        natural_voice=cecilia_cortes_morales,  # Set to None to use the default voice
         voice_model=persona["elevenlabs_voice_model"],  # The voice model to be used
         is_filtered=True,  # Set to False to enable NSFW content
         output_dir=persona["audio_output_path"],  # The output folder for audio files
