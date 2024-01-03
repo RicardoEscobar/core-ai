@@ -6,7 +6,7 @@ from controller.youtube.youtube_search import ai_youtube_search
 from controller.vision.eyes import Eyes
 
 
-def show_emote(message: str = "", emote: str = "sad"):
+def show_emote(message: str = "", emote: str = "sad", prompt: str = ""):
     """Send an emote to the VRChat client, when assistant is sad, waves at the user, is dancing, laughs."""
     vrchat = VRChat()
     # Send the greeting to the VRChat client.
@@ -64,6 +64,10 @@ tools = [
                     "emote": {
                         "type": "string",
                         "enum": ["sad", "wave", "a1-dance", "laugh", "applause"],
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "description": "The prompt to use.",
                     },
                 },
                 "required": ["message", "emote"],
