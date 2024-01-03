@@ -282,7 +282,14 @@ class StreamCompletion:
         mp3_audiofile = str(mp3_filepath.resolve())
         save(completed_audio_stream, mp3_audiofile)
 
-        return {"last_completion": self.last_completion, "filepath": mp3_audiofile}
+        if self.last_completion:
+            response = {"last_completion": self.last_completion, "filepath": mp3_audiofile}
+            self.logger.debug("response created: %s", response)
+        else:
+            self.logger.error("self.last_completion is empty. Check why the AI did not generate a completion.")
+            raise ValueError("self.last_completion is empty.")
+
+        return response
 
     def generate_microsoft_ai_speech_completion(
         self,
