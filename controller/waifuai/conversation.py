@@ -16,10 +16,11 @@ from pathlib import Path
 from typing import Dict, List, Union, Tuple
 import logging
 
-from elevenlabs.api import Voice, VoiceSettings
+from elevenlabs.api import Voice, VoiceSettings, VoiceSample
 import openai
 import traceback
 
+from controller.waifuai.conversations.cecilia import persona
 from controller import detect_audio
 from controller import transcribe_audio
 from controller.speech_synthesis import get_speech_synthesizer, speak_text_into_file
@@ -30,7 +31,6 @@ from controller.waifuai.completion_create import (
 )
 from controller.llmchain import get_response_unfiltered
 from controller.play_audio import play_audio, get_audio_duration
-from controller.waifuai.conversations.vrchat_runa import persona
 from controller.load_openai import load_openai
 from controller.natural_voice import generate_multilingual
 from controller.vrchat import VRChat
@@ -42,6 +42,7 @@ from controller.create_logger import create_logger
 from controller.vision.eyes import Eyes
 from controller.transcribe_audio import language_codes
 from controller.ai_functions import available_functions, tools
+from controller.voices_elevenlabs import get_voice_by_id
 
 
 # Create a logger
@@ -263,7 +264,7 @@ def stream_conversation(
 
     if available_functions is None:
         available_functions = persona_data["available_functions"]
-    
+
     if yield_characters is None:
         yield_characters = (".", "?", "!", "\n", ":", ";")
 
@@ -344,7 +345,7 @@ def stream_conversation(
                 except Exception as error:
                     logger.error("Error: %s", str(error))
                     logger.error(traceback.format_exc())
-                    continue
+                    break  # continue
                 else:
                     break
         else:
@@ -494,14 +495,14 @@ def main():
         preview_url="https://storage.googleapis.com/eleven-public-prod/U1Rx6ByQzXTKXc5wPxu4fXvSRqO2/voices/07If6JkaNiXuzSTEgKuj/c973d3e5-89f1-43e8-861d-89ef866ce41f.mp3",
     )
 
-    cecilia_cortes_morales = Voice(voice_id="8otMrswOK7DEs0BuIyzd")
+    ceci = get_voice_by_id("8otMrswOK7DEs0BuIyzd")
 
     # Run the conversation
     stream_conversation(
         persona_data=persona,  # Contains the conversation data
         gpt_model=persona["gpt_model"],  # The GPT model to be used
         selected_voice=persona["selected_voice"],  # The default voice is used
-        natural_voice=cecilia_cortes_morales,  # Set to None to use the default voice
+        natural_voice=ceci,  # Set to None to use the default voice
         voice_model=persona["elevenlabs_voice_model"],  # The voice model to be used
         is_filtered=True,  # Set to False to enable NSFW content
         output_dir=persona["audio_output_path"],  # The output folder for audio files
@@ -509,7 +510,7 @@ def main():
         tools=tools,  # The tools to be used
         tool_choice=persona["tool_choice"],  # The tool choice
         available_functions=available_functions,  # The available functions
-        yield_characters=(".", "?", "!", "\n", ":", ";", " ",),  # The yield characters, used to split the response into phrases
+        yield_characters=(".","?","!","\n",":",";"," ",),  # The yield characters, used to split the response into phrases
     )
 
 
