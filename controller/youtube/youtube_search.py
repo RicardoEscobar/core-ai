@@ -13,16 +13,30 @@ from typing import List
 from pathlib import Path
 import json
 import requests
+import logging
 
 from pytube import Channel, YouTube, Search
 from youtube_transcript_api import YouTubeTranscriptApi
 
 from controller.clean_filename import clean_filename
 from controller.load_openai import load_openai
+from controller.create_logger import create_logger
+
+
+# Create logger
+log = create_logger(
+    logger_name=__name__,
+    logger_filename="youtube_search.log",
+    log_directory="logs",
+    add_date_to_filename=False,
+    console_logging=True,
+    console_log_level=logging.DEBUG,
+)
 
 
 # Load YouTube API key
 load_openai()
+
 
 def get_video_description(video_url: str) -> str:
     """Get the description of a video.
@@ -60,11 +74,15 @@ def get_transcript(video: YouTube) -> str:
     args:
         video: The video to get the transcript of.
     returns:
-        The transcript of the video."""
-    # get the video captions/subtitles as a list of dictionaries
-    video_data = YouTubeTranscriptApi.get_transcript(
-        video_id=video.video_id, languages=["es-MX", "en-US", "es", "en"]
-    )
+        The transcript of the video. Returns None if the video has no transcript."""
+    try:
+        # get the video captions/subtitles as a list of dictionaries
+        video_data = YouTubeTranscriptApi.get_transcript(
+            video_id=video.video_id, languages=["es-MX", "en-US", "es", "en"]
+        )
+    except Exception as exeption:
+        log.error("Exception: %s", exeption)
+        return
 
     # loop through the list of dictionaries and get the transcript
     result = ""
@@ -128,7 +146,10 @@ def ai_youtube_search(
     output_dirpath.mkdir(exist_ok=True)
 
     result = list()
-    for data in youtube_query(prompt, max_videos=max_videos, max_tokens=max_tokens):
+    youtube_generator = youtube_query(
+        prompt, max_videos=max_videos, max_tokens=max_tokens
+    )
+    for data in youtube_generator:
         output_filepath = output_dirpath / f"{data['filename']}"
         with open(str(output_filepath), "w", encoding="utf-8") as file:
             file.write(json.dumps(data))
@@ -139,9 +160,10 @@ def ai_youtube_search(
 
 def main():
     """The main function."""
-    query = "EVE Online | Down the Rabbit Hole"
-    result = json.loads(ai_youtube_search(query))
-    print(f"The video transcript is:\n{result[0]['filename']}")
+    query = "Super Mario RPG Nintendo Switch"
+    result = json.loads(ai_youtube_search(query, max_videos=10))
+    filepath = Path("./video_caption") / result[0]["filename"]
+    log.debug("The video transcript is:\n%s", filepath)
 
 
 if __name__ == "__main__":
