@@ -66,6 +66,8 @@ def youtube_search(query: str) -> List[YouTube]:
     # Search for the video
     search = Search(query)
 
+    log.debug("The search results are:\n%s", repr(search.results))
+
     return search.results
 
 
