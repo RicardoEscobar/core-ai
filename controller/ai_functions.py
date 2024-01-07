@@ -24,7 +24,7 @@ def show_emote(message: str = "", emote: str = "sad", prompt: str = ""):
 
 
 # List of functions that are available to the AI assistant.
-available_functions = {
+ai_available_functions = {
     "show_emote": show_emote,
     "ai_youtube_search": ai_youtube_search,
     "take_picture_and_process": Eyes.take_picture_and_process,
