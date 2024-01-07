@@ -8,7 +8,7 @@ import openai
 
 from controller.load_openai import load_openai
 from controller.create_logger import create_logger
-from controller.ai_functions import available_functions
+from controller.ai_functions import ai_available_functions
 from controller.conversation_handler import truncate_conversation
 
 
@@ -153,7 +153,7 @@ def get_response(
                 # Call the function
                 # Note: the JSON response may not always be valid; be sure to handle errors
                 function_name = response_message["function_call"]["name"]
-                fuction_to_call = available_functions[function_name]
+                fuction_to_call = ai_available_functions[function_name]
                 function_args = json.loads(
                     response_message["function_call"]["arguments"]
                 )

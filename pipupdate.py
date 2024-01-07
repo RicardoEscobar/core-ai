@@ -3,8 +3,6 @@ import subprocess
 import sys
 from typing import List
 
-import pkg_resources
-
 
 def get_outdated_packages() -> List[str]:
     """Returns a list of outdated packages."""

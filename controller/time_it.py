@@ -8,6 +8,7 @@ if __name__ == "__main__":
     sys.path.append(str(root_folder))
 
 import time
+import datetime
 from functools import wraps
 import logging
 
@@ -33,10 +34,12 @@ def time_it(func):
         start_time = time.time()
         result = func(*args, **kwargs)
         end_time = time.time()
+        duration_seconds = end_time - start_time
+        duration_formatted = str(datetime.timedelta(seconds=duration_seconds))
         module_logger.info(
-            "Function %s took %s seconds to complete",
+            "Function %s took %s to complete.",
             func.__name__,
-            round(end_time - start_time, 2),
+            duration_formatted,
         )
         return result
 

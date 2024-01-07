@@ -20,13 +20,13 @@ import traceback
 import json
 
 import openai
-from elevenlabs import generate, stream, save, voices
+from elevenlabs import generate, stream, save, voices, play
 from elevenlabs.api import Voice, VoiceSettings
 
 from controller.load_openai import load_openai
 from controller.create_logger import create_logger
 from controller.speech_synthesis import get_speech_synthesizer, speak_text_into_file
-from controller.play_audio import play_audio
+from controller.play_audio import play_audio, play_audio_stream, play_audio_mp3
 from controller.time_it import time_it
 from controller.get_audio_filepath import get_audio_filepath
 from controller.conversation_handler import truncate_conversation_persona
@@ -176,6 +176,10 @@ class StreamCompletion:
         returns:
             Dict[str, str]: Generated response from the OpenAI API and the filepath of the audio file e. g. {"last_completion": "Hello world!", "filepath": "./audio/20210901_123456_Hello_world.mp3"}
         """
+        # Create a variable to hold the audio stream
+        audio = b""
+        chunks_audio = b""
+        CHUNKS_AUDIO_THRESHOLD = 100_000
 
         # Initialize the variables
         if persona is None:
@@ -231,6 +235,7 @@ class StreamCompletion:
             voice=voice.name,
             model=voice_model,
             stream=stream_mode,
+            stream_chunk_size=100_000,
         )
 
         # Play the audio stream
@@ -238,10 +243,11 @@ class StreamCompletion:
             self.logger.error("audio_stream is None.\n%s", traceback.format_exc())
             raise ValueError(f"audio_stream is None.\n{traceback.format_exc()}")
 
-        self.audio_stream = stream(audio_stream)
+        # Play the audio stream and save it to a file
+        completed_audio_stream = stream(audio_stream)
 
         # Get the size of the audio stream
-        size_in_bytes = len(self.audio_stream)
+        size_in_bytes = len(completed_audio_stream)
         size_in_kilobytes = size_in_bytes / 1024
         size_in_megabytes = size_in_kilobytes / 1024
 
@@ -270,18 +276,20 @@ class StreamCompletion:
                 output_dir=audio_output_dir,
             )
         )
-        self.logger.debug("mp3_filepath created: %s", mp3_filepath)
-
-        # Create the folder if it does not exist
-        mp3_filepath.parent.mkdir(parents=True, exist_ok=True)
-
         self.logger.debug("Saving audio to %s", {mp3_filepath.resolve()})
 
         # Save the audio stream to a file
-        mp3_file = str(mp3_filepath.resolve())
-        save(self.audio_stream, mp3_file)
+        mp3_audiofile = str(mp3_filepath.resolve())
+        save(completed_audio_stream, mp3_audiofile)
 
-        return {"last_completion": self.last_completion, "filepath": mp3_file}
+        if self.last_completion:
+            response = {"last_completion": self.last_completion, "filepath": mp3_audiofile}
+            self.logger.debug("response created: %s", response)
+        else:
+            self.logger.error("self.last_completion is empty. Check why the AI did not generate a completion.")
+            raise ValueError("self.last_completion is empty.")
+
+        return response
 
     def generate_microsoft_ai_speech_completion(
         self,
@@ -519,9 +527,8 @@ class StreamCompletion:
             # Note: the JSON response may not always be valid; be sure to handle errors
             if available_functions is None:
                 available_functions = self.available_functions
-            messages.append(
-                response_message
-            )  # extend conversation with assistant's reply
+            # extend conversation with assistant's reply
+            messages.append(response_message)
             # Step 4: send the info for each function call and function response to the model
             for tool_call in tool_calls:
                 function_name = tool_call.function.name
@@ -554,10 +561,12 @@ class StreamCompletion:
                 )
                 yield error
                 return  # Stop the function after yielding the error
-            
+
             if stream_mode:
                 # responses is a generator object that yields full sentences from the last response, this response is saved in the self.last_completion variable
-                responses = self.response_generator(second_response, start_time, yield_characters)
+                responses = self.response_generator(
+                    second_response, start_time, yield_characters
+                )
                 for response_yield in responses:
                     yield response_yield
             else:
@@ -635,8 +644,11 @@ class StreamCompletion:
 
             if stream_mode:
                 # responses is a generator object that yields full sentences from the last response, this response is saved in the self.last_completion variable
-                responses = self.response_generator(response, start_time, yield_characters)
+                responses = self.response_generator(
+                    response, start_time, yield_characters
+                )
                 for response_yield in responses:
+                    module_logger.debug("response_yield: %s", response_yield)
                     yield response_yield
             else:
                 # Log the last completion
@@ -650,7 +662,6 @@ class StreamCompletion:
 
                 # required to add a space after the function yield or else audio will throw an error
                 yield self.last_completion + " "
-
 
     def response_generator(self, response, start_time, yield_characters):
         """This generator function yields the next completion from the OpenAI API from a stream mode openai completion. Each time a sentence is completed, the generator yields the sentence. To detect the end of a sentence, the generator looks for a period, question mark, or exclamation point at the end of the sentence. If the sentence is not complete, then the generator yields None. If the generator yields None, then the caller should call the generator again to get the next completion. If the generator yields a sentence, then the caller should call the generator again to get the next completion. The generator will yield None when the stream is complete.
