@@ -193,8 +193,8 @@ def get_sumarized_text(
         gpt_model = BIGGEST_MODEL
 
     if token_count > token_limit:
-        print(f"The text is too long to be summarized: {token_count}/{token_limit}")
-        print(f"Difference: {token_count - token_limit}")
+        log.debug("The text is too long to be summarized: %s/%s", token_count, token_limit)
+        log.debug("Difference: %s", token_count - token_limit)
         raise ValueError("The text is too long to be summarized.")
 
     # Get the summarized text
@@ -214,11 +214,13 @@ def get_sumarized_text(
                 # stop=["\n", " Human:", " AI:"],
             )
         except openai.RateLimitError as rate_limit_error:
-            print(
-                f"{rate_limit_error}. Waiting {SLEEP_TIME} seconds before trying again."
+            log.debug(
+                "%s. Waiting %s seconds before trying again.",
+                rate_limit_error,
+                SLEEP_TIME,
             )
             sleep(SLEEP_TIME)
-            print("Trying again...")
+            log.info("Trying again...")
             continue
         else:
             break
