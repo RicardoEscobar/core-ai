@@ -1,10 +1,14 @@
 {
     "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter"
-<<<<<<< HEAD
-    },
-    "python.formatting.provider": "none"
-=======
-      }
->>>>>>> 8578ddbae0ec14dd8c8eb1151028ed36c2c05808
+        "editor.defaultFormatter": "ms-python.black-formatter",
+      },
+      "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./tests/unit",
+        "-p",
+        "test_*.py"
+      ],
+      "python.testing.pytestEnabled": false,
+      "python.testing.unittestEnabled": true
 }

@@ -1,9 +1,13 @@
 import os
+import subprocess
+import shutil
 import wave
 from typing import Any, Dict, List
 
 from mutagen.mp3 import MP3
 import pyaudio
+from pydub import AudioSegment
+
 
 def get_audio_device_index(device_name: str) -> int:
     """Get the audio device index from the device name."""
@@ -73,6 +77,35 @@ def play_audio(audio_file_path: str, output_device_name: str = "VoiceMeeter Aux 
         stream.close()
         audio.terminate()
 
+def play_audio_mp3(audio_file_path: str, output_device_name: str = "VoiceMeeter Aux Input (VB-Audio"):
+    # Load the audio file
+    audio_segment = AudioSegment.from_file(audio_file_path)
+
+    # Convert to mono and get the raw data
+    mono_audio_segment = audio_segment.set_channels(1)
+    audio_data = mono_audio_segment.raw_data
+
+    # Create the PyAudio object
+    audio = pyaudio.PyAudio()
+
+    output_device_index = get_audio_device_index(output_device_name)
+
+    # Open a PyAudio stream for playback
+    stream = audio.open(format=audio.get_format_from_width(mono_audio_segment.sample_width),
+                        channels=1,
+                        rate=mono_audio_segment.frame_rate,
+                        output=True,
+                        output_device_index=output_device_index
+                        )
+
+    # Play the audio data
+    stream.write(audio_data)
+
+    # Cleanup
+    stream.stop_stream()
+    stream.close()
+    audio.terminate()
+
 def get_audio_duration(audio_file_path: str) -> float:
     """Get the duration of an audio file (WAV, MP3) in seconds."""
     # Get the file extension
@@ -96,6 +129,52 @@ def get_audio_duration(audio_file_path: str) -> float:
         return audio.info.length
     else:
         raise ValueError(f"Unsupported file extension: {file_extension}. This function supports only WAV and MP3 files.")
+
+
+def is_installed(lib_name: str) -> bool:
+    lib = shutil.which(lib_name)
+    if lib is None:
+        return False
+    return True
+
+
+def play_audio_stream(audio: bytes, notebook: bool = False, use_ffmpeg: bool = True) -> None:
+    if notebook:
+        from IPython.display import Audio, display
+
+        display(Audio(audio, rate=44100, autoplay=True))
+    elif use_ffmpeg:
+        if not is_installed("ffplay"):
+            message = (
+                "ffplay from ffmpeg not found, necessary to play audio. "
+                "On mac you can install it with 'brew install ffmpeg'. "
+                "On linux and windows you can install it from https://ffmpeg.org/"
+            )
+            raise ValueError(message)
+
+        args = ["ffplay", "-autoexit", "-", "-nodisp"]
+        proc = subprocess.Popen(
+            args=args,
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        out, err = proc.communicate(input=audio)
+        proc.poll()
+    else:
+        try:
+            import io
+
+            import sounddevice as sd
+            import soundfile as sf
+        except ModuleNotFoundError:
+            message = (
+                "`pip install sounddevice soundfile` required when `use_ffmpeg=False` "
+            )
+            raise ValueError(message)
+        sd.play(*sf.read(io.BytesIO(audio)))
+        sd.wait()
+
 
 if __name__ == "__main__":
     from pathlib import Path

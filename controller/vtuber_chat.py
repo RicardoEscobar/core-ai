@@ -444,7 +444,7 @@ class VTuberChat:
 
         if isinstance(voice, elevenlabs.Voice):
             self.stream_completion.generate_completion(
-                prompt=prompt,
+                persona=prompt,
                 gpt_model=gpt_model,
                 voice=voice,
                 audio_output_dir=audio_output_dir,

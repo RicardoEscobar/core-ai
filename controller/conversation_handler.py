@@ -8,32 +8,30 @@ if __name__ == "__main__":
     sys.path.append(str(root_folder))
 
 from pathlib import Path
+from typing import List, Dict, Union
+import logging
 
 from controller.get_token_count import get_token_count
+from controller.create_logger import create_logger
+from controller.get_conversation_text import get_conversation_text
 
 
-def get_conversation_text(conversation: dict) -> str:
-    """Given a conversation, return the text of the conversation.
-    Args:
-        conversation (dict): A conversation.
-    Returns:
-        str: The text of the conversation.
-    """
-    # Get the conversation text.
-    conversation_text = ""
+# Create a logger instance
+module_logger = create_logger(
+    logger_name="controller.conversation_handler",
+    logger_filename="conversation_handler.log",
+    log_directory="logs",
+    console_logging=False,
+    console_log_level=logging.INFO,
+)
 
-    for message in conversation["messages"]:
-        conversation_text += message["role"] + ": " + message["content"] + "\n"
-
-    return conversation_text
-
-def truncate_conversation(conversation: dict, token_threshold: int) -> dict:
+def truncate_conversation(conversation: Dict, token_threshold: int) -> Dict:
     """Given a conversation, remove the number of tokens from the conversation.
     Args:
-        conversation (dict): A conversation.
-        set_tokens (int): The number of tokens to be used as threshold.
+        conversation (Dict): A conversation.
+        token_threshold (int): The number of tokens to be used as threshold.
     Returns:
-        dict: A conversation with the tokens removed.
+        Dict: A conversation with the tokens removed.
     """
     # if "old_messages" does not exist, then create it.
     if "old_messages" not in conversation:
@@ -57,7 +55,7 @@ def truncate_conversation(conversation: dict, token_threshold: int) -> dict:
             print(error)
             print("The conversation is too short.")
             break
-            
+
         # Recount the number of tokens.
         conversation_text = get_conversation_text(conversation)
         token_length = get_token_count(conversation_text)
@@ -67,15 +65,42 @@ def truncate_conversation(conversation: dict, token_threshold: int) -> dict:
     return conversation
 
 
+def truncate_conversation_persona(persona: Dict[str, list]) -> Dict[str, list]:
+    """Given a persona (Dict), move the oldest half of the conversation into persona["old_messages"] to handle the token limit.
+    Args:
+        persona (Dict): A persona.
+    Returns:
+        Dict: A persona with the tokens removed.
+    """
+
+    # Get the conversation.
+    messages = persona["messages"]
+
+    # If persona["old_messages"] does not exist, then create it.
+    if "old_messages" not in persona:
+        persona["old_messages"] = list()
+
+    # Move half of the conversation to "old_messages".
+    messages_length = len(messages)
+    for _ in range(messages_length // 2):
+        persona["old_messages"].append(messages[0])
+        del persona["messages"][0]
+
+    return persona
+
+
 if __name__ == "__main__":
-    conversation = {"messages": [{"role": "system", "content": "You are an AI asistant."},
-                                 {"role": "user", "content": "Hi"},
-                                 {"role": "assistant", "content": "How are you?"},
-                                 {"role": "user", "content": "I'm fine"},
-                                 {"role": "assistant", "content": "Goodbye"},
-                                 {"role": "system", "content": "Goodbye"},
-    ]}
-    print(f"Conversation:\n{get_conversation_text(conversation)}\n")
-    conversation = truncate_conversation(conversation, 25)
-    print(f"Truncated conversation:\n{get_conversation_text(conversation)}\n")
-    print(f"Old messages:\n{conversation['old_messages']}\n")
+    persona_dict = {
+        "messages": [
+            {"role": "system", "content": "You are an AI asistant."},
+            {"role": "user", "content": "Hi"},
+            {"role": "assistant", "content": "How are you?"},
+            {"role": "user", "content": "I'm fine"},
+            {"role": "assistant", "content": "Goodbye"},
+            {"role": "system", "content": "Goodbye"},
+        ]
+    }
+    print(f"Conversation:\n{get_conversation_text(persona_dict)}\n")
+    persona_dict = truncate_conversation_persona(persona_dict)
+    print(f"Truncated conversation:\n{get_conversation_text(persona_dict)}\n")
+    print(f"Old messages:\n{persona_dict['old_messages']}\n")

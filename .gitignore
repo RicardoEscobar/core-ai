@@ -421,3 +421,12 @@ conversation.json
 
 # Voices from eleven labs in JSON format
 voices.json
+
+# Images folder
+img/
+
+# borrame
+borrame*
+
+# Video captions
+video_caption/
