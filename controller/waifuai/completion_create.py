@@ -218,33 +218,26 @@ FILENAME = Path(__file__).name
 
 # This dictionary is used to save the conversation to a file.
 persona = {{
-    "name": "{persona["name"]}",
-    "age": {persona["age"]},
-    "selected_voice": "{persona["selected_voice"]}",
-    "target_language": "{persona["target_language"]}",
+    "name": "{persona.get("name")}",
+    "age": {persona.get("age")},
+    "selected_voice": "{persona.get("selected_voice")}",
+    "target_language": "{persona.get("target_language")}",
     "conversation_file_path": DIRECTORY / FILENAME,
-    "audio_output_path": Path('{persona["audio_output_path"].as_posix()}'),
-    "elevenlabs_voice_model": "{persona["elevenlabs_voice_model"]}",
-    "gpt_model": "{persona["gpt_model"]}",
-    "tools": {persona["tools"]},
-    "available_functions": {{
-        "take_picture_and_process": Eyes.take_picture_and_process,
-    }},  # only one function in this example, but you can have multiple
-    "tool_choice": "auto",  # auto is default, but we'll be explicit
+    "audio_output_path": Path('{persona.get("audio_output_path").as_posix()}'),
+    "elevenlabs_voice_model": "{persona.get("elevenlabs_voice_model")}",
+    "gpt_model": "{persona.get("gpt_model")}",
+    "tool_choice": "{persona.get("auto")}",  # auto is default, but we'll be explicit
 }}
 
 # Add system to describe the persona.
 persona[
     "system"
-] = f\"\"\"You are an artificial intelligence powered friend.
-Your name is {{persona["name"]}}, you are {{persona["age"]}} years old, you speak in {{persona["target_language"]}} only.
-You are talking with Jorge, inside VRChat.
-\"\"\"
+] = f\"\"\"{persona.get("system")}\"\"\"
 
 # Add system to messages.
-persona["messages"] = {persona["messages"]}
+persona["messages"] = {persona.get("messages")}
 
-persona["old_messages"] = {persona["old_messages"]}
+persona["old_messages"] = {persona.get("old_messages")}
 
 """
         with open(persona["conversation_file_path"], mode="r+", encoding="utf-8") as file:
